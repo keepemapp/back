@@ -1,0 +1,8 @@
+fastapi
+fastapi-login
+uvicorn
+pydantic
+pydantic[email]
+python-multipart
+aiofiles
+jinja2
