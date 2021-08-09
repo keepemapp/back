@@ -7,10 +7,10 @@ Backend + frontend in python
 . Install dependencies in requirements file `pup install -r requirements.txt`
 . Start application with 
 
-[bash]
-----
+
+````bash
 uvicorn api.main:app --reload
-----
+````
 
 
 ## Understanding the repo organization
@@ -22,7 +22,7 @@ We divide the packages in:
 * Domain: subdivided in entity and use case. And those by bounded context
 * Infrastructure
 
-----
+````
 emo
 ├── __init__.py
 ├── domain
@@ -64,15 +64,16 @@ emo
         └── usecase
             └── validations.py
 
-----
+````
 
 ## Resources
 
-https://github.com/iktakahiro/dddpy
-https://jsonapi.org/
-https://pydantic-docs.helpmanual.io/usage/dataclasses/
-https://sderosiaux.medium.com/cqrs-what-why-how-945543482313
-https://github.com/CodelyTV/scala-ddd-example/blob/master/src/mooc/main/tv/codely/mooc/video/application/search/VideosSearcher.scala
-https://medium.com/codex/clean-architecture-for-dummies-df6561d42c94
-https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
+* https://github.com/iktakahiro/dddpy
+* https://softwareengineering.stackexchange.com/questions/396151/which-layer-do-ddd-repositories-belong-to
+* https://jsonapi.org/
+* https://pydantic-docs.helpmanual.io/usage/dataclasses/
+* https://sderosiaux.medium.com/cqrs-what-why-how-945543482313
+* https://github.com/CodelyTV/scala-ddd-example/blob/master/src/mooc/main/tv/codely/mooc/video/application/search/VideosSearcher.scala
+* https://medium.com/codex/clean-architecture-for-dummies-df6561d42c94
+* https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
 
