@@ -19,5 +19,5 @@ def verify_password(salted_password, hashed_password):
     return pwd_context.verify(salted_password, hashed_password)
 
 
-def get_password_hash(salted_password):
+def hash_password(salted_password):
     return pwd_context.hash(salted_password)

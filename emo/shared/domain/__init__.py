@@ -1,6 +1,6 @@
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import Callable, Type
+from typing import Callable, Type, Any
 from uuid import uuid4
 from abc import ABC
 
@@ -49,23 +49,25 @@ class Entity:
         raise NotImplementedError
         return self
 
+    def __eq__(self, other) -> bool:
+        return self.id == other.id and type(self) == type(other)
+
 
 @dataclass(frozen=True)
 class RootAggregate(Entity):
-
-    def __eq__(self, other) -> bool:
-        return self.id == other.id
+    pass
 
 
 @dataclass(frozen=True, eq=True)
 class ValueObject:
-    pass
+    value: Any
 
 
 class DomainRepository(ABC):
     """
     Represents the repository
     """
+
     pass
 
 
@@ -76,4 +78,5 @@ class Tombstone(Entity):
     To be used with Deletion events
     TODO is this tombstone technique correct? I feel this is layer corruption
     """
+
     pass

@@ -8,8 +8,9 @@ aiofiles
 jinja2
 python-jose[cryptography]
 passlib
-
+bcrypt
 
 pytest
+pytest-cov
 flake8
 black

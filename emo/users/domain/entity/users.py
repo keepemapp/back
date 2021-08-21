@@ -1,3 +1,5 @@
+from __future__ import annotations
+import dataclasses
 from dataclasses import dataclass
 from typing import Optional
 import re
@@ -9,17 +11,15 @@ from emo.shared.domain import RootAggregate, UserId, init_id
 class User(RootAggregate):
     id: UserId
     username: str
-    salt: str
-    password_hash: str
+    salt: Optional[str]
+    password_hash: Optional[str]
     email: str
     disabled: Optional[bool] = False
 
     @staticmethod
-    def _is_valid_email(email):
+    def _is_valid_email(email: str) -> bool:
         regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,5}$"
-        if not re.match(regex, email):
-            raise ValueError("It's not an email address.")
-        return email
+        return True if re.match(regex, email) else False
 
     def __post_init__(self):
         super().__post_init__()
@@ -27,3 +27,12 @@ class User(RootAggregate):
             raise ValueError("ID is not of correct type")
         if not self._is_valid_email(self.email):
             raise ValueError("Email is not valid")
+
+    def disable(self) -> User:
+        return dataclasses.replace(self, disabled=True)
+
+    def erase_sensitive_data(self) -> User:
+        return dataclasses.replace(self, salt=None, password_hash=None)
+
+    def change_password_hash(self, new_password_hash):
+        return dataclasses.replace(self, password_hash=new_password_hash)
