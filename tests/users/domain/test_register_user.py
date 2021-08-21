@@ -11,13 +11,16 @@ DataType = Dict[str, Any]
 
 @pytest.fixture
 def valid_data() -> DataType:
-    return {
+    repo = MemoryUserRepository()
+    repo.clean_all() # TODO check why repo is not clean here. It looks like is reusing a cached instance
+    yield {
         "username": "me",
         "password": "password",
         "email": "mail@mnail.com",
-        "repository": MemoryUserRepository(),
+        "repository": repo,
         "message_bus": TestEventPublisher(),
     }
+    repo.clean_all()
 
 
 @pytest.mark.unit
@@ -40,10 +43,11 @@ class TestRegisterUser:
         assert not r._event.aggregate.salt
 
     def test_user_is_saved_to_registry(self, valid_data):
+
+        repo = valid_data.get("repository")
         r = RegisterUser(**valid_data)
         r.execute()
         u = r._entity
-        repo = valid_data.get("repository")
 
         assert len(repo.all()) == 1
         assert repo.get(u.id) == u

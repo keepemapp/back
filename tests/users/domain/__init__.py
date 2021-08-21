@@ -17,7 +17,7 @@ pwd_group = {
 
 @pytest.fixture
 def valid_user() -> DataType:
-    return {
+    yield {
             "id": UserId("as092092"),
             "username": "me",
             "salt": pwd_group["salt"],
@@ -31,3 +31,4 @@ def user_repo_with_test_user(valid_user) -> MemoryUserRepository:
     repo = MemoryUserRepository()
     repo.create(User(**valid_user))
     yield repo
+    repo.clean_all()

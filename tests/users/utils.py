@@ -21,3 +21,6 @@ class MemoryUserRepository(UserRepository):
 
     def update(self, user: User):
         self._users[str(user.id)] = user
+
+    def clean_all(self):
+        self._users = {}
