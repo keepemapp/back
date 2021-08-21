@@ -5,7 +5,7 @@ from fastapi_login import LoginManager
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi_login.exceptions import InvalidCredentialsException
 
-from emo.infrastructure.routers import api_router
+from emo.assets.infrastructure.routers import api_router
 
 app = FastAPI(
     title="MyHeritage",

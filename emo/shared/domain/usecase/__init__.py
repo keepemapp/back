@@ -1,11 +1,10 @@
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Type
-from abc import ABC, abstractmethod
+from abc import abstractmethod
+from typing import NoReturn
 
-from emo.settings import settings
+
 from emo.shared.domain import *
 from emo.shared.domain.usecase import Event
+from emo.shared.domain.usecase.event import Event, EventPublisher
 
 
 class UseCase(ABC):
@@ -13,19 +12,18 @@ class UseCase(ABC):
 
 
 class Query(UseCase):
-    pass
+    def __init__(self, *, repository: DomainRepository):
+        self.__repository = repository
 
 
 class Command(UseCase):
 
+    def __init__(self, *, repository: DomainRepository, message_bus: EventPublisher):
+        self._repository = repository
+        self._message_bus = message_bus
+
     @abstractmethod
-    def execute(self) -> Type[Event]:
+    def execute(self) -> NoReturn:
         raise NotImplementedError
 
 
-@dataclass(frozen=True)
-class Event(UseCase):
-    eventType: str
-    aggregate: Type[Entity]
-    occurredOn: datetime = datetime.utcnow()
-    application: str = settings.APPLICATION_TECHNICAL_NAME

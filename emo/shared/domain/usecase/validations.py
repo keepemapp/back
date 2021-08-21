@@ -1,8 +1,8 @@
 from typing import List, Type
 
 from emo.shared.domain import AssetId, UserId, TransferId
-from emo.domain.entity.asset import Asset, AssetRepository
-from emo.domain.entity.transfer import TransferRepository
+from emo.assets.domain.entity import AssetRepository
+from emo.assets.domain.entity import TransferRepository
 
 
 def user_owns_all_assets(repo: Type[AssetRepository], owner_id: UserId, asset_ids: List[AssetId]) -> bool:
