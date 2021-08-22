@@ -1,6 +1,7 @@
 from typing import Optional
-
 from pydantic import BaseModel
+
+from emo.shared.domain import UserId
 
 
 class Token(BaseModel):
@@ -8,5 +9,5 @@ class Token(BaseModel):
     token_type: str
 
 
-class TokenPayload(BaseModel):
-    sub: Optional[int] = None
+class TokenData(BaseModel):
+    id: Optional[UserId] = None

@@ -6,6 +6,8 @@ from emo.users.domain.entity.users import User
 
 
 class UserRepository(DomainRepository):
+    # TODO return of users should not have the password and salt
+    # Those should only be returned if you cal a get_credentials() specifically
     @abstractmethod
     def all(self) -> List[User]:
         raise NotImplementedError

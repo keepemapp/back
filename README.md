@@ -9,7 +9,7 @@ Backend + frontend in python
 
 
 ````bash
-uvicorn api.main:app --reload
+uvicorn emo.main:app --reload
 ````
 
 

@@ -34,6 +34,7 @@ class RegisterUser(Command):
             disabled=False,
             password_hash=hash_password(salt_password(password, salt)),
         )
+        # TODO allow just one username and email!!!
 
         self._event = UserRegistered(aggregate=self._entity.erase_sensitive_data())
 
@@ -42,3 +43,4 @@ class RegisterUser(Command):
         self._message_bus.publish(
             UserRegistered(aggregate=self._entity.erase_sensitive_data())
         )
+
