@@ -4,7 +4,7 @@ Backend + frontend in python
 
 
 . Install python >3.9 via venv for example
-. Install dependencies in requirements file `pup install -r requirements.txt`
+. Install dependencies in requirements file `pip install -r requirements.txt`
 . Start application with 
 
 
