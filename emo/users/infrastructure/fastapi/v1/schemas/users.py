@@ -26,7 +26,7 @@ class UserResponse(UserBase):
 
     @validator('links')
     def populate_folder_name(cls, v, values):
-        return Links(self=settings.API_USER_PATH + '/' + values.get('id'))
+        return Links(self=settings.API_USER_PATH.prefix + '/' + values.get('id'))
 
 
 # Properties to receive via API on update

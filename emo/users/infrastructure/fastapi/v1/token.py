@@ -11,12 +11,12 @@ from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.usecase.query_user import QueryUser
 from emo.shared.security import hash_password, salt_password, verify_password
 from emo.users.infrastructure.dependencies import user_repository
+from emo.users.infrastructure.fastapi.v1.schemas.token import Token
 
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
-    prefix="/token",
-    tags=["authorization"],
+    **settings.API_TOKEN.dict(),
 )
 
 
@@ -40,7 +40,7 @@ def authenticate_user(q: QueryUser, username: str, password: str) -> Optional[Us
     return user
 
 
-@router.post("/")
+@router.post("/", response_model=Token)
 async def login_for_access_token(
         repo: UserRepository = Depends(user_repository),
         form_data: OAuth2PasswordRequestForm = Depends()
@@ -58,5 +58,5 @@ async def login_for_access_token(
     access_token = create_access_token(
         data={"sub": user.id.id}, expires_delta=access_token_expires
     )
-    return {"access_token": access_token, "token_type": "bearer"}
+    return Token(access_token=access_token,token_type="bearer")
 

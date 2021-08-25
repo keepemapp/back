@@ -21,6 +21,7 @@ from emo.users.domain.usecase.query_user import QueryUser
 from emo.users.domain.usecase.register_user import RegisterUser
 from emo.users.infrastructure.fastapi.v1.schemas.token import TokenData
 from emo.users.infrastructure.memory.message_bus import NoneEventPub
+from emo.settings import settings
 
 
 def user_repository() -> UserRepository:
@@ -35,7 +36,7 @@ def query_user(repo: UserRepository = Depends(user_repository)) -> QueryUser:
     yield QueryUser(repository=repo)
 
 
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/token")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl=settings.API_V1.concat(settings.API_TOKEN).prefix)
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), q: QueryUser = Depends(query_user)) -> User:

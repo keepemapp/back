@@ -13,8 +13,7 @@ from emo.settings import settings
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
-    prefix=settings.API_USER_PATH,
-    tags=[settings.API_USER_PATH.replace('/', '')],
+    **settings.API_USER_PATH.dict(),
 )
 
 
