@@ -17,6 +17,14 @@ class UserRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
+    def exists_email(self, email: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
+    def exists_username(self, email: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
     def create(self, user: User):
         raise NotImplementedError
 

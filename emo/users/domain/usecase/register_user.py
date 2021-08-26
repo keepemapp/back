@@ -4,6 +4,7 @@ from dataclasses import dataclass
 
 from emo.users.domain.entity.users import User
 from emo.users.domain.entity.user_repository import UserRepository
+from emo.users.domain.usecase.exceptions import EmailAlreadyExistsException, UsernameAlreadyExistsException
 from emo.shared.domain.usecase import Command, Event, EventPublisher
 from emo.shared.domain import UserId, init_id
 from emo.shared.security import generate_salt, salt_password, hash_password
@@ -15,6 +16,8 @@ class UserRegistered(Event):
 
 
 class RegisterUser(Command):
+    _repository: UserRepository
+
     def __init__(
         self,
         username: str,
@@ -34,13 +37,17 @@ class RegisterUser(Command):
             disabled=False,
             password_hash=hash_password(salt_password(password, salt)),
         )
-        # TODO allow just one username and email!!!
 
         self._event = UserRegistered(aggregate=self._entity.erase_sensitive_data())
 
     def execute(self) -> NoReturn:
-        self._repository.create(self._entity)
+        e = self._entity
+        if self._repository.exists_email(e.email):
+            raise EmailAlreadyExistsException()
+        if self._repository.exists_username(e.username):
+            raise UsernameAlreadyExistsException()
+        self._repository.create(e)
         self._message_bus.publish(
-            UserRegistered(aggregate=self._entity.erase_sensitive_data())
+            UserRegistered(aggregate=e.erase_sensitive_data())
         )
 

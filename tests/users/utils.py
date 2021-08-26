@@ -24,3 +24,9 @@ class MemoryUserRepository(UserRepository):
 
     def clean_all(self):
         self._users = {}
+
+    def exists_email(self, email: str) -> bool:
+        return any(u.email == email for u in self.all())
+
+    def exists_username(self, username: str) -> bool:
+        return any(u.username == username for u in self.all())

@@ -1,7 +1,7 @@
 from fastapi.security import OAuth2PasswordBearer
 
 from emo.users.domain.entity.user_repository import UserRepository
-from emo.users.infrastructure.memory.repository import MemoryUserRepository
+from emo.users.infrastructure.memory.repository import MemoryPersistedUserRepository
 
 from datetime import datetime, timedelta
 from typing import Optional
@@ -25,7 +25,7 @@ from emo.settings import settings
 
 
 def user_repository() -> UserRepository:
-    yield MemoryUserRepository()
+    yield MemoryPersistedUserRepository()
 
 
 def event_bus() -> EventPublisher:
@@ -61,5 +61,5 @@ async def get_current_user(token: str = Depends(oauth2_scheme), q: QueryUser = D
 
 async def get_current_active_user(current_user: User = Depends(get_current_user)):
     if current_user.disabled:
-        raise HTTPException(status_code=400, detail="Inactive user")
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive user")
     return current_user

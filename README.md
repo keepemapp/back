@@ -3,68 +3,77 @@
 Backend + frontend in python
 
 
-. Install python >3.9 via venv for example
-. Install dependencies in requirements file `pip install -r requirements.txt`
-. Start application with 
+1. Install python >3.9 via venv for example. If you have done it via venv, to activate the environment do `source venv/bin/activate`
+2. Install dependencies in requirements file `pip install -r requirements.txt`
+3. Create `data` folder in parent repository. Temporarily used to store the data
+4. Start application with 
 
 
 ````bash
 uvicorn emo.main:app --reload
 ````
 
-
 ## Understanding the repo organization
 
-NOTE: It will probably change. Possibly grouping by bounded context, since it will be easier to split into microservices
 
 We divide the packages in:
-
-* Domain: subdivided in entity and use case. And those by bounded context
-* Infrastructure
+* Bounded context
+  * Domain
+     * entity
+     * use case (including domain events)
+  * Infrastructure (it has implementations with the frameworks)
+    * fastAPI
+    * memoryDatabase
+    * ...
 
 ````
 emo
-├── __init__.py
-├── domain
-│   ├── entity
-│   │   ├── asset
-│   │   │   ├── asset.py
-│   │   │   ├── asset_repository.py
-│   │   │   └── condition_to_live.py
-│   │   └── transfer
-│   │       ├── transfer.py
-│   │       └── transfer_repository.py
-│   └── usecase
-│       ├── asset
-│       │   ├── create_asset.py
-│       │   └── events.py
-│       └── transfer
-│           ├── delete_transfer.py
-│           ├── events.py
-│           ├── note_to_future_self.py
-│           └── time_capsule.py
-├── infrastructure
-│   └── routers
-│       ├── api.py
-│       └── endpoints
-│           ├── assets.py
-│           ├── transfers.py
-│           └── users.py
 ├── main.py
-├── schemas  ## IT WILL CHANGE and be included in infrastructure
-│   ├── asset.py
-│   ├── json_links.py
-│   ├── msg.py
-│   ├── token.py
-│   ├── transfer.py
-│   └── user.py
 ├── settings.py
-└── shared
-    └── domain
-        └── usecase
-            └── validations.py
-
+├── shared
+│   ├── domain
+│   │   └── usecase
+│   │       ├── event.py
+│   │       └── validations.py
+│   ├── infrastructure
+│   │   └── fastapi
+│   │       ├── schema_utils.py
+│   │       └── schemas.py
+│   └── security.py
+├── assets
+│   ├── domain
+│   └── infrastructure
+└── users
+    ├── domain
+    │   ├── entity
+    │   │   ├── user_repository.py
+    │   │   └── users.py
+    │   └── usecase
+    │       ├── change_user_password.py
+    │       ├── exceptions.py
+    │       ├── query_user.py
+    │       └── register_user.py
+    └── infrastructure
+        ├── dependencies.py
+        ├── fastapi
+        │   └── v1
+        │       ├── schemas
+        │       │   ├── token.py
+        │       │   └── users.py
+        │       ├── token.py
+        │       └── users.py
+        └── memory
+            ├── message_bus.py
+            └── repository.py
 ````
+
+## Testing and code cleaning
+
+* Run tests calling `pytest`
+* Format code with `black emo`
+* Lint code with `flake8 emo tests`
+
+NOTE: clean python cache via `py3clean emo tests` if needed
 
 ## Resources
 
