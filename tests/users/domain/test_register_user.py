@@ -11,7 +11,7 @@ from emo.users.domain.usecase.exceptions import EmailAlreadyExistsException, Use
 DataType = Dict[str, Any]
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.fixture(scope='function')
 def valid_data() -> DataType:
     repo = MemoryUserRepository()
     repo.clean_all() # TODO check why repo is not clean here. It looks like is reusing a cached instance
