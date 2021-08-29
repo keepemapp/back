@@ -29,7 +29,7 @@ format: $(VENV)
 
 .PHONY: lint
 lint: $(VENV)
-	$(BIN)/flake8 emo tests
+	$(BIN)/flake8 emo
 
 .PHONY: test-only
 test-only: $(VENV)

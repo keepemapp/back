@@ -1,4 +1,3 @@
-import pytest
 
 from emo.shared.security import *
 
@@ -23,5 +22,6 @@ def test_hash():
 
 def test_password_verify():
     assert verify_password(
-        "password", "$2b$12$Hzgp1lAu1tA5O1Qizcjei.KXMhl9Z5.uejg5RePR9whnDuAqTbCQi"
+        "password",
+        "$2b$12$Hzgp1lAu1tA5O1Qizcjei.KXMhl9Z5.uejg5RePR9whnDuAqTbCQi"
     )

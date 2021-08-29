@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import NoReturn
 from dataclasses import dataclass
 
-from emo import settings
+from emo.settings import settings
 from emo.shared.domain import Entity, DomainRepository
 
 

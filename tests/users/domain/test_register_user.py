@@ -12,10 +12,11 @@ from tests.utils import TestEventPublisher
 DataType = Dict[str, Any]
 
 
-@pytest.yield_fixture(scope="function")
+@pytest.fixture
 def valid_data() -> DataType:
     repo = MemoryUserRepository()
-    repo.clean_all()  # TODO check why repo is not clean here. It looks like is reusing a cached instance
+    repo.clean_all()  # TODO check why repo is not clean here.
+    # It looks like is reusing a cached instance
     yield {
         "username": "me",
         "password": "password",

@@ -6,12 +6,10 @@ Backend + frontend in python
 1. Install python >3.8 and `make` (installed by default in GNI/linux and OS X)
 2. Install dependencies with `make install-dev`
 3. Start application with `make run-dev`
+4. Run auto-format code with `make format`
+5. Run linting and tests with `make test` (see [flake8 rules](https://lintlyci.github.io/Flake8Rules/))
+6. Before committing execute `make clean`
 
-Before committing do: 
-
-````bash
-uvicorn emo.main:app --reload
-````
 
 ## Understanding the repo organization
 
@@ -102,9 +100,9 @@ Extra:
 
 # TODOs
 
-* [ ] Create `make` script with install, test, clean and run
-* [ ] Add pylint 
-* [ ] Create pylint rule to ensure domain does not have any dependencies on INF
-* [ ] Pylint rules to forbid cross-bounded context dependencies
+* [x] Create `make` script with install, test, clean and run
+* [x] Fix flake8 linting errors 
+* [ ] Create flake8 rule to ensure domain does not have any dependencies on INF
+* [ ] flake8 rules to forbid cross-bounded context dependencies
 * [ ] Test `fastapi` users interface
 * [ ] Adapt `assets` bounded context to new format

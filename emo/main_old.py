@@ -57,7 +57,7 @@ def query_user(user_id: str):
 
 
 @app.get("/login")
-async def main():
+async def main_web():
     content = """
 <body>
 <form action="/login" enctype="multipart/form-data" method="post">
