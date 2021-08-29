@@ -3,11 +3,11 @@
 Backend + frontend in python
 
 
-1. Install python >3.9 via venv for example. If you have done it via venv, to activate the environment do `source venv/bin/activate`
-2. Install dependencies in requirements file `pip install -r requirements.txt`
-3. Create `data` folder in parent repository. Temporarily used to store the data
-4. Start application with 
+1. Install python >3.8 and `make` (installed by default in GNI/linux and OS X)
+2. Install dependencies with `make install-dev`
+3. Start application with `make run-dev`
 
+Before commiting do: 
 
 ````bash
 uvicorn emo.main:app --reload
@@ -85,4 +85,26 @@ NOTE: clean python cache via `py3clean emo tests` if needed
 * https://github.com/CodelyTV/scala-ddd-example/blob/master/src/mooc/main/tv/codely/mooc/video/application/search/VideosSearcher.scala
 * https://medium.com/codex/clean-architecture-for-dummies-df6561d42c94
 * https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
+* https://stackoverflow.com/questions/50802874/use-case-to-command-application-layer-mapping-implementation
 
+Extra:
+* https://github.com/dannysteenman/aws-toolbox#aws-toolbox-
+* https://github.com/donnemartin/system-design-primer
+
+### Domain Driven Design 
+
+> **Anemic Classes**
+> 
+>It’s the photograph of a poor implemented business requirements. This kind of classes only store data, they do not implement behaviors or policies. These code smells alone doesn’t mean that the code is bad at all. In certain conditions these characteristics are necessary. The problem happens when multiple code smells are combined in a single code base, then the software gets harder to change, the regression tests are required for small changes and the bugs are frequent.
+>
+> -- From https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
+
+
+# TODOs
+
+* [ ] Create `make` script with install, test, clean and run
+* [ ] Add pylint 
+* [ ] Create pylint rule to ensure domain does not have any dependencies on INF
+* [ ] Pylint rules to forbid cross-bounded context dependencies
+* [ ] Test `fastapi` users interface
+* [ ] Adapt `assets` bounded context to new format
