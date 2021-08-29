@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Optional, List, Type
+from typing import List, Optional, Type
 
-from emo.shared.domain import RootAggregate, TransferId, AssetId, UserId, init_id
-from emo.assets.domain.entity import AssetRepository, AssetFileRepository
+from emo.assets.domain.entity import AssetFileRepository, AssetRepository
+from emo.shared.domain import (AssetId, RootAggregate, TransferId, UserId,
+                               init_id)
 
 
 @dataclass(frozen=True)
@@ -20,10 +21,12 @@ class Transfer(RootAggregate):
     def is_future(self) -> bool:
         return self.scheduled_date <= datetime.utcnow()
 
-    def execute(self,
-                asset_repo: Type[AssetRepository],
-                asset_file_repo: Type[AssetFileRepository]):
-        """ TODO
+    def execute(
+        self,
+        asset_repo: Type[AssetRepository],
+        asset_file_repo: Type[AssetFileRepository],
+    ):
+        """TODO
         Executes the logic to transfer the assets
 
         . Ensure new users can access the assets (FUTURE)

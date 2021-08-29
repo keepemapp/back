@@ -7,7 +7,7 @@ Backend + frontend in python
 2. Install dependencies with `make install-dev`
 3. Start application with `make run-dev`
 
-Before commiting do: 
+Before committing do: 
 
 ````bash
 uvicorn emo.main:app --reload

@@ -1,8 +1,8 @@
 from __future__ import annotations
-from typing import Optional, Dict
+
+from typing import Optional
 
 from pydantic import BaseModel, validator
-from pydantic.dataclasses import dataclass
 
 from emo.settings import settings
 from emo.shared.infrastructure.fastapi.schemas import Links
@@ -24,12 +24,13 @@ class UserResponse(UserBase):
     id: str
     links: Optional[Links]
 
-    @validator('links')
+    @validator("links")
     def populate_folder_name(cls, v, values):
-        return Links(self=settings.API_USER_PATH.prefix + '/' + values.get('id'))
+        return Links(
+            self=settings.API_USER_PATH.prefix + "/" + values.get("id")
+        )
 
 
 # Properties to receive via API on update
 class PasswordUpdate(UserBase):
     password: Optional[str] = None
-

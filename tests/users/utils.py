@@ -1,4 +1,4 @@
-from typing import List, Optional, Dict
+from typing import Dict, List, Optional
 
 from emo.shared.domain import UserId
 from emo.users.domain.entity.user_repository import UserRepository

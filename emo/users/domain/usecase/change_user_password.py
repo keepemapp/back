@@ -1,12 +1,10 @@
-from typing import NoReturn
 from dataclasses import dataclass
+from typing import NoReturn
 
-
-from emo.users.domain.entity.users import User
-from emo.users.domain.entity.user_repository import UserRepository
-from emo.shared.security import salt_password, hash_password, verify_password
 from emo.shared.domain import UserId
 from emo.shared.domain.usecase import Command, Event, EventPublisher
+from emo.shared.security import hash_password, salt_password, verify_password
+from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.usecase.exceptions import MissmatchPasswordException
 
 
@@ -34,7 +32,8 @@ class ChangeUserPassword(Command):
     def execute(self) -> NoReturn:
         u = self._repository.get(self.uid)
 
-        if not verify_password(salt_password(self.old, u.salt), u.password_hash):
+        if not verify_password(salt_password(self.old, u.salt),
+                               u.password_hash):
             raise MissmatchPasswordException()
 
         new = hash_password(salt_password(self.new, u.salt))

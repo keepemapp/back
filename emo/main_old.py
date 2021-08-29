@@ -1,15 +1,16 @@
-from fastapi import FastAPI, Depends
-from fastapi.responses import HTMLResponse
 from enum import Enum
-from fastapi_login import LoginManager
-from fastapi.security import OAuth2PasswordRequestForm
-from fastapi_login.exceptions import InvalidCredentialsException
 
-from emo.assets.infrastructure.routers import api_router
+from fastapi import Depends, FastAPI
+from fastapi.responses import HTMLResponse
+from fastapi.security import OAuth2PasswordRequestForm
+from fastapi_login import LoginManager
+from fastapi_login.exceptions import InvalidCredentialsException
 
 from emo.users.infrastructure.fastapi.v1 import users_router
 
-app = FastAPI(title="MyHeritage",)
+app = FastAPI(
+    title="MyHeritage",
+)
 
 app.include_router(users_router)
 
@@ -24,7 +25,10 @@ class AssetType(str, Enum):
 
 # TODO move me to env variable
 SECRET = "8ab5b651555ef56bbb27e84868034dd7cb9d6533bf2bb16b"
-manager = LoginManager(SECRET, "/login",)
+manager = LoginManager(
+    SECRET,
+    "/login",
+)
 manager.cookie_name = "emo-auth-cookie"
 DB = {
     "users": {

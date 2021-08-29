@@ -1,9 +1,11 @@
-from fastapi import FastAPI, Depends
 import uvicorn
+from fastapi import FastAPI
 
 from emo.users.infrastructure.fastapi.v1 import users_router
 
-app = FastAPI(title="MyHeritage",)
+app = FastAPI(
+    title="MyHeritage",
+)
 
 app.include_router(users_router)
 

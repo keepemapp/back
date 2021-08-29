@@ -24,7 +24,8 @@ $(VENV): requirements.txt
 
 .PHONY: format
 format: $(VENV)
-	$(BIN)/black emo
+	$(BIN)/black emo tests
+	$(BIN)/isort emo tests
 
 .PHONY: lint
 lint: $(VENV)

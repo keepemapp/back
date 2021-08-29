@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Any, Optional, Type
+from typing import List, Optional
 
 from emo.shared.domain import DomainRepository, UserId
 from emo.users.domain.entity.users import User

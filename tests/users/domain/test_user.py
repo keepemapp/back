@@ -1,8 +1,7 @@
 import pytest
 
+from emo.shared.domain import DomainId, UserId
 from emo.users.domain.entity.users import User
-from emo.shared.domain import UserId, DomainId
-
 from tests.users.domain import valid_user
 
 
@@ -40,7 +39,6 @@ class TestUser:
                 User(**valid_user)
 
     class TestActions:
-
         def test_user_disable(self, valid_user):
             u = User(**valid_user)
             assert not u.disabled

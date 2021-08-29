@@ -1,9 +1,10 @@
-from typing import Optional, List
 from datetime import datetime
+from typing import List, Optional
+
 from pydantic import BaseModel, validator
 
-from api import settings
-from emo.schemas import UserLink, AssetLink, TransferLink
+from emo.schemas import AssetLink, UserLink
+
 
 # Shared properties
 class TransferBase(BaseModel):
@@ -45,17 +46,17 @@ class Transfer(TransferInDBBase):
     transferor: Optional[UserLink] = None
     receivers: Optional[List[UserLink]] = None
 
-    @validator('assets', always=True)
+    @validator("assets", always=True)
     def set_assets(cls, v, values) -> List[AssetLink]:
-        return [AssetLink(id=a) for a in values['assets_ids']]
+        return [AssetLink(id=a) for a in values["assets_ids"]]
 
-    @validator('transferor', always=True)
+    @validator("transferor", always=True)
     def set_transferor(cls, v, values) -> UserLink:
-        return UserLink(id=values['transferor_id'])
+        return UserLink(id=values["transferor_id"])
 
-    @validator('receivers', always=True)
+    @validator("receivers", always=True)
     def set_receivers(cls, v, values) -> List[UserLink]:
-        return [UserLink(id=a) for a in values['receiver_ids']]
+        return [UserLink(id=a) for a in values["receiver_ids"]]
 
 
 # Properties properties stored in DB

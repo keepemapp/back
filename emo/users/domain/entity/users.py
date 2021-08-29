@@ -1,10 +1,11 @@
 from __future__ import annotations
+
 import dataclasses
+import re
 from dataclasses import dataclass
 from typing import Optional
-import re
 
-from emo.shared.domain import RootAggregate, UserId, init_id
+from emo.shared.domain import RootAggregate, UserId
 
 
 @dataclass(frozen=True)
@@ -18,7 +19,7 @@ class User(RootAggregate):
 
     @staticmethod
     def _is_valid_email(email: str) -> bool:
-        regex = "^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,5}$"
+        regex = r"^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,5}$"
         return True if re.match(regex, email) else False
 
     def __post_init__(self):

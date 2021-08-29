@@ -1,9 +1,8 @@
 from typing import Optional
 
-from fastapi.logger import logger
 from pydantic import BaseModel, validator
-from api import settings
-from emo.schemas import UserLink, AssetLink
+
+from emo.schemas import AssetLink, UserLink
 
 
 # Shared properties
@@ -40,16 +39,15 @@ class Asset(AssetInDBBase):
     self: Optional[AssetLink] = None
     owner: Optional[UserLink] = None
 
-    @validator('self', always=True)
+    @validator("self", always=True)
     def set_self(cls, v, values) -> AssetLink:
-        return AssetLink(id=values['id'])
+        return AssetLink(id=values["id"])
 
-    @validator('owner', always=True)
+    @validator("owner", always=True)
     def set_owner(cls, v, values) -> UserLink:
-        return UserLink(id=values['owner_id'])
+        return UserLink(id=values["owner_id"])
 
 
 # Properties properties stored in DB
 class AssetInDB(AssetInDBBase):
     pass
-

@@ -1,11 +1,10 @@
 from abc import abstractmethod, ABC
-from dataclasses import dataclass
 from datetime import datetime
 from typing import NoReturn
+from dataclasses import dataclass
 
 from emo import settings
-from emo.shared.domain import *
-from emo.shared.domain import Entity
+from emo.shared.domain import Entity, DomainRepository
 
 
 @dataclass(frozen=True)
@@ -36,7 +35,9 @@ class Query(UseCase):
 
 
 class Command(UseCase):
-    def __init__(self, *, repository: DomainRepository, message_bus: EventPublisher):
+    def __init__(self, *,
+                 repository: DomainRepository,
+                 message_bus: EventPublisher):
         self._repository = repository
         self._message_bus = message_bus
 

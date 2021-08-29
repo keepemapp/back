@@ -1,20 +1,21 @@
-import pytest
 from typing import Any, Dict
 
-from tests.utils import TestEventPublisher
-from tests.users.utils import MemoryUserRepository
-from emo.users.domain.entity.users import User
-from emo.users.domain.usecase.register_user import RegisterUser, UserRegistered
-from emo.users.domain.usecase.exceptions import EmailAlreadyExistsException, UsernameAlreadyExistsException
+import pytest
 
+from emo.users.domain.entity.users import User
+from emo.users.domain.usecase.exceptions import (
+    EmailAlreadyExistsException, UsernameAlreadyExistsException)
+from emo.users.domain.usecase.register_user import RegisterUser, UserRegistered
+from tests.users.utils import MemoryUserRepository
+from tests.utils import TestEventPublisher
 
 DataType = Dict[str, Any]
 
 
-@pytest.yield_fixture(scope='function')
+@pytest.yield_fixture(scope="function")
 def valid_data() -> DataType:
     repo = MemoryUserRepository()
-    repo.clean_all() # TODO check why repo is not clean here. It looks like is reusing a cached instance
+    repo.clean_all()  # TODO check why repo is not clean here. It looks like is reusing a cached instance
     yield {
         "username": "me",
         "password": "password",
@@ -28,7 +29,6 @@ def valid_data() -> DataType:
 
 @pytest.mark.unit
 class TestRegisterUser:
-
     def test_register_user_init(self, valid_data):
         r = RegisterUser(**valid_data)
 
@@ -69,7 +69,7 @@ class TestRegisterUser:
     def test_email_is_unique(self, valid_data):
         r = RegisterUser(**valid_data)
         r.execute()
-        valid_data['username'] = "another one"
+        valid_data["username"] = "another one"
         r2 = RegisterUser(**valid_data)
         with pytest.raises(EmailAlreadyExistsException):
             r2.execute()
@@ -77,7 +77,7 @@ class TestRegisterUser:
     def test_username_is_unique(self, valid_data):
         r = RegisterUser(**valid_data)
         r.execute()
-        valid_data['email'] = "another@email.com"
+        valid_data["email"] = "another@email.com"
         r2 = RegisterUser(**valid_data)
         with pytest.raises(UsernameAlreadyExistsException):
             r2.execute()

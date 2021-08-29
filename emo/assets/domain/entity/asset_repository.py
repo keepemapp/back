@@ -1,12 +1,13 @@
 from abc import abstractmethod
-from typing import List, Any, Optional, Type
+from typing import Any, List, Optional, Type
 
-from emo.shared.domain import AssetId, DomainRepository, UserId
 from emo.assets.domain.entity.asset import Asset
+from emo.shared.domain import AssetId, DomainRepository, UserId
 
 
 class AssetFileRepository(DomainRepository):
-    # TODO move me to implementation/infra. This detail does not need to be here
+    # TODO move me to implementation/infra.
+    #  This detail does not need to be here
     def create(self, asset: Asset, file: bytes):
         raise NotImplementedError
 
@@ -24,9 +25,7 @@ class AssetFileRepository(DomainRepository):
 
 
 class AssetRepository(DomainRepository):
-
-    def __init__(self,
-                 file_repository: Type[AssetFileRepository]):
+    def __init__(self, file_repository: Type[AssetFileRepository]):
         pass
 
     @abstractmethod
@@ -54,4 +53,3 @@ class AssetRepository(DomainRepository):
 
     def delete_by_id(self, assetId: AssetId):
         raise NotImplementedError
-

@@ -11,9 +11,9 @@ def test_salt():
 def test_salt_password():
     sp = salt_password("password,", "salt")
     assert isinstance(sp, str)
-    assert sp.split(',')[0] == "password"
-    assert sp.split(',')[1] == "salt"
-    assert len(sp.split(',')) == 2
+    assert sp.split(",")[0] == "password"
+    assert sp.split(",")[1] == "salt"
+    assert len(sp.split(",")) == 2
 
 
 def test_hash():
@@ -22,4 +22,6 @@ def test_hash():
 
 
 def test_password_verify():
-    assert verify_password("password", "$2b$12$Hzgp1lAu1tA5O1Qizcjei.KXMhl9Z5.uejg5RePR9whnDuAqTbCQi")
+    assert verify_password(
+        "password", "$2b$12$Hzgp1lAu1tA5O1Qizcjei.KXMhl9Z5.uejg5RePR9whnDuAqTbCQi"
+    )

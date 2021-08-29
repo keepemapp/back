@@ -1,6 +1,6 @@
-from typing import List, Optional, Dict
-import pickle
 import os
+import pickle
+from typing import Dict, List, Optional
 
 from emo.shared.domain import UserId
 from emo.users.domain.entity.user_repository import UserRepository
@@ -14,7 +14,7 @@ class MemoryPersistedUserRepository(UserRepository):
     In memory repository for Users. Don't use this in production
     """
 
-    DB_FILE = '../data/usersrepo.pk'
+    DB_FILE = "../data/usersrepo.pk"
 
     def __init__(self):
         self._users: Users = self.__startup_db()
@@ -40,12 +40,12 @@ class MemoryPersistedUserRepository(UserRepository):
         return any(u.username == username for u in self.all())
 
     def __write_file(self):
-        with open(self.DB_FILE, 'wb') as f:
+        with open(self.DB_FILE, "wb") as f:
             pickle.dump(self._users, f)
 
     def __startup_db(self) -> Users:
         if os.path.exists(self.DB_FILE):
-            with open(self.DB_FILE, 'rb') as f:
+            with open(self.DB_FILE, "rb") as f:
                 r = pickle.load(f)
             return r
         return {}

@@ -1,12 +1,14 @@
 import pytest
 
-from tests.utils import TestEventPublisher
-from emo.users.domain.entity.users import User
-from emo.users.domain.usecase.change_user_password import ChangeUserPassword, UserPasswordChanged
 from emo.shared.security import salt_password, verify_password
+from emo.users.domain.entity.users import User
+from emo.users.domain.usecase.change_user_password import (ChangeUserPassword,
+                                                           UserPasswordChanged)
 from emo.users.domain.usecase.exceptions import MissmatchPasswordException
+from tests.users.domain import (DataType, pwd_group, user_repo_with_test_user,
+                                valid_user)
+from tests.utils import TestEventPublisher
 
-from tests.users.domain import DataType, user_repo_with_test_user, valid_user, pwd_group
 
 @pytest.fixture
 def valid_pwd_change(user_repo_with_test_user) -> DataType:
@@ -20,9 +22,9 @@ def valid_pwd_change(user_repo_with_test_user) -> DataType:
         "message_bus": TestEventPublisher(),
     }
 
+
 @pytest.mark.unit
 class TestChangePassword:
-
     def test_init_change_password(self, valid_pwd_change):
         cp = ChangeUserPassword(**valid_pwd_change)
         assert isinstance(cp._event, UserPasswordChanged)
@@ -32,7 +34,10 @@ class TestChangePassword:
         cp.execute()
 
         updated: User = cp._repository.all()[0]
-        assert verify_password(salt_password(valid_pwd_change["new_password"], updated.salt), updated.password_hash)
+        assert verify_password(
+            salt_password(valid_pwd_change["new_password"], updated.salt),
+            updated.password_hash,
+        )
 
     def test_fail_old_pw_mismatch(self, valid_pwd_change):
         valid_pwd_change["old_password"] = "Wrong password"

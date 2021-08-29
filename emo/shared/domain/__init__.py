@@ -1,8 +1,9 @@
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import Callable, Type, Any
-from uuid import uuid4
+
 from abc import ABC
+from dataclasses import dataclass
+from typing import Any, Callable, Type
+from uuid import uuid4
 
 
 @dataclass(frozen=True)

@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import Optional
 
-from emo.shared.domain import RootAggregate, UserId, AssetId, init_id
 from emo.assets.domain.entity.condition_to_live import ConditionToLive
+from emo.shared.domain import AssetId, RootAggregate, UserId, init_id
 
 
 @dataclass(frozen=True)
@@ -18,4 +18,8 @@ class Asset(RootAggregate):
     conditionToLive: Optional[ConditionToLive] = None
 
     def has_expired(self) -> bool:
-        return False if not self.conditionToLive else self.conditionToLive.condition_not_met()
+        return (
+            False
+            if not self.conditionToLive
+            else self.conditionToLive.condition_not_met()
+        )

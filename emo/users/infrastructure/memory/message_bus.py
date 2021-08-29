@@ -1,6 +1,6 @@
 from typing import NoReturn
 
-from emo.shared.domain.usecase import EventPublisher, Event
+from emo.shared.domain.usecase import Event, EventPublisher
 
 
 class NoneEventPub(EventPublisher):

@@ -1,10 +1,14 @@
-from typing import Type, NoReturn
+from dataclasses import dataclass
+from typing import NoReturn, Type
 
-
-from emo.shared.domain import TransferId, Tombstone
-from emo.shared.domain.usecase import Command, EventPublisher
 from emo.assets.domain.entity.transfer_repository import TransferRepository
-from emo.assets.domain.usecase.transfer import TransferDeleted
+from emo.shared.domain import Tombstone, TransferId
+from emo.shared.domain.usecase import Command, Event, EventPublisher
+
+
+@dataclass(frozen=True)
+class TransferDeleted(Event):
+    eventType: str = "transfer_deleted"
 
 
 class DeleteTransfer(Command):
@@ -19,10 +23,13 @@ class DeleteTransfer(Command):
     2. Transfer must be in the future
     """
 
-    def __init__(self, *,
-                 transfer_id: TransferId,
-                 repository: Type[TransferRepository],
-                 message_bus: Type[EventPublisher]):
+    def __init__(
+        self,
+        *,
+        transfer_id: TransferId,
+        repository: Type[TransferRepository],
+        message_bus: Type[EventPublisher]
+    ):
         super().__init__(repository=repository, message_bus=message_bus)
         transfer = self._repository.find_by_id(id=transfer_id)
         if not transfer:
@@ -36,6 +43,3 @@ class DeleteTransfer(Command):
     def execute(self) -> NoReturn:
         self._repository.delete(self._entity.id)
         self._message_bus.publish(self._event)
-
-
-

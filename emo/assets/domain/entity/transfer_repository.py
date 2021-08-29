@@ -1,14 +1,13 @@
 from abc import abstractmethod
-from typing import List, Any, Optional
+from typing import Any, List, Optional
 
-from emo.shared.domain import TransferId, DomainRepository, UserId
 from emo.assets.domain.entity.transfer import Transfer
+from emo.shared.domain import DomainRepository, TransferId, UserId
 
 
 class TransferRepository(DomainRepository):
-
     @abstractmethod
-    def all(self,  owner: UserId) -> List[Transfer]:
+    def all(self, owner: UserId) -> List[Transfer]:
         """
         Returns all the assets this user has access to
         :return:
@@ -28,5 +27,6 @@ class TransferRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_ids(self, owner: UserId, ids: List[TransferId]) -> List[Transfer]:
+    def find_by_ids(self, owner: UserId, ids: List[TransferId]) \
+            -> List[Transfer]:
         raise NotImplementedError
