@@ -5,3 +5,5 @@ black
 pre-commit
 isort
 autoflake
+requests
+pytest-pycharm

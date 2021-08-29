@@ -32,8 +32,9 @@ class ChangeUserPassword(Command):
     def execute(self) -> NoReturn:
         u = self._repository.get(self.uid)
 
-        if not verify_password(salt_password(self.old, u.salt),
-                               u.password_hash):
+        if not verify_password(
+            salt_password(self.old, u.salt), u.password_hash
+        ):
             raise MissmatchPasswordException()
 
         new = hash_password(salt_password(self.new, u.salt))

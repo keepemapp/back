@@ -23,5 +23,6 @@ class TestPydanticConverter:
         class EntityPyd(BaseModel):
             id: str
             other_key: str
+
         with pytest.raises(ValidationError) as _:
             p = to_pydantic_model(e, EntityPyd)

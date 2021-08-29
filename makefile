@@ -24,7 +24,7 @@ $(VENV): requirements.txt
 
 .PHONY: format
 format: $(VENV)
-	$(BIN)/black emo tests
+	$(BIN)/black --line-length 79 emo tests
 	$(BIN)/isort emo tests
 
 .PHONY: lint
@@ -50,8 +50,8 @@ clean:
 	find . -type f -name .coverage -delete
 	find . -type f -name *.pyc -delete
 	find . -type d -name __pycache__ -delete
-	find . -type d -name .pytest_cache -exec rm -rv {} +
-	find . -type d -name coverage_html -exec rm -rv {} +
+	find . -type d -name .pytest_cache -exec rm -r {} +
+	find . -type d -name .coverage_html -exec rm -r {} +
 
 clean-deep: clean
 	rm -rf $(VENV)

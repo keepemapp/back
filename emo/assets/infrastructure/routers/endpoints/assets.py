@@ -41,8 +41,9 @@ def write_asset(user_id: str, asset_id: uuid.UUID, file: UploadFile):
 
 
 @router.post("/", response_model=schemas.Asset)
-async def create_asset(file: UploadFile = File(...),
-                       assetname: str = Form(...)):
+async def create_asset(
+    file: UploadFile = File(...), assetname: str = Form(...)
+):
     id = str(uuid.uuid4())
     write_asset("userId", id, file)
     # TODO save meta information

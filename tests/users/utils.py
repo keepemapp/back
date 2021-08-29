@@ -1,10 +1,18 @@
-from typing import Dict, List, Optional
+from typing import Dict, List, NoReturn, Optional
 
 from emo.shared.domain import UserId
+from emo.shared.domain.usecase import Event, EventPublisher
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 
 Users = Dict[str, User]
+
+
+class MemoryEventBus(EventPublisher):
+    events: List[Event] = []
+
+    def publish(self, event: Event) -> NoReturn:
+        self.events.append(event)
 
 
 class MemoryUserRepository(UserRepository):

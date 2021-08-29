@@ -32,18 +32,20 @@ def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
     return encoded_jwt
 
 
-def authenticate_user(q: QueryUser, username: str, password: str) \
-        -> Optional[User]:
+def authenticate_user(
+    q: QueryUser, username: str, password: str
+) -> Optional[User]:
     user = q.fetch_by_email(username)
     if not user:
         return None
-    if not verify_password(salt_password(password, user.salt),
-                           user.password_hash):
+    if not verify_password(
+        salt_password(password, user.salt), user.password_hash
+    ):
         return None
     return user
 
 
-@router.post("/", response_model=Token)
+@router.post("", response_model=Token)
 async def login_for_access_token(
     repo: UserRepository = Depends(user_repository),
     form_data: OAuth2PasswordRequestForm = Depends(),

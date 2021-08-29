@@ -28,7 +28,7 @@ class TestGetUser:
 
     def test_unknown_userid(self, user_repo_with_test_user):
         q = QueryUser(repository=user_repo_with_test_user)
-        assert not q.fetch_by_id(UserId('nonexisting'))
+        assert not q.fetch_by_id(UserId("nonexisting"))
 
     def test_unknown_email(self, user_repo_with_test_user):
         q = QueryUser(repository=user_repo_with_test_user)
@@ -40,4 +40,4 @@ class TestGetUser:
         q = QueryUser(repository=r)
         assert not q.fetch_all()
         assert not q.fetch_by_email("notanemailatall")
-        assert not q.fetch_by_id(UserId('nonexisting'))
+        assert not q.fetch_by_id(UserId("nonexisting"))

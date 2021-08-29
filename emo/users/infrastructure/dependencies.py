@@ -48,14 +48,15 @@ async def get_current_user(
         token_data = TokenData(id=uid)
     except JWTError:
         raise credentials_exception
-    user = q.fetch_by_id(token_data.id)
+    token_data.id
+    user = q.fetch_by_id(uid)
     if user is None:
         raise credentials_exception
     return user
 
 
 async def get_current_active_user(
-        current_user: User = Depends(get_current_user)
+    current_user: User = Depends(get_current_user),
 ):
     if current_user.disabled:
         raise HTTPException(

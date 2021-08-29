@@ -7,7 +7,8 @@ Backend + frontend in python
 2. Install dependencies with `make install-dev`
 3. Start application with `make run-dev`
 4. Run auto-format code with `make format`
-5. Run linting and tests with `make test` (see [flake8 rules](https://lintlyci.github.io/Flake8Rules/))
+5. Run linting and tests with `make test` (see [flake8 rules](https://lintlyci.github.io/Flake8Rules/)) 
+   You can see the HTML report inside `.coverage_html` folder
 6. Before committing execute `make clean`
 
 

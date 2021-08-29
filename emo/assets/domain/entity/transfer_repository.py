@@ -27,6 +27,7 @@ class TransferRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_ids(self, owner: UserId, ids: List[TransferId]) \
-            -> List[Transfer]:
+    def find_by_ids(
+        self, owner: UserId, ids: List[TransferId]
+    ) -> List[Transfer]:
         raise NotImplementedError

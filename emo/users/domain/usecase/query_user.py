@@ -15,8 +15,11 @@ class QueryUser(Query):
 
     def fetch_by_email(self, email: str) -> Optional[User]:
         return next(
-            (u for u in self.__repository.all()
-             if u.email.lower() == email.lower()),
+            (
+                u
+                for u in self.__repository.all()
+                if u.email.lower() == email.lower()
+            ),
             None,
         )
 
