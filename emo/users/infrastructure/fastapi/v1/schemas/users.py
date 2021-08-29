@@ -25,7 +25,7 @@ class UserResponse(UserBase):
     links: Optional[Links]
 
     @validator("links")
-    def populate_folder_name(cls, v, values):
+    def populate_links(cls, v, values):
         return Links(
             self=settings.API_USER_PATH.prefix + "/" + values.get("id")
         )

@@ -1,6 +1,7 @@
 from typing import List, Optional
 
-from emo.shared.domain.usecase import Query, UserId
+from emo.shared.domain import UserId
+from emo.shared.domain.usecase import Query
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 

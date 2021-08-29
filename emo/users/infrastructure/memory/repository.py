@@ -14,9 +14,8 @@ class MemoryPersistedUserRepository(UserRepository):
     In memory repository for Users. Don't use this in production
     """
 
-    DB_FILE = "../data/usersrepo.pk"
-
-    def __init__(self):
+    def __init__(self, dbfile="../data/usersrepo.pk"):
+        self.DB_FILE = dbfile
         self._users: Users = self.__startup_db()
 
     def all(self) -> List[User]:
