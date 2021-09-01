@@ -1,6 +1,7 @@
-from fastapi.security import OAuth2PasswordRequestForm
+import pytest
 
 from emo.settings import settings as s
+from emo.users.domain.entity.users import INVALID_USERNAME
 from emo.users.infrastructure.fastapi.v1.schemas.users import UserCreate
 from tests.users.infrastructure.fastapi import get_client
 
@@ -33,6 +34,21 @@ class TestRegisterUser:
         assert user_resp.get("email") == user.email
         assert user_resp.get("id")
         assert user_resp.get("id") in user_resp.get("links").get("self")
+
+    non_allowed_usernames = [
+        "", ".a2c", "c/sc", "78k2_'3", "s", "#2sd", "so 2s"
+    ]
+
+    @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
+    def test_non_allowed_usernames(self, wrong_username):
+        # TODO since this has been moved to the use case layer, perhaps
+        # simplify me.
+        user = UserCreate(
+            username=wrong_username, email="email@correct.com", password="pwd"
+        )
+        response = client.post(user_route, json=user.dict())
+        assert response.status_code == 400
+        assert response.json().get("detail") == INVALID_USERNAME
 
     def test_wrong_email(self):
         user = UserCreate(username="user", email="noemail", password="pwd")

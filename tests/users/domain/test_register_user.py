@@ -70,7 +70,7 @@ class TestRegisterUser:
     def test_email_is_unique(self, valid_data):
         r = RegisterUser(**valid_data)
         r.execute()
-        valid_data["username"] = "another one"
+        valid_data["username"] = "another_one"
         r2 = RegisterUser(**valid_data)
         with pytest.raises(EmailAlreadyExistsException):
             r2.execute()
@@ -82,3 +82,13 @@ class TestRegisterUser:
         r2 = RegisterUser(**valid_data)
         with pytest.raises(UsernameAlreadyExistsException):
             r2.execute()
+
+    non_allowed_usernames = [
+        "", ".a2c", "c/sc", "78k2_'3", "s", "#2sd", "so 2s"
+    ]
+
+    @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
+    def test_non_allowed_usernames(self, valid_data, wrong_username):
+        valid_data['username'] = wrong_username
+        with pytest.raises(ValueError):
+            RegisterUser(**valid_data)

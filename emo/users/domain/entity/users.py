@@ -7,6 +7,12 @@ from typing import Optional
 
 from emo.shared.domain import RootAggregate, UserId
 
+INVALID_USERNAME = "Username is not valid. It can contain letters, " \
+                   "numbers and underscores and have between " \
+                   "2 and 15 characters."
+INVALID_EMAIL = "Email is not valid"
+INVALID_ID = "ID is not of correct type. It needs to be UserId"
+
 
 @dataclass(frozen=True)
 class User(RootAggregate):
@@ -18,16 +24,23 @@ class User(RootAggregate):
     disabled: Optional[bool] = False
 
     @staticmethod
-    def _is_valid_email(email: str) -> bool:
+    def _email_is_valid(email: str) -> bool:
         regex = r"^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,5}$"
         return True if re.match(regex, email) else False
+
+    @staticmethod
+    def _name_is_valid(name: str) -> bool:
+        regex = r"^[a-z_0-9]{2,15}$"
+        return True if re.match(regex, name) else False
 
     def __post_init__(self):
         super().__post_init__()
         if not self._validate_id_type(UserId):
-            raise ValueError("ID is not of correct type")
-        if not self._is_valid_email(self.email):
-            raise ValueError("Email is not valid")
+            raise ValueError(INVALID_ID)
+        if not self._name_is_valid(self.username):
+            raise ValueError(INVALID_USERNAME)
+        if not self._email_is_valid(self.email):
+            raise ValueError(INVALID_EMAIL)
 
     def disable(self) -> User:
         return dataclasses.replace(self, disabled=True)

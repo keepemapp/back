@@ -30,5 +30,7 @@ def valid_user() -> DataType:
 def user_repo_with_test_user(valid_user) -> MemoryUserRepository:
     repo = MemoryUserRepository()
     repo.create(User(**valid_user))
-    yield repo
-    repo.clean_all()
+    try:
+        yield repo
+    finally:
+        repo.clean_all()
