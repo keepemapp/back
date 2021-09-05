@@ -2,8 +2,8 @@ import pytest
 
 from emo.settings import settings as s
 from emo.users.domain.entity.users import INVALID_USERNAME
-from emo.users.infrastructure.fastapi.v1.schemas.users import UserCreate
-from tests.users.infrastructure.fastapi import get_client
+from emo.users.infra.fastapi.v1.schemas.users import UserCreate
+from tests.users.infra.fastapi import get_client
 
 client = get_client()
 
@@ -36,7 +36,13 @@ class TestRegisterUser:
         assert user_resp.get("id") in user_resp.get("links").get("self")
 
     non_allowed_usernames = [
-        "", ".a2c", "c/sc", "78k2_'3", "s", "#2sd", "so 2s"
+        "",
+        ".a2c",
+        "c/sc",
+        "78k2_'3",
+        "s",
+        "#2sd",
+        "so 2s",
     ]
 
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)

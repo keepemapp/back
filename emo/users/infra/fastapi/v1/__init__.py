@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 from emo.settings import settings
-from emo.users.infrastructure.fastapi.v1 import token, users
+from emo.users.infra.fastapi.v1 import token, users
 
 users_router = APIRouter(
     responses={404: {"description": "Not found"}},

@@ -9,7 +9,7 @@ Backend + frontend in python
 4. Run auto-format code with `make format`
 5. Run linting and tests with `make test` (see [flake8 rules](https://lintlyci.github.io/Flake8Rules/)) 
    You can see the HTML report inside `.coverage_html` folder
-6. Before committing execute `make clean`
+6. Before committing execute `make precommit` (runs formatting, linting, test and clean)
 
 
 ## Understanding the repo organization
@@ -34,14 +34,14 @@ emo
 │   │   └── usecase
 │   │       ├── event.py
 │   │       └── validations.py
-│   ├── infrastructure
+│   ├── infra
 │   │   └── fastapi
 │   │       ├── schema_utils.py
 │   │       └── schemas.py
 │   └── security.py
 ├── assets
 │   ├── domain
-│   └── infrastructure
+│   └── infra
 └── users
     ├── domain
     │   ├── entity
@@ -52,7 +52,7 @@ emo
     │       ├── exceptions.py
     │       ├── query_user.py
     │       └── register_user.py
-    └── infrastructure
+    └── infra
         ├── dependencies.py
         ├── fastapi
         │   └── v1
@@ -68,11 +68,12 @@ emo
 
 ## Testing and code cleaning
 
-* Run tests calling `pytest`
-* Format code with `black emo`
-* Lint code with `flake8 emo tests`
+* Run all pre-commit steps: `make precommit`
+* Run tests calling `make test`
+* Format code with `make format`
+* Lint code with `make lint`
 
-NOTE: clean python cache via `py3clean emo tests` if needed
+NOTE: clean python cache via `make clean` if needed
 
 ## Resources
 

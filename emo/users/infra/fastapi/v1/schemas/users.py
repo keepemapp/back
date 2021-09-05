@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, validator
 
 from emo.settings import settings
-from emo.shared.infrastructure.fastapi.schemas import Links
+from emo.shared.infra.fastapi.schemas import Links
 
 
 class UserBase(BaseModel):

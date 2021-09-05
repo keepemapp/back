@@ -84,11 +84,17 @@ class TestRegisterUser:
             r2.execute()
 
     non_allowed_usernames = [
-        "", ".a2c", "c/sc", "78k2_'3", "s", "#2sd", "so 2s"
+        "",
+        ".a2c",
+        "c/sc",
+        "78k2_'3",
+        "s",
+        "#2sd",
+        "so 2s",
     ]
 
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
     def test_non_allowed_usernames(self, valid_data, wrong_username):
-        valid_data['username'] = wrong_username
+        valid_data["username"] = wrong_username
         with pytest.raises(ValueError):
             RegisterUser(**valid_data)

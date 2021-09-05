@@ -38,6 +38,9 @@ test-only: $(VENV)
 .PHONY: test
 test: lint test-only
 
+.PHONY: precommit
+precommit: format test clean
+
 .PHONY: run-dev
 run-dev: $(VENV) $(DATA_FOLDER)
 	$(BIN)/uvicorn emo.main:app --reload

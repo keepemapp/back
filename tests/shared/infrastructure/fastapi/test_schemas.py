@@ -3,7 +3,7 @@ from pydantic import BaseModel, ValidationError
 
 from emo.shared.domain import DomainId
 from emo.shared.domain.usecase import Entity
-from emo.shared.infrastructure.fastapi.schema_utils import to_pydantic_model
+from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
 
 
 @pytest.mark.unit

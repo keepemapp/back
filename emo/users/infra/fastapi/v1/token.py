@@ -10,8 +10,8 @@ from emo.shared.security import salt_password, verify_password
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 from emo.users.domain.usecase.query_user import QueryUser
-from emo.users.infrastructure.dependencies import user_repository
-from emo.users.infrastructure.fastapi.v1.schemas.token import Token
+from emo.users.infra.dependencies import user_repository
+from emo.users.infra.fastapi.v1.schemas.token import Token
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},

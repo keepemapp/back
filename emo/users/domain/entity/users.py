@@ -7,9 +7,11 @@ from typing import Optional
 
 from emo.shared.domain import RootAggregate, UserId
 
-INVALID_USERNAME = "Username is not valid. It can contain letters, " \
-                   "numbers and underscores and have between " \
-                   "2 and 15 characters."
+INVALID_USERNAME = (
+    "Username is not valid. It can contain letters, "
+    "numbers and underscores and have between "
+    "2 and 15 characters."
+)
 INVALID_EMAIL = "Email is not valid"
 INVALID_ID = "ID is not of correct type. It needs to be UserId"
 

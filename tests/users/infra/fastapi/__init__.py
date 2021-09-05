@@ -1,7 +1,7 @@
 from fastapi.testclient import TestClient
 
 from emo.main import app
-from emo.users.infrastructure.dependencies import event_bus, user_repository
+from emo.users.infra.dependencies import event_bus, user_repository
 from tests.users.utils import MemoryEventBus, MemoryUserRepository
 
 

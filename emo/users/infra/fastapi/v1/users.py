@@ -4,18 +4,16 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from emo.settings import settings
 from emo.shared.domain.usecase import EventPublisher
-from emo.shared.infrastructure.fastapi.schema_utils import to_pydantic_model
-from emo.shared.infrastructure.fastapi.schemas import HTTPError
+from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
+from emo.shared.infra.fastapi.schemas import HTTPError
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 from emo.users.domain.usecase.exceptions import (
     EmailAlreadyExistsException, UsernameAlreadyExistsException)
 from emo.users.domain.usecase.register_user import RegisterUser
-from emo.users.infrastructure.dependencies import (event_bus,
-                                                   get_current_active_user,
-                                                   user_repository)
-from emo.users.infrastructure.fastapi.v1.schemas.users import (UserCreate,
-                                                               UserResponse)
+from emo.users.infra.dependencies import (event_bus, get_current_active_user,
+                                          user_repository)
+from emo.users.infra.fastapi.v1.schemas.users import UserCreate, UserResponse
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
