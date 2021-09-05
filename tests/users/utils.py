@@ -1,22 +1,15 @@
-from typing import Dict, List, NoReturn, Optional
+from typing import Dict, List, Optional
 
 from emo.shared.domain import UserId
-from emo.shared.domain.usecase import Event, EventPublisher
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 
 Users = Dict[str, User]
 
 
-class MemoryEventBus(EventPublisher):
-    events: List[Event] = []
-
-    def publish(self, event: Event) -> NoReturn:
-        self.events.append(event)
-
-
 class MemoryUserRepository(UserRepository):
-    _users: Users = {}
+    def __init__(self):
+        self._users: Users = {}
 
     def all(self) -> List[User]:
         return list(self._users.values())
@@ -31,7 +24,7 @@ class MemoryUserRepository(UserRepository):
         self._users[str(user.id)] = user
 
     def clean_all(self):
-        self._users = {}
+        self._users.clear()
 
     def exists_email(self, email: str) -> bool:
         return any(u.email == email for u in self.all())

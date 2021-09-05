@@ -3,16 +3,14 @@ import pytest
 from emo.settings import settings as s
 from emo.users.domain.entity.users import INVALID_USERNAME
 from emo.users.infra.fastapi.v1.schemas.users import UserCreate
-from tests.users.infra.fastapi import get_client
-
-client = get_client()
+from tests.users.infra.fastapi import client
 
 user_route: str = s.API_V1.concat(s.API_USER_PATH).prefix
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix
 USER_PWD = "pwd"
 
 
-def create_user(user_num: int = 0):
+def create_user(client, user_num: int = 0):
     user = UserCreate(
         username=f"user{user_num}",
         email=f"valid{user_num}@email.com",
@@ -23,7 +21,7 @@ def create_user(user_num: int = 0):
 
 
 class TestRegisterUser:
-    def test_create(self):
+    def test_create(self, client):
         user = UserCreate(
             username="user", email="valid@email.com", password="pwd"
         )
@@ -46,7 +44,7 @@ class TestRegisterUser:
     ]
 
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
-    def test_non_allowed_usernames(self, wrong_username):
+    def test_non_allowed_usernames(self, client, wrong_username):
         # TODO since this has been moved to the use case layer, perhaps
         # simplify me.
         user = UserCreate(
@@ -56,12 +54,12 @@ class TestRegisterUser:
         assert response.status_code == 400
         assert response.json().get("detail") == INVALID_USERNAME
 
-    def test_wrong_email(self):
+    def test_wrong_email(self, client):
         user = UserCreate(username="user", email="noemail", password="pwd")
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 400
 
-    def test_existing_username(self):
+    def test_existing_username(self, client):
         user = UserCreate(
             username="user", email="valid@email.com", password="pwd"
         )
@@ -72,7 +70,7 @@ class TestRegisterUser:
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
 
-    def test_existing_email(self):
+    def test_existing_email(self, client):
         user = UserCreate(
             username="user", email="valid@email.com", password="pwd"
         )
@@ -83,9 +81,9 @@ class TestRegisterUser:
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
 
-    def test_create_multiple(self):
+    def test_create_multiple(self, client):
         for i in range(10):
-            user, response = create_user(i)
+            user, response = create_user(client, i)
             assert response.status_code == 200
             user_resp = response.json()
             assert user_resp.get("username") == user.username
@@ -95,12 +93,12 @@ class TestRegisterUser:
 
 
 class TestGetUsers:
-    def test_me_requires_login(self):
+    def test_me_requires_login(self, client):
         response = client.get(user_route + "/me")
         assert response.status_code == 401
 
-    def test_token_invalid(self):
-        user, response = create_user()
+    def test_token_invalid(self, client):
+        user, response = create_user(client)
         tok_log = client.post(
             login_route, data={"username": user.email, "password": USER_PWD}
         )
@@ -111,16 +109,16 @@ class TestGetUsers:
         assert response.json() == {"detail": "Could not validate credentials"}
         assert response.status_code == 401
 
-    def test_login(self):
-        user, response = create_user()
+    def test_login(self, client):
+        user, response = create_user(client)
         response = client.post(
             login_route, data={"username": user.email, "password": USER_PWD}
         )
         assert response.status_code == 200
         assert response.json().get("token_type") == "bearer"
 
-    def test_login_username_invalid(self):
-        user, _ = create_user()
+    def test_login_username_invalid(self, client):
+        user, _ = create_user(client)
         response = client.post(
             login_route,
             data={"username": "wrong username", "password": USER_PWD},
@@ -128,16 +126,16 @@ class TestGetUsers:
         assert response.status_code == 401
         assert response.json() == {"detail": "Incorrect username or password"}
 
-    def test_login_password_invalid(self):
-        user, _ = create_user()
+    def test_login_password_invalid(self, client):
+        user, _ = create_user(client)
         response = client.post(
             login_route, data={"username": user.email, "password": "wrong pwd"}
         )
         assert response.status_code == 401
         assert response.json() == {"detail": "Incorrect username or password"}
 
-    def test_token_validity(self):
-        user, _ = create_user()
+    def test_token_validity(self, client):
+        user, _ = create_user(client)
         tok_log = client.post(
             login_route, data={"username": user.email, "password": USER_PWD}
         )
@@ -149,8 +147,8 @@ class TestGetUsers:
         )
         assert response.status_code == 200
 
-    def test_me_returns_user(self):
-        user, create_resp = create_user(343)
+    def test_me_returns_user(self, client):
+        user, create_resp = create_user(client, 343)
         tok_log = client.post(
             login_route, data={"username": user.email, "password": USER_PWD}
         )

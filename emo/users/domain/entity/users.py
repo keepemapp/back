@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from emo.shared.domain import RootAggregate, UserId
+from emo.shared.domain import IdTypeException, RootAggregate, UserId
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "
@@ -13,7 +13,6 @@ INVALID_USERNAME = (
     "2 and 15 characters."
 )
 INVALID_EMAIL = "Email is not valid"
-INVALID_ID = "ID is not of correct type. It needs to be UserId"
 
 
 @dataclass(frozen=True)
@@ -37,8 +36,8 @@ class User(RootAggregate):
 
     def __post_init__(self):
         super().__post_init__()
-        if not self._validate_id_type(UserId):
-            raise ValueError(INVALID_ID)
+        if not self._id_type_is_valid(UserId):
+            raise IdTypeException()
         if not self._name_is_valid(self.username):
             raise ValueError(INVALID_USERNAME)
         if not self._email_is_valid(self.email):

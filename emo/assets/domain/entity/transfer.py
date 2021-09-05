@@ -3,8 +3,7 @@ from datetime import datetime
 from typing import List, Optional, Type
 
 from emo.assets.domain.entity import AssetFileRepository, AssetRepository
-from emo.shared.domain import (AssetId, RootAggregate, TransferId, UserId,
-                               init_id)
+from emo.shared.domain import AssetId, RootAggregate, TransferId, UserId
 
 
 @dataclass(frozen=True)
@@ -13,10 +12,9 @@ class Transfer(RootAggregate):
     receiver_ids: List[UserId]
     asset_ids: List[AssetId]
     scheduled_date: datetime
-
-    id: TransferId = init_id(TransferId)
-    title: Optional[str] = None
-    description: Optional[str] = None
+    id: TransferId
+    title: Optional[str]
+    description: Optional[str]
 
     def is_future(self) -> bool:
         return self.scheduled_date <= datetime.utcnow()

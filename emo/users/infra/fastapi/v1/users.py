@@ -56,7 +56,7 @@ async def register_user(
         uc = RegisterUser(
             repository=repo, message_bus=bus, **new_user.__dict__
         )
-    except ValueError as e:
+    except (Exception, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         )

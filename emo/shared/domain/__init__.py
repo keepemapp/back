@@ -10,6 +10,9 @@ from uuid import uuid4
 class DomainId:
     id: str
 
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 @dataclass(frozen=True)
 class UserId(DomainId):
@@ -30,16 +33,26 @@ def init_id(id_type: Callable):
     return id_type(id=str(uuid4()))
 
 
+class IdTypeException(Exception):
+    """Raise when ID type is not valid"""
+
+    def __init__(self):
+        super().__init__("ID Type is not valid")
+
+
 @dataclass(frozen=True)
 class Entity:
     id: DomainId
 
-    def _validate_id_type(self, t: Type[DomainId]):
-        return isinstance(self.id, t)
+    def _id_type_is_valid(self, t: Type[DomainId], field: DomainId = None):
+        if field:
+            return isinstance(field, t)
+        else:
+            return isinstance(self.id, t)
 
     def __post_init__(self):
-        if not self._validate_id_type(DomainId):
-            raise ValueError("ID is not of correct type")
+        if not self._id_type_is_valid(DomainId):
+            raise IdTypeException()
 
     def erase_sensitive_data(self) -> Entity:
         """
@@ -61,7 +74,7 @@ class RootAggregate(Entity):
 
 @dataclass(frozen=True, eq=True)
 class ValueObject:
-    value: Any
+    pass
 
 
 class DomainRepository(ABC):

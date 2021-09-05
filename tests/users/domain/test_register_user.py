@@ -59,7 +59,6 @@ class TestRegisterUser:
         assert u.password_hash
 
     def test_event_is_published(self, valid_data):
-        print(valid_data["repository"].all())
         r = RegisterUser(**valid_data)
         r.execute()
         e = r._event

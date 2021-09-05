@@ -1,7 +1,7 @@
 import pytest
 
 from emo.shared.domain import DomainId, UserId
-from emo.users.domain.entity.users import User
+from emo.users.domain.entity.users import IdTypeException, User
 from tests.users.domain import valid_user
 
 
@@ -23,11 +23,11 @@ class TestUser:
 
         def test_id_shall_be_class_userid(self, valid_user):
             valid_user["id"] = 3324
-            with pytest.raises(ValueError) as _:
+            with pytest.raises(IdTypeException) as _:
                 User(**valid_user)
 
             valid_user["id"] = DomainId("232")
-            with pytest.raises(ValueError) as _:
+            with pytest.raises(IdTypeException) as _:
                 User(**valid_user)
 
             valid_user["id"] = UserId("232")

@@ -37,19 +37,21 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def create(self, owner: UserId, asset: Asset) -> Any:
+    def create(self, asset: Asset) -> Any:
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_id(self, owner: UserId, id: AssetId) -> Optional[Asset]:
+    def find_by_id(self, id: AssetId) -> Optional[Asset]:
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_ids(self, owner: UserId, ids: List[AssetId]) -> List[Asset]:
+    def find_by_ids(self, ids: List[AssetId]) -> List[Asset]:
         raise NotImplementedError
 
-    def delete(self, asset: Asset):
+    @abstractmethod
+    def find_by_ownerid(self, uid: UserId) -> List[Asset]:
         raise NotImplementedError
 
-    def delete_by_id(self, assetId: AssetId):
+    @abstractmethod
+    def delete_by_id(self, id: AssetId):
         raise NotImplementedError
