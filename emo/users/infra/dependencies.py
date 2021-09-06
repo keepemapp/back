@@ -10,8 +10,8 @@ from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 from emo.users.domain.usecase.query_user import QueryUser
 from emo.users.infra.fastapi.v1.schemas.token import TokenData
-from emo.users.infra.memory.message_bus import NoneEventPub
-from emo.users.infra.memory.repository import MemoryPersistedUserRepository
+from emo.users.infra.memrepo.message_bus import NoneEventPub
+from emo.users.infra.memrepo.repository import MemoryPersistedUserRepository
 
 
 def user_repository() -> UserRepository:

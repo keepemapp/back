@@ -2,8 +2,8 @@ import pytest
 
 from emo.shared.domain.usecase import Event
 from emo.users.domain.entity.users import User
-from emo.users.infra.memory.message_bus import NoneEventPub
-from emo.users.infra.memory.repository import MemoryPersistedUserRepository
+from emo.users.infra.memrepo.message_bus import NoneEventPub
+from emo.users.infra.memrepo.repository import MemoryPersistedUserRepository
 from tests.users.domain import valid_user
 
 

@@ -10,8 +10,8 @@ Users = Dict[str, User]
 
 
 class MemoryPersistedUserRepository(UserRepository):
-    """
-    In memory repository for Users. Don't use this in production
+    """In memory repository for Users with file storage.
+    Don't use this in production
     """
 
     def __init__(self, dbfile="data/usersrepo.pk"):

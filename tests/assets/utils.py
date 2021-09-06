@@ -42,11 +42,8 @@ class MemoryAssetRepository(AssetRepository):
         asset_ids = self._owner_index.get(uid, [])
         return self.find_by_ids(asset_ids)
 
-    def all(self, owner: Optional[UserId] = None) -> List[Asset]:
-        if owner:
-            return [a for a in self._repo.values() if owner in a.owners_id]
-        else:
-            return list(self._repo.values())
+    def all(self) -> List[Asset]:
+        return list(self._repo.values())
 
     def clean_all(self):
         self._repo.clear()

@@ -2,4 +2,9 @@
 omit =
     emo/__main__.py
     emo/__init__.py
-    emo/assets/*
+    emo/assets/infra/routers/*
+[report]
+exclude_lines =
+    @abstractmethod
+    @abc.abstractmethod
+    raise NotImplementedError
