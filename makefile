@@ -43,11 +43,11 @@ precommit: format test clean
 
 .PHONY: run-dev
 run-dev: $(VENV) $(DATA_FOLDER)
-	$(BIN)/uvicorn emo.main:app --reload
+	$(BIN)/uvicorn emo.main:app --reload --no-server-header
 
 .PHONY: run
 run: $(VENV)
-	$(BIN)/uvicorn emo.main:app
+	$(BIN)/uvicorn emo.main:app --no-server-header
 
 clean:
 	find . -type f -name .coverage -delete
