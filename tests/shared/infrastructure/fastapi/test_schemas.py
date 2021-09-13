@@ -1,3 +1,6 @@
+from dataclasses import dataclass
+from typing import List
+
 import pytest
 from pydantic import BaseModel, ValidationError
 
@@ -25,4 +28,21 @@ class TestPydanticConverter:
             other_key: str
 
         with pytest.raises(ValidationError) as _:
-            p = to_pydantic_model(e, EntityPyd)
+            to_pydantic_model(e, EntityPyd)
+
+    def test_list_of_domain_ids(self):
+        @dataclass(frozen=True)
+        class DomainEntity(Entity):
+            ids: List[DomainId]
+
+        class EntityPyd(BaseModel):
+            id: str
+            ids: List[str]
+
+        e = DomainEntity(
+            id=DomainId("id"),
+            ids=[DomainId("0"), DomainId("1"), DomainId("2")],
+        )
+
+        p = to_pydantic_model(e, EntityPyd)
+        assert p.ids == ["0", "1", "2"]

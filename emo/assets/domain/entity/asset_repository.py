@@ -77,6 +77,22 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
+    def find_by_id_and_ownerid(
+        self, aid: AssetId, uid: UserId
+    ) -> Optional[Asset]:
+        """Finds all the assets the user is owner of.
+
+        :parameter aid:  asset ID
+        :type: AssetId
+        :parameter uid: user ID
+        :type: UserId
+
+        :returns: List of matching assets
+        :rtype: List[Asset]
+        """
+        raise NotImplementedError
+
+    @abstractmethod
     def delete_by_id(self, id: AssetId) -> NoReturn:
         """Deletes asset matching the ID.
 

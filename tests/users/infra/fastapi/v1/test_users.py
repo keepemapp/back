@@ -20,6 +20,7 @@ def create_user(client, user_num: int = 0):
     return user, response
 
 
+@pytest.mark.unit
 class TestRegisterUser:
     def test_create(self, client):
         user = UserCreate(
@@ -92,6 +93,7 @@ class TestRegisterUser:
             assert user_resp.get("id") in user_resp.get("links").get("self")
 
 
+@pytest.mark.unit
 class TestGetUsers:
     def test_me_requires_login(self, client):
         response = client.get(user_route + "/me")

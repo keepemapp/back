@@ -1,5 +1,6 @@
 import os
 import pickle
+from pathlib import Path
 from typing import Dict, List, Optional
 
 from emo.shared.domain import UserId
@@ -14,7 +15,10 @@ class MemoryPersistedUserRepository(UserRepository):
     Don't use this in production
     """
 
-    def __init__(self, dbfile="data/usersrepo.pk"):
+    def __init__(
+        self,
+        dbfile=os.path.join(Path(os.getcwd()).parent, "data", "usersrepo.pk"),
+    ):
         self.DB_FILE = dbfile
         self._users: Users = self.__startup_db()
 

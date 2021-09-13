@@ -6,6 +6,7 @@ from fastapi.security import OAuth2PasswordRequestForm
 from jose import jwt
 
 from emo.settings import settings
+from emo.shared.infra.fastapi.schemas import TokenData
 from emo.shared.security import salt_password, verify_password
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
@@ -60,7 +61,8 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     at_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+    token_data = TokenData(user_id=user.id.id, disabled=user.disabled)
     access_token = create_access_token(
-        data={"sub": user.id.id}, expires_delta=at_expires
+        data=token_data.dict(), expires_delta=at_expires
     )
     return Token(access_token=access_token, token_type="bearer")

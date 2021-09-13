@@ -20,7 +20,12 @@ class DuplicatedAssetException(Exception):
 
 
 class MemoryPersistedAssetRepository(AssetRepository):
-    def __init__(self, dbfile: Union[Path, str] = Path("data/assetssrepo.pk")):
+    def __init__(
+        self,
+        dbfile: Union[Path, str] = Path(
+            os.path.join(Path(os.getcwd()).parent, "data", "assetssrepo.pk")
+        ),
+    ):
         if isinstance(dbfile, str):
             dbfile = Path(dbfile)
         self.DB_FILE: Path = dbfile
@@ -66,6 +71,12 @@ class MemoryPersistedAssetRepository(AssetRepository):
     def find_by_ownerid(self, uid: UserId) -> List[Asset]:
         asset_ids = self._owner_index.get(uid, [])
         return self.find_by_ids(asset_ids)
+
+    def find_by_id_and_ownerid(
+        self, aid: AssetId, uid: UserId
+    ) -> Optional[Asset]:
+        owner_assets = self._owner_index.get(uid, [])
+        return self.find_by_id(aid) if aid in owner_assets else None
 
     def all(self) -> List[Asset]:
         return list(self._repo.values())

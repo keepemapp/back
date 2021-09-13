@@ -24,8 +24,8 @@ class UserResponse(UserBase):
     id: str
     links: Optional[Links]
 
-    @validator("links")
-    def populate_links(cls, v, values):
+    @validator("links", always=True)
+    def populate_links(cls, _, values):
         return Links(
             self=settings.API_USER_PATH.prefix + "/" + values.get("id")
         )

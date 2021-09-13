@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 
 from emo.settings import settings
 from emo.shared.domain.usecase import EventPublisher
+from emo.shared.infra.dependencies import event_bus
 from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
 from emo.shared.infra.fastapi.schemas import HTTPError
 from emo.users.domain.entity.user_repository import UserRepository
@@ -11,7 +12,7 @@ from emo.users.domain.entity.users import User
 from emo.users.domain.usecase.exceptions import (
     EmailAlreadyExistsException, UsernameAlreadyExistsException)
 from emo.users.domain.usecase.register_user import RegisterUser
-from emo.users.infra.dependencies import (event_bus, get_current_active_user,
+from emo.users.infra.dependencies import (get_current_active_user,
                                           user_repository)
 from emo.users.infra.fastapi.v1.schemas.users import UserCreate, UserResponse
 
@@ -23,8 +24,8 @@ router = APIRouter(
 
 @router.get(
     "/me",
-    response_model=UserResponse,
     responses={
+        status.HTTP_200_OK: {"model": List[UserResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
@@ -32,7 +33,7 @@ async def read_users_me(current_user: User = Depends(get_current_active_user)):
     return to_pydantic_model(current_user, UserResponse)
 
 
-@router.get("", response_model=List[UserResponse])
+@router.get("", responses={status.HTTP_200_OK: {"model": List[UserResponse]}})
 async def get_all_users(repo: UserRepository = Depends(user_repository)):
     # TODO change me. Allow only admins
     return [to_pydantic_model(u, UserResponse) for u in repo.all()]
@@ -40,8 +41,8 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 
 @router.post(
     "",
-    response_model=UserResponse,
     responses={
+        status.HTTP_200_OK: {"model": UserResponse},
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
     },

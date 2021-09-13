@@ -60,5 +60,5 @@ class CreateAsset(Command):
         self._message_bus.publish(self.event)
 
     @staticmethod
-    def _compute_location(owner_id, asset_id) -> str:
+    def _compute_location(owner_id: UserId, asset_id: AssetId) -> str:
         return path.join(owner_id.id, asset_id.id + ".enc")
