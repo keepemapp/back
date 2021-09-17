@@ -133,5 +133,8 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 * [x] Fix flake8 linting errors 
 * [ ] Create flake8 rule to ensure domain does not have any dependencies on INF
 * [ ] flake8 rules to forbid cross-bounded context dependencies
-* [ ] Test `fastapi` users interface
-* [ ] Adapt `assets` bounded context to new format
+* [x] Test `fastapi` users interface
+* [x] Adapt `assets` bounded context to new format
+* [ ] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
+  Either give them the publish_url or the view URL for the file when they do a `get` on the asset
+* [ ] Test asset file upload and retrieval

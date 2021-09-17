@@ -123,8 +123,9 @@ class TestGetAssets:
         assert len(json) == 1
 
         # Second asset
-        _, r2 = create_asset(client, 0,
-                             ["other-user", ACTIVE_USER_TOKEN.user_id])
+        _, r2 = create_asset(
+            client, 0, ["other-user", ACTIVE_USER_TOKEN.user_id]
+        )
         aid2 = r2.json().get("id")
 
         response = client.get(
@@ -139,10 +140,12 @@ class TestGetAssets:
 
     def test_get_individual_asset(self, client):
         _, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.user_id])
-        aid1 = r1.json().get("id")
+        r1 = r1.json()
+        r1["upload_path"] = None
+        aid1 = r1.get("id")
         response = client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
-        assert response.json() == r1.json()
+        assert response.json() == r1
 
     def test_non_existing_asset_gives_unauthorized(self, client):
         response = client.get(ASSET_ROUTE + "/random-asset-id")

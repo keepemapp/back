@@ -5,25 +5,6 @@ from emo.assets.domain.entity.asset import Asset
 from emo.shared.domain import AssetId, DomainRepository, UserId
 
 
-class AssetFileRepository(DomainRepository):
-    # TODO move me to implementation/infra.
-    #  This detail does not need to be here
-    def create(self, asset: Asset, file: bytes):
-        raise NotImplementedError
-
-    def update(self, asset: Asset, file: bytes):
-        raise NotImplementedError
-
-    def copy(self, source: Asset, target: Asset):
-        raise NotImplementedError
-
-    def move(self, source: Asset, target: Asset):
-        raise NotImplementedError
-
-    def delete(self, asset: Asset):
-        raise NotImplementedError
-
-
 class AssetRepository(DomainRepository):
     @abstractmethod
     def all(self) -> List[Asset]:

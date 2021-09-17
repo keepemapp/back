@@ -23,6 +23,7 @@ class AssetCreate(AssetBase):
 class AssetResponse(AssetBase):
     id: str
     links: Optional[Links]
+    upload_path: Optional[str]
 
     @validator("links", always=True)
     def populate_links(cls, _, values):
@@ -33,3 +34,10 @@ class AssetResponse(AssetBase):
     @validator("owners_id")
     def populate_owners_links(cls, owners_id) -> List[Links]:
         return [settings.API_USER_PATH.prefix + "/" + oid for oid in owners_id]
+
+
+class AssetUploadAuthData(BaseModel):
+    """Data inside asset upload authorizer token"""
+
+    asset_id: str
+    user_id: str

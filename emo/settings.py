@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
-from typing import Dict, List
+from typing import Dict, List, Union
 
 from pydantic import BaseSettings
 
@@ -14,10 +14,13 @@ class ApiRoute:
     def dict(self) -> Dict:
         return asdict(self)
 
-    def concat(self, other: ApiRoute) -> ApiRoute:
-        return ApiRoute(
-            prefix=self.prefix + other.prefix, tags=self.tags + other.tags
-        )
+    def concat(self, other: Union[ApiRoute, str]) -> ApiRoute:
+        if isinstance(other, ApiRoute):
+            return ApiRoute(
+                prefix=self.prefix + other.prefix, tags=self.tags + other.tags
+            )
+        else:
+            return ApiRoute(prefix=self.prefix + "/" + other, tags=self.tags)
 
     def __str__(self) -> str:
         return self.prefix
@@ -36,6 +39,7 @@ class Settings(BaseSettings):
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
     # to get a string like this run:
     # openssl rand -hex 32
     SECRET_KEY = (

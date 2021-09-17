@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List, Optional, Type
 
-from emo.assets.domain.entity import AssetFileRepository, AssetRepository
+from emo.assets.domain.entity import AssetRepository
 from emo.shared.domain import AssetId, RootAggregate, TransferId, UserId
 
 
@@ -22,7 +22,6 @@ class Transfer(RootAggregate):
     def execute(
         self,
         asset_repo: Type[AssetRepository],
-        asset_file_repo: Type[AssetFileRepository],
     ):
         """TODO
         Executes the logic to transfer the assets

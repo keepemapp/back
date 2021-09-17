@@ -42,7 +42,7 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 @router.post(
     "",
     responses={
-        status.HTTP_200_OK: {"model": UserResponse},
+        status.HTTP_201_CREATED: {"model": UserResponse},
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
     },
