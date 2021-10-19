@@ -7,16 +7,25 @@ from jose import JWTError
 
 from emo.assets.domain.entity import Asset, AssetRepository
 from emo.assets.domain.usecase.create_asset import CreateAsset
-from emo.assets.infra.dependencies import (asset_file_repository,
-                                           asset_repository)
-from emo.assets.infra.fastapi.v1.schemas import (AssetCreate, AssetResponse,
-                                                 AssetUploadAuthData)
+from emo.assets.infra.dependencies import (
+    asset_file_repository,
+    asset_repository,
+)
+from emo.assets.infra.fastapi.v1.schemas import (
+    AssetCreate,
+    AssetResponse,
+    AssetUploadAuthData,
+)
 from emo.assets.infra.filestorage import AssetFileRepository
 from emo.settings import settings
 from emo.shared.domain import AssetId, UserId
 from emo.shared.domain.usecase import EventPublisher
-from emo.shared.infra.dependencies import (create_jwt_token, decode_token,
-                                           event_bus, get_active_user_token)
+from emo.shared.infra.dependencies import (
+    create_jwt_token,
+    decode_token,
+    event_bus,
+    get_active_user_token,
+)
 from emo.shared.infra.fastapi.exceptions import UNAUTHORIZED_GENERIC
 from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
 from emo.shared.infra.fastapi.schemas import HTTPError, TokenData
@@ -25,6 +34,13 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
     **settings.API_ASSET_PATH.dict(),
 )
+
+
+def asset_to_response(a: Asset, token: TokenData):
+    resp = to_pydantic_model(a, AssetResponse)
+    # TODO provide upload path only if no file was uploaded before
+    resp.upload_path = create_asset_upload_path(a, token.user_id)
+    return resp
 
 
 @router.post(
@@ -64,9 +80,7 @@ async def add_asset(
             detail=str(e),
         )
     # TODO provide pre-signed url
-    resp = to_pydantic_model(uc.entity, AssetResponse)
-    resp.upload_path = create_asset_upload_path(uc.entity, token.user_id)
-    return resp
+    return asset_to_response(uc.entity, token)
 
 
 def create_asset_upload_auth_token(a: Asset, uid: str) -> str:
@@ -114,6 +128,12 @@ async def post_asset_file(
 
     a = repo.find_by_id_and_ownerid(AssetId(asset_id), UserId(token.user_id))
 
+    if not a:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Asset not found",
+        )
+
     if auth_data.asset_id != asset_id:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -152,7 +172,12 @@ async def get_all_assets(
     repo: AssetRepository = Depends(asset_repository),
 ):
     # TODO change me. Allow only admins
-    return [to_pydantic_model(u, AssetResponse) for u in repo.all()]
+    res = []
+    for u in repo.all():
+        resp = to_pydantic_model(u, AssetResponse)
+        resp.upload_path = create_asset_upload_path(u, token.user_id)
+        res.append(resp)
+    return res
 
 
 @router.get(

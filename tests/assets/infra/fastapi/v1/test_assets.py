@@ -110,6 +110,22 @@ class TestRegisterAsset:
 
 @pytest.mark.unit
 class TestGetAssets:
+
+    @staticmethod
+    @pytest.fixture(scope="class")
+    def client() -> TestClient:
+        app = FastAPI(
+            title="MyHeritage User test",
+        )
+        app.include_router(assets_router)
+
+        r = MemoryAssetRepository()
+        e = MemoryEventBus()
+        app.dependency_overrides[asset_repository] = lambda: r
+        app.dependency_overrides[event_bus] = lambda: e
+        app.dependency_overrides[get_active_user_token] = active_user_token
+        yield TestClient(app)
+
     def test_user_assets(self, client: TestClient):
         _, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.user_id])
         aid1 = r1.json().get("id")

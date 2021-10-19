@@ -1,8 +1,9 @@
-from typing import Any, Dict
+from typing import Any, Dict, Callable
 
 import pytest
 
 from emo.shared.domain import AssetId, UserId
+from emo.assets.domain.entity import Asset
 from emo.users.domain.entity.users import User
 from tests.users.utils import MemoryUserRepository
 

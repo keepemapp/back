@@ -3,6 +3,7 @@ fastapi-login
 uvicorn
 pydantic
 pydantic[email]
+setuptools-rust
 python-multipart
 aiofiles
 jinja2
