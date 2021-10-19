@@ -9,7 +9,7 @@ from tests.shared.utils import MemoryEventBus
 from tests.users.utils import MemoryUserRepository
 
 
-@pytest.fixture(scope="class")
+@pytest.fixture
 def client() -> TestClient:
     app = FastAPI(
         title="MyHeritage User test",

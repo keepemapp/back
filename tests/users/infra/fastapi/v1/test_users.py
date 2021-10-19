@@ -17,6 +17,7 @@ def create_user(client, user_num: int = 0):
         password=USER_PWD,
     )
     response = client.post(user_route, json=user.dict())
+    assert response.status_code == 200
     return user, response
 
 
@@ -118,6 +119,15 @@ class TestGetUsers:
         )
         assert response.status_code == 200
         assert response.json().get("token_type") == "bearer"
+
+    def test_successful_login_returns_user_id(self, client):
+        user, resp1 = create_user(client)
+        user_id = resp1.json().get("id", "no user id provided")
+        response = client.post(
+            login_route, data={"username": user.email, "password": USER_PWD}
+        )
+        assert response.status_code == 200
+        assert response.json().get("user_id") == user_id
 
     def test_login_username_invalid(self, client):
         user, _ = create_user(client)

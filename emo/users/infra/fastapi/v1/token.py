@@ -12,7 +12,7 @@ from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
 from emo.users.domain.usecase.query_user import QueryUser
 from emo.users.infra.dependencies import user_repository
-from emo.users.infra.fastapi.v1.schemas.token import Token
+from emo.users.infra.fastapi.v1.schemas.token import LoginResponse
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -33,7 +33,7 @@ def authenticate_user(
     return user
 
 
-@router.post("", response_model=Token)
+@router.post("", response_model=LoginResponse)
 async def login_for_access_token(
     repo: UserRepository = Depends(user_repository),
     form_data: OAuth2PasswordRequestForm = Depends(),
@@ -52,4 +52,6 @@ async def login_for_access_token(
     access_token = create_jwt_token(
         data=token_data.dict(), expires_delta=at_expires
     )
-    return Token(access_token=access_token, token_type="bearer")
+    return LoginResponse(
+        user_id=user.id.id, access_token=access_token, token_type="bearer"
+    )
