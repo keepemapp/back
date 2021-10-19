@@ -1,4 +1,4 @@
-PY = python3
+PY = python3.9
 VENV = venv
 BIN = $(VENV)/bin
 DATA_FOLDER = data
@@ -9,17 +9,19 @@ ifeq ($(OS), Windows_NT)
 endif
 
 install: $(VENV)
+	#sudo apt-get install python3.8 python3.8-dev python3.8-venv
+	$(BIN)/$(PY) -m pip install --upgrade -r requirements.txt
+	echo "installed"
 
-install-dev: install $(DATA_FOLDER) $(VENV)/devel requirements-dev.txt
-	$(BIN)/pip install --upgrade -r requirements-dev.txt
-	touch $(VENV)/devel
+install-dev: install $(DATA_FOLDER) requirements-dev.txt
+	$(BIN)/$(PY) -m pip install --upgrade -r requirements-dev.txt
 
 $(DATA_FOLDER):
 	mkdir $(DATA_FOLDER)
 
 $(VENV): requirements.txt
-	python3 -m venv venv
-	$(BIN)/pip install --upgrade -r requirements.txt
+	$(PY) -m venv venv
+	wget https://bootstrap.pypa.io/get-pip.py && $(BIN)/$(PY) get-pip.py && rm get-pip.py
 	touch $(VENV)
 
 .PHONY: format
