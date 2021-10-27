@@ -89,6 +89,7 @@ NOTE: clean python cache via `make clean` if needed
 * https://medium.com/codex/clean-architecture-for-dummies-df6561d42c94
 * https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
 * https://stackoverflow.com/questions/50802874/use-case-to-command-application-layer-mapping-implementation
+* Monitoring: https://medium.com/swlh/fastapi-microservice-patterns-application-monitoring-49fcb7341d9a
 
 Extra:
 * https://github.com/dannysteenman/aws-toolbox#aws-toolbox-
@@ -127,6 +128,12 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
     return [to_pydantic_model(u, UserResponse) for u in repo.all()]
 ```
 
+|:warning: ALERT|
+|:--------------|
+|`POST` and `PUT` endpoints should never return data. If needed, just redirect to the `GET` endpoint with the corresponding HTTP code (201, 202, 203...). This is to respect Command Query Segregation principle (command ONLY modifies state and Query ONLY answers questions)|
+|EXCEPTION: login to obtain token|
+
+
 # TODOs
 
 * [x] Create `make` script with install, test, clean and run
@@ -138,3 +145,4 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 * [ ] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
   Either give them the publish_url or the view URL for the file when they do a `get` on the asset
 * [ ] Test asset file upload and retrieval
+* [ ] Implement command responsibility segregation for POST APIs (do not return result and just redirect. See https://stackoverflow.com/questions/62119138/how-to-do-a-post-redirect-get-prg-in-fastapi)

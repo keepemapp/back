@@ -1,8 +1,8 @@
 import os
 import pickle
-from pathlib import Path
 from typing import Dict, List, Optional
 
+from emo.settings import settings
 from emo.shared.domain import UserId
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
@@ -17,7 +17,7 @@ class MemoryPersistedUserRepository(UserRepository):
 
     def __init__(
         self,
-        dbfile=os.path.join(Path(os.getcwd()).parent, "data", "usersrepo.pk"),
+        dbfile=os.path.join(settings.DATA_FOLDER, "usersrepo.pk"),
     ):
         self.DB_FILE = dbfile
         self._users: Users = self.__startup_db()

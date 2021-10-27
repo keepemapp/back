@@ -1,9 +1,9 @@
-from typing import Any, Dict, Callable
+from typing import Any, Callable, Dict
 
 import pytest
 
+from emo.assets.domain.entity import Asset, FileData
 from emo.shared.domain import AssetId, UserId
-from emo.assets.domain.entity import Asset
 from emo.users.domain.entity.users import User
 from tests.users.utils import MemoryUserRepository
 
@@ -16,10 +16,16 @@ def valid_asset() -> DataType:
         "id": AssetId("as092092"),
         "owners_id": [UserId("userid")],
         "created_at": 1630853189,
-        "type": "type",
-        "file_name": "file.jpg",
-        "file_location": "some_place_under_the_sea",
+        "file": FileData(
+            name="file.jpg",
+            location="some_place_under_the_sea",
+            type="type",
+        ),
         "title": "asset title",
         "description": "description",
-        "conditionToLive": None,
     }
+
+
+@pytest.fixture
+def get_asset(valid_asset) -> Asset:
+    yield Asset(**valid_asset)

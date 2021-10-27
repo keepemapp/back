@@ -3,9 +3,9 @@ from typing import List
 
 import pytest
 from pydantic import BaseModel, ValidationError
+from pydantic.dataclasses import dataclass as pydataclass
 
-from emo.shared.domain import DomainId
-from emo.shared.domain.usecase import Entity
+from emo.shared.domain import DomainId, Entity, ValueObject
 from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
 
 
@@ -31,7 +31,7 @@ class TestPydanticConverter:
             to_pydantic_model(e, EntityPyd)
 
     def test_list_of_domain_ids(self):
-        @dataclass(frozen=True)
+        @dataclass
         class DomainEntity(Entity):
             ids: List[DomainId]
 

@@ -1,6 +1,11 @@
-from typing import Any, Dict, List, NoReturn, Optional
+from typing import Any, Dict, List, Optional
+
+import pytest
 
 from emo.assets.domain.entity import Asset, AssetRepository
+from emo.assets.domain.entity.asset_repository import DuplicatedAssetException
+from emo.assets.domain.usecase.unit_of_work import AssetUoW
+from emo.assets.infra import bootstrap
 from emo.shared.domain import AssetId, UserId
 
 Assets = Dict[AssetId, Asset]
@@ -9,10 +14,13 @@ OwnerIndex = Dict[UserId, List[AssetId]]
 
 class MemoryAssetRepository(AssetRepository):
     def __init__(self):
+        super(MemoryAssetRepository, self).__init__()
         self._repo: Assets = {}
         self._owner_index: OwnerIndex = {}
 
     def create(self, asset: Asset) -> Any:
+        if self._repo.get(asset.id):
+            raise DuplicatedAssetException()
         self._repo[asset.id] = asset
         for oid in asset.owners_id:
             if oid in self._owner_index:
@@ -54,3 +62,25 @@ class MemoryAssetRepository(AssetRepository):
     def clean_all(self):
         self._repo.clear()
         self._owner_index.clear()
+
+
+class FakeAssetUoW(AssetUoW):
+    def __init__(self):
+        self.repo = MemoryAssetRepository()
+        super().__init__()
+        self.committed = False
+
+    def __enter__(self):
+        return super().__enter__()
+
+    def _commit(self):
+        self.committed = True
+
+    def rollback(self):
+        pass
+
+
+@pytest.fixture
+def bus():
+    """Init test bus for passing it to tests"""
+    return bootstrap.bootstrap(uow=FakeAssetUoW())

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from os import path
 from typing import Dict, List, Union
 
 from pydantic import BaseSettings
@@ -46,6 +47,9 @@ class Settings(BaseSettings):
         "09d25e094faa6ca2556c818166b7a9563b93f7099f6" "f0f4caa6cf63b88e8d3e7"
     )
     ALGORITHM = "HS256"
+    DATA_FOLDER = path.join(
+        path.dirname(path.dirname(path.abspath(__file__))), "data"
+    )
 
 
 settings = Settings()

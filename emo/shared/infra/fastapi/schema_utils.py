@@ -22,6 +22,7 @@ def to_base_type(value: Any):
 
 
 def to_pydantic_model(entity: Entity, model: Type[T]) -> T:
+    # TODO possibility to use inspect.signature(model).parameters
     keys = [k for k in model.__fields__.keys() if k != "links"]
     res = {k: to_base_type(getattr(entity, k, None)) for k in keys}
     return model(**res)

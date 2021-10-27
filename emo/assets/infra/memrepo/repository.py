@@ -3,29 +3,23 @@ import pickle
 from pathlib import Path
 from typing import Dict, List, NoReturn, Optional, Union
 
-from emo.assets.domain.entity import Asset, AssetRepository
+from emo.assets.domain.entity import (Asset, AssetRepository,
+                                      DuplicatedAssetException)
+from emo.settings import settings
 from emo.shared.domain import AssetId, UserId
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]
 
 
-class DuplicatedAssetException(Exception):
-    def __init__(self):
-        super().__init__(
-            "You have tried creating the same asset "
-            "twice. This is not allowed. "
-            "Try updating it."
-        )
-
-
 class MemoryPersistedAssetRepository(AssetRepository):
     def __init__(
         self,
         dbfile: Union[Path, str] = Path(
-            os.path.join(Path(os.getcwd()).parent, "data", "assetssrepo.pk")
+            os.path.join(settings.DATA_FOLDER, "assetssrepo.pk")
         ),
     ):
+        super(MemoryPersistedAssetRepository, self).__init__()
         if isinstance(dbfile, str):
             dbfile = Path(dbfile)
         self.DB_FILE: Path = dbfile
@@ -35,7 +29,7 @@ class MemoryPersistedAssetRepository(AssetRepository):
 
     def create(self, asset: Asset) -> NoReturn:
         if self._repo.get(asset.id):
-            raise
+            raise DuplicatedAssetException()
         self._repo[asset.id] = asset
         for oid in asset.owners_id:
             if oid in self._owner_index:
@@ -81,7 +75,7 @@ class MemoryPersistedAssetRepository(AssetRepository):
     def all(self) -> List[Asset]:
         return list(self._repo.values())
 
-    def __persist(self) -> NoReturn:
+    def __persist(self) -> None:
         with open(self.DB_FILE, "wb") as f:
             pickle.dump(self._repo, f)
         with open(self.INDEX_FILE, "wb") as f:

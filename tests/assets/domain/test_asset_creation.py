@@ -2,57 +2,48 @@ from typing import Any, Dict
 
 import pytest
 
-from emo.assets.domain.entity import Asset
+from emo.assets.domain.entity.asset_repository import DuplicatedAssetException
 from emo.assets.domain.usecase.create_asset import CreateAsset
-from emo.shared.domain import UserId
-from tests.assets.utils import MemoryAssetRepository
-from tests.utils import TestEventPublisher
+from emo.shared.domain import AssetId
+from tests.assets.utils import bus
 
 DataType = Dict[str, Any]
 
 
 @pytest.fixture
-def valid_create_asset() -> DataType:
-    repo = MemoryAssetRepository()
-    repo.clean_all()  # TODO check why repo is not clean here.
-    # It looks like is reusing a cached instance
-    yield {
-        "title": "me",
-        "description": "password",
-        "type": "image",
-        "file_name": "myfile.png",
-        "owners_id": [UserId("owner1")],
-        "conditionToLive": None,
-        "repository": repo,
-        "message_bus": TestEventPublisher(),
-    }
-    repo.clean_all()
+def create_asset_cmd():
+    yield CreateAsset(
+        title="Asset",
+        description="Asset description",
+        file_type="image",
+        file_name="my_asset.jpg",
+        owners_id=["owner1", "/users/owner2"],
+    )
 
 
 @pytest.mark.unit
 class TestCreateAsset:
-    def test_create_asset(self, valid_create_asset):
-        c = CreateAsset(**valid_create_asset)
-        assert isinstance(c.entity, Asset)
+    def test_for_new_asset(self, create_asset_cmd, bus):
+        bus.handle(create_asset_cmd)
+        assert (
+            bus.uow.repo.find_by_id(AssetId(create_asset_cmd.id)) is not None
+        )
+        assert bus.uow.committed
 
-    def test_asset_location(self, valid_create_asset):
-        c = CreateAsset(**valid_create_asset)
-        first_owner = c.entity.owners_id[0].id
-        asset_id = c.entity.id.id
-        assert first_owner in c.entity.file_location
-        assert asset_id in c.entity.file_location
-        assert ".enc" in c.entity.file_location
+    def test_cannot_duplicate_same_asset(self, create_asset_cmd, bus):
+        bus.handle(create_asset_cmd)
+        assert (
+            bus.uow.repo.find_by_id(AssetId(create_asset_cmd.id)) is not None
+        )
+        with pytest.raises(DuplicatedAssetException):
+            bus.handle(create_asset_cmd)
 
-    def test_event_is_published(self, valid_create_asset):
-        c = CreateAsset(**valid_create_asset)
-        c.execute()
-        bus = valid_create_asset.get("message_bus")
+    def test_asset_location(self, create_asset_cmd, bus):
+        bus.handle(create_asset_cmd)
+        a = bus.uow.repo.find_by_id(AssetId(create_asset_cmd.id))
 
-        assert bus.published_event == c.event
-
-    def test_asset_is_saved(self, valid_create_asset):
-        c = CreateAsset(**valid_create_asset)
-        c.execute()
-        repo: MemoryAssetRepository = valid_create_asset.get("repository")
-        # assert repo.all() == c.entity.id
-        assert repo.find_by_id(c.entity.id) == c.entity
+        first_owner = create_asset_cmd.owners_id[0]
+        asset_id = a.id.id
+        assert first_owner in a.file.location
+        assert asset_id in a.file.location
+        assert ".enc" in a.file.location

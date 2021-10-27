@@ -12,7 +12,7 @@ class AssetBase(BaseModel):
     title: str
     description: str
     owners_id: List[str]
-    type: str
+    file_type: str
     file_name: str
 
 

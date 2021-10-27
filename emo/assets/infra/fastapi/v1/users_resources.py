@@ -1,14 +1,14 @@
-from typing import List
+from typing import List, Type
 
 from fastapi import APIRouter, Depends, status
 
-from emo.assets.domain.entity import AssetRepository
-from emo.assets.infra.dependencies import asset_repository
+from emo.assets.domain.usecase.unit_of_work import AssetUoW
+from emo.assets.infra.dependencies import unit_of_work_class
+from emo.assets.infra.fastapi.v1.assets import asset_to_response
 from emo.assets.infra.fastapi.v1.schemas import AssetResponse
+from emo.assets.infra.memrepo import views
 from emo.settings import settings
-from emo.shared.domain import UserId
 from emo.shared.infra.dependencies import get_active_user_token
-from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
 from emo.shared.infra.fastapi.schemas import HTTPError, TokenData
 
 router = APIRouter(
@@ -27,7 +27,7 @@ router = APIRouter(
 )
 async def get_user_assets(
     token: TokenData = Depends(get_active_user_token),
-    repo: AssetRepository = Depends(asset_repository),
+    uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
 ):
-    assets = repo.find_by_ownerid(UserId(token.user_id))
-    return [to_pydantic_model(u, AssetResponse) for u in assets]
+    assets = views.find_by_ownerid(token.user_id, uow_cls())
+    return [asset_to_response(a, token) for a in assets]

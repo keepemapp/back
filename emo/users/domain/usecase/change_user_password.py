@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import NoReturn
 
-from emo.shared.domain import UserId
-from emo.shared.domain.usecase import Command, Event, EventPublisher
+from emo.shared.domain import Event, UserId
+from emo.shared.domain.usecase import CommandOld, EventPublisher
 from emo.shared.security import hash_password, salt_password, verify_password
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.usecase.exceptions import MissmatchPasswordException
@@ -13,7 +13,7 @@ class UserPasswordChanged(Event):
     eventType: str = "user_password_changed"
 
 
-class ChangeUserPassword(Command):
+class ChangeUserPassword(CommandOld):
     def __init__(
         self,
         *,

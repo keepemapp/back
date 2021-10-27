@@ -1,0 +1,24 @@
+= Asset upload process
+
+This document explains the asset upload process. 
+
+[plantuml, target=upload_pattern]
+----
+participant Frontend
+collections API
+database DB
+database FileStore
+queue MessageQueue
+
+Frontend -> API : Upload Asset
+API -> DB
+DB -> API : Done
+API -> Frontend : 203 Accepted. Redirect
+Frontend -> API : Upload binary
+API -> FileStore
+FileStore -> API
+API -> Frontend : 202 Created
+API -> MessageQueue : AssetCreated
+----
+
+Test

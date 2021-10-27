@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import abc
 from abc import ABC
 from dataclasses import dataclass
-from typing import Any, Callable, Type
+from datetime import datetime
+from typing import Callable, List, Optional, Protocol, Set, Type, TypeVar
 from uuid import uuid4
+
+from emo.settings import settings
 
 
 @dataclass(frozen=True)
@@ -12,6 +16,9 @@ class DomainId:
 
     def __eq__(self, other):
         return self.id == other.id
+
+    # def __str__(self):
+    #     return id
 
 
 @dataclass(frozen=True)
@@ -29,7 +36,7 @@ class TransferId(DomainId):
     pass
 
 
-def init_id(id_type: Callable):
+def init_id(id_type: Callable) -> DomainId:
     return id_type(id=str(uuid4()))
 
 
@@ -41,17 +48,32 @@ class IdTypeException(Exception):
 
 
 @dataclass(frozen=True)
+class Event:
+    eventType: str = None
+    aggregate: Entity = None
+    occurredOn: datetime = datetime.utcnow()
+    application: str = settings.APPLICATION_TECHNICAL_NAME
+
+
+@dataclass(frozen=True)
+class Command:
+    pass
+
+
+@dataclass
 class Entity:
     id: DomainId
 
     def _id_type_is_valid(self, t: Type[DomainId], field: DomainId = None):
-        if field:
-            return isinstance(field, t)
-        else:
-            return isinstance(self.id, t)
+        """Raises Error if types do not match
 
-    def __post_init__(self):
-        if not self._id_type_is_valid(DomainId):
+        :param t: desired type
+        :param field: value to compare to. By default, `self.id`
+        :raises: IdTypeException
+        """
+        if not field:
+            field = self.id
+        if not isinstance(field, t):
             raise IdTypeException()
 
     def erase_sensitive_data(self) -> Entity:
@@ -64,12 +86,21 @@ class Entity:
         return self
 
     def __eq__(self, other) -> bool:
-        return self.id == other.id and type(self) == type(other)
+        return type(self) == type(other) and self.id == other.id
 
 
-@dataclass(frozen=True)
+@dataclass
 class RootAggregate(Entity):
-    pass
+    # _events: Optional[List[Event]]
+
+    @property
+    def events(self) -> List[Event]:
+        """Property returning events to process
+
+        :return: List of events
+        :rtype: List[Event]
+        """
+        return self._events
 
 
 @dataclass(frozen=True, eq=True)
@@ -79,13 +110,18 @@ class ValueObject:
 
 class DomainRepository(ABC):
     """
-    Represents the repository
+    Represents the repository.
+
+    It contains a `seen` variable that will allow us to collect all the
+    events from every entity acted on.
     """
 
-    pass
+    @property
+    def seen(self) -> Set[RootAggregate]:
+        return self._seen
 
 
-@dataclass(frozen=True)
+@dataclass
 class Tombstone(Entity):
     """
     Special entity marking the deletion of an entity

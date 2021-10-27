@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import NoReturn
 
-from emo.shared.domain import UserId, init_id
-from emo.shared.domain.usecase import Command, Event, EventPublisher
+from emo.shared.domain import Event, UserId, init_id
+from emo.shared.domain.usecase import CommandOld, EventPublisher
 from emo.shared.security import generate_salt, hash_password, salt_password
 from emo.users.domain.entity.user_repository import UserRepository
 from emo.users.domain.entity.users import User
@@ -15,7 +15,7 @@ class UserRegistered(Event):
     eventType: str = "user_created"
 
 
-class RegisterUser(Command):
+class RegisterUser(CommandOld):
     _repository: UserRepository
 
     def __init__(

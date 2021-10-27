@@ -1,18 +1,7 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from datetime import datetime
 from typing import NoReturn
 
-from emo.settings import settings
-from emo.shared.domain import DomainRepository, Entity
-
-
-@dataclass(frozen=True)
-class Event:
-    eventType: str = None
-    aggregate: Entity = None
-    occurredOn: datetime = datetime.utcnow()
-    application: str = settings.APPLICATION_TECHNICAL_NAME
+from emo.shared.domain import DomainRepository, Event
 
 
 class EventPublisher(ABC):
@@ -34,7 +23,7 @@ class Query(UseCase):
         self.__repository = repository
 
 
-class Command(UseCase):
+class CommandOld(UseCase):
     def __init__(
         self, *, repository: DomainRepository, message_bus: EventPublisher
     ):

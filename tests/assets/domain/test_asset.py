@@ -1,9 +1,8 @@
 import pytest
 
 from emo.assets.domain.entity import (Asset, AssetTtileException,
-                                      ConditionToLive, EmptyOwnerException)
+                                      EmptyOwnerException)
 from emo.shared.domain import AssetId, DomainId, IdTypeException, UserId
-from emo.shared.domain.time_utils import current_utc_timestamp
 from tests.assets.domain import valid_asset
 
 
@@ -67,26 +66,3 @@ class TestAsset:
             valid_asset["owners_id"] = owners_id
             with pytest.raises(IdTypeException):
                 Asset(**valid_asset)
-
-    class TestAssetExpiration:
-        def test_asset_not_expired(self, valid_asset):
-            valid_asset["conditionToLive"] = None
-            a = Asset(**valid_asset)
-            assert not a.has_expired()
-
-            valid_asset["conditionToLive"] = ConditionToLive(None)
-            a = Asset(**valid_asset)
-            assert not a.has_expired()
-
-            valid_asset["conditionToLive"] = ConditionToLive(
-                current_utc_timestamp() + 10000
-            )
-            a = Asset(**valid_asset)
-            assert not a.has_expired()
-
-        def test_asset_expired_time(self, valid_asset):
-            valid_asset["conditionToLive"] = ConditionToLive(
-                current_utc_timestamp() - 50
-            )
-            a = Asset(**valid_asset)
-            assert a.has_expired()

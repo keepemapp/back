@@ -5,7 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from emo.shared.domain import IdTypeException, RootAggregate, UserId
+from emo.shared.domain import RootAggregate, UserId
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "
@@ -15,7 +15,7 @@ INVALID_USERNAME = (
 INVALID_EMAIL = "Email is not valid"
 
 
-@dataclass(frozen=True)
+@dataclass
 class User(RootAggregate):
     id: UserId
     username: str
@@ -35,9 +35,7 @@ class User(RootAggregate):
         return True if re.match(regex, name) else False
 
     def __post_init__(self):
-        super().__post_init__()
-        if not self._id_type_is_valid(UserId):
-            raise IdTypeException()
+        self._id_type_is_valid(UserId)
         if not self._name_is_valid(self.username):
             raise ValueError(INVALID_USERNAME)
         if not self._email_is_valid(self.email):

@@ -5,12 +5,14 @@ from typing import Union
 
 import aiofiles
 
+from emo.settings import settings
+
 
 class AssetFileRepository:
     def __init__(
         self,
         base_path: Union[Path, str] = Path(
-            os.path.join(Path(os.getcwd()).parent, "data", "assets")
+            os.path.join(settings.DATA_FOLDER, "assets")
         ),
     ):
         self._base_path = base_path

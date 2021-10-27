@@ -1,9 +1,9 @@
 import re
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Optional
 
-from emo.assets.domain.entity.condition_to_live import ConditionToLive
-from emo.shared.domain import AssetId, IdTypeException, RootAggregate, UserId
+from emo.shared.domain import (AssetId, Event, RootAggregate, UserId,
+                               ValueObject)
 
 
 class AssetTtileException(Exception):
@@ -20,19 +20,24 @@ class EmptyOwnerException(Exception):
         super().__init__("Asset must have owners")
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, eq=True)
+class FileData(ValueObject):
+    name: str
+    location: str
+    type: str
+
+
+@dataclass
 class Asset(RootAggregate):
     """ """
 
     created_at: int
     owners_id: List[UserId]
-    type: str
-    file_name: str
-    file_location: str
+    file: FileData
     id: AssetId
     title: Optional[str]
     description: Optional[str]
-    conditionToLive: Optional[ConditionToLive]
+    _events: Optional[List[Event]] = field(default_factory=list)
 
     @staticmethod
     def _title_is_valid(name: str) -> bool:
@@ -45,21 +50,17 @@ class Asset(RootAggregate):
         return True if re.match(regex, name) else False
 
     def __post_init__(self):
-        super().__post_init__()
-        if not self._id_type_is_valid(AssetId):
-            raise IdTypeException()
+        self._id_type_is_valid(AssetId)
         if not self.owners_id:
             raise EmptyOwnerException()
         for uid in self.owners_id:
-            if not self._id_type_is_valid(UserId, uid):
-                raise IdTypeException()
+            self._id_type_is_valid(UserId, uid)
         if not self._title_is_valid(self.title):
             raise AssetTtileException()
 
     def has_expired(self) -> bool:
-        """ """
-        return (
-            False
-            if not self.conditionToLive
-            else self.conditionToLive.expired()
-        )
+        """Returns true if asset has expired an is no longer valid
+
+        TODO implement me
+        """
+        return False

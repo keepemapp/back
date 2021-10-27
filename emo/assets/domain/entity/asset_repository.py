@@ -1,11 +1,24 @@
 from abc import abstractmethod
-from typing import List, NoReturn, Optional
+from typing import List, Optional, Set
 
 from emo.assets.domain.entity.asset import Asset
 from emo.shared.domain import AssetId, DomainRepository, UserId
 
 
+class DuplicatedAssetException(Exception):
+    def __init__(self):
+        super().__init__(
+            "You have tried creating the same asset "
+            "twice. This is not allowed. "
+            "Try updating it."
+        )
+
+
 class AssetRepository(DomainRepository):
+    def __init__(self):
+        super(AssetRepository, self).__init__()
+        self._seen: Set[Asset] = set()
+
     @abstractmethod
     def all(self) -> List[Asset]:
         """Returns all the assets
@@ -18,7 +31,7 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def create(self, asset: Asset) -> NoReturn:
+    def create(self, asset: Asset) -> None:
         """Create an asset in the repository"""
         raise NotImplementedError
 
@@ -74,7 +87,7 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def delete_by_id(self, id: AssetId) -> NoReturn:
+    def delete_by_id(self, id: AssetId) -> None:
         """Deletes asset matching the ID.
 
         ATTENTION: if ID does not exist, it does not raise anything.
