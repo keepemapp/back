@@ -103,6 +103,8 @@ Extra:
 >
 > -- From https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
 
+Each `AggregateRoot` has its own `AbstractRepository`.
+And each `AbstractRepository` has its own `UnitOfWork`?
 
 ## WRITING FASTAPI endpoints
 
@@ -136,13 +138,18 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 
 # TODOs
 
-* [x] Create `make` script with install, test, clean and run
-* [x] Fix flake8 linting errors 
-* [ ] Create flake8 rule to ensure domain does not have any dependencies on INF
-* [ ] flake8 rules to forbid cross-bounded context dependencies
-* [x] Test `fastapi` users interface
-* [x] Adapt `assets` bounded context to new format
 * [ ] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
   Either give them the publish_url or the view URL for the file when they do a `get` on the asset
-* [ ] Test asset file upload and retrieval
+* [X] Test asset file upload and retrieval
 * [ ] Implement command responsibility segregation for POST APIs (do not return result and just redirect. See https://stackoverflow.com/questions/62119138/how-to-do-a-post-redirect-get-prg-in-fastapi)
+  * [X] For assets
+  * [ ] for Users
+* [ ] Schema evolution in database and dataclasses. How to do it?
+* [ ] change database to a persistent one
+
+
+
+Low prio:
+* [ ] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas
+* [ ] Create flake8 rule to ensure domain does not have any dependencies on INF
+* [ ] flake8 rules to forbid cross-bounded context dependencies

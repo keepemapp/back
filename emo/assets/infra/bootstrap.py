@@ -53,4 +53,6 @@ def inject_dependencies(handler, dependencies):
         for name, dependency in dependencies.items()
         if name in params
     }
-    return lambda message: handler(message, **deps)
+    l = lambda message: handler(message, **deps)
+    l.__name__ = handler.__name__
+    return l

@@ -1,4 +1,6 @@
 ./assets
+docs/.asciidoctor
+docs/*.html
 data
 
 .coverage_html
