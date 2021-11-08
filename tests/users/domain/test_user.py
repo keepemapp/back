@@ -1,6 +1,6 @@
 import pytest
 
-from emo.shared.domain import DomainId, UserId, IdTypeException
+from emo.shared.domain import DomainId, IdTypeException, UserId
 from emo.users.domain.entity.users import User
 from tests.users.domain import valid_user
 

@@ -1,19 +1,21 @@
 from __future__ import annotations
 
-from enum import Enum, unique
 from abc import ABC
-from dataclasses import dataclass, field, Field
-from dataclasses_json import dataclass_json
-from typing import Callable, List, Set, Type, TypeVar, Dict
+from dataclasses import Field, dataclass, field
+from enum import Enum, unique
+from typing import Callable, Dict, List, Set, Type, TypeVar
 from uuid import uuid4
-from emo.shared.domain.time_utils import current_utc_millis
+
+from dataclasses_json import dataclass_json
 
 from emo.settings import settings
+from emo.shared.domain.time_utils import current_utc_millis
 
 
 def required_field() -> Field:
     def raise_err():
         raise TypeError()
+
     return field(default_factory=lambda: raise_err)
 
 
@@ -54,7 +56,7 @@ class IdTypeException(Exception):
         super().__init__("ID Type is not valid")
 
 
-IDT = TypeVar('IDT', str, DomainId)
+IDT = TypeVar("IDT", str, DomainId)
 
 
 @dataclass_json
@@ -118,6 +120,7 @@ class RootAggState(NoValue):
 @dataclass
 class RootAggregate(Entity):
     """Base class with parameters that will need to be overwritten"""
+
     _events: List[Event] = field(default_factory=list)
     created_ts: int = current_utc_millis()
     modified_ts: Dict[str, int] = field(default_factory=dict)
@@ -140,6 +143,7 @@ class RootAggregate(Entity):
     def _modified_ts_for(self, field: str):
         return self.modified_ts.get(field, self.created_ts)
 
+
 @dataclass_json
 @dataclass(frozen=True, eq=True)
 class ValueObject:
@@ -153,10 +157,10 @@ class DomainRepository(ABC):
     It contains a `seen` variable that will allow us to collect all the
     events from every entity acted on.
     """
+
     def __init__(self, **kwargs):
         pass
 
     @property
     def seen(self) -> Set[RootAggregate]:
         return self._seen
-

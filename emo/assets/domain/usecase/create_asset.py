@@ -19,7 +19,9 @@ class CreateAsset(Command):
     file_type: str
     file_name: str
     description: Optional[str] = None
-    asset_id: Optional[str] = field(default_factory=lambda: init_id(AssetId).id)
+    asset_id: Optional[str] = field(
+        default_factory=lambda: init_id(AssetId).id
+    )
 
 
 def _compute_location(owner_id: str, asset_id: str) -> str:

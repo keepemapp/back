@@ -1,14 +1,14 @@
 from __future__ import annotations
-from dataclasses import dataclass, field
-from dataclasses_json import dataclass_json
-from abc import ABC, abstractmethod
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
-from typing import List, Optional, Set
-from emo.shared.domain.time_utils import current_utc_millis
 
-from emo.shared.domain import (AssetId, Event, RootAggregate, UserId,
-                               ValueObject, RootAggState, required_field,
-                               DomainId, init_id, DomainRepository)
+from abc import ABC, abstractmethod
+from dataclasses import dataclass
+from typing import List, Set
+
+
+from emo.shared.domain import (AssetId, DomainId, DomainRepository, Event,
+                               RootAggregate, RootAggState, UserId,
+                               ValueObject, init_id, required_field)
+from emo.shared.domain.time_utils import current_utc_millis
 
 
 @dataclass(frozen=True)
@@ -38,7 +38,6 @@ class AssetReleased(Event):
 
 @dataclass(frozen=True, eq=True)
 class ReleaseCondition(ValueObject, ABC):
-
     @abstractmethod
     def is_met(self) -> bool:
         raise NotImplementedError
@@ -65,6 +64,7 @@ class AssetRelease(RootAggregate):
 
     Only the owner of this event can act on it.
     """
+
     name: str = required_field()
     description: str = required_field()
     owner: UserId = required_field()
@@ -82,7 +82,7 @@ class AssetRelease(RootAggregate):
                 re_type=self.release_type,
                 owner=self.owner.id,
                 assets=[a.id for a in self.assets],
-                receivers=[u.id for u in self.receivers]
+                receivers=[u.id for u in self.receivers],
             )
         )
 
@@ -106,7 +106,7 @@ class AssetRelease(RootAggregate):
                 re_type=self.release_type,
                 owner=self.owner.id,
                 assets=[a.id for a in self.assets],
-                receivers=[u.id for u in self.receivers]
+                receivers=[u.id for u in self.receivers],
             )
         )
 
@@ -114,10 +114,13 @@ class AssetRelease(RootAggregate):
         """Cancels the event."""
         ts = current_utc_millis()
         self._update_field(ts, "state", RootAggState.REMOVED)
-        self._events.append(AssetReleaseCanceled(
-            aggregate_id=self.id.id, timestamp=ts,
-            assets=[a.id for a in self.assets]
-        ))
+        self._events.append(
+            AssetReleaseCanceled(
+                aggregate_id=self.id.id,
+                timestamp=ts,
+                assets=[a.id for a in self.assets],
+            )
+        )
 
     def __hash__(self):
         return hash(self.id.id)

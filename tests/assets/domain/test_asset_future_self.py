@@ -1,4 +1,3 @@
-
 import dataclasses as dc
 import datetime as dt
 
@@ -6,11 +5,10 @@ import pytest
 
 import emo.assets.domain.entity.asset_release as ar
 import emo.assets.domain.usecase.asset_to_future_self as afs
-from tests.assets.domain.test_asset_creation import create_asset_cmd
 from emo.shared.domain import AssetId, UserId
-from tests.assets.utils import bus
-
 from emo.shared.domain.time_utils import current_utc
+from tests.assets.domain.test_asset_creation import create_asset_cmd
+from tests.assets.utils import bus
 
 
 @pytest.mark.unit
@@ -22,8 +20,10 @@ class TestAssetFutureSelf:
         history = [
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),
             afs.CreateAssetToFutureSelf(
-                asset_ids=[asset_id], scheduled_date=scheduled_date,
-                name="note", owner=owner
+                asset_ids=[asset_id],
+                scheduled_date=scheduled_date,
+                name="note",
+                owner=owner,
             ),
         ]
 
@@ -36,4 +36,3 @@ class TestAssetFutureSelf:
             assert len(user_rel) == 1
             assert user_rel[0].assets == [AssetId(asset_id)]
             assert not user_rel[0].is_due()
-

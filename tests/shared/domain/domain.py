@@ -1,11 +1,13 @@
-import pytest
 import datetime as dt
+
+import pytest
 
 from emo.assets.domain.entity import (Asset, AssetTitleException,
                                       EmptyOwnerException)
 from emo.shared.domain import RootAggregate, RootAggState
-from tests.assets.domain import valid_asset, asset
 from emo.shared.domain.time_utils import current_utc, to_millis
+from tests.assets.domain import asset, valid_asset
+
 
 @pytest.mark.unit
 class TestRootAggregate:

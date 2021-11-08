@@ -5,8 +5,7 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from emo.shared.domain import RootAggregate, RootAggState, UserId, \
-    required_field
+from emo.shared.domain import RootAggregate, UserId, required_field
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "

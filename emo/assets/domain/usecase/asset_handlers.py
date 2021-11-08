@@ -1,6 +1,6 @@
 from typing import Union
-import emo.assets.domain.entity.asset_release as ar
 
+import emo.assets.domain.entity.asset_release as ar
 from emo.assets.domain.entity.asset import Asset
 from emo.assets.domain.usecase.unit_of_work import AssetUoW
 from emo.shared.domain import AssetId

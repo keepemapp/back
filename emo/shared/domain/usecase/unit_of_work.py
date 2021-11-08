@@ -32,5 +32,3 @@ class AbstractUnitOfWork(ABC):
     @abstractmethod
     def rollback(self) -> NoReturn:
         raise NotImplementedError
-
-

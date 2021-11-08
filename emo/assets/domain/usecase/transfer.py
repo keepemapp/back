@@ -1,15 +1,16 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List
 
 from emo.assets.domain.entity.asset import Asset
 from emo.assets.domain.usecase.unit_of_work import AssetUoW
-from emo.shared.domain import Command, AssetId
+from emo.shared.domain import AssetId, Command
 from emo.shared.domain.time_utils import current_utc_millis
 
 
 @dataclass(frozen=True)
 class TransferAssets(Command):
     """"""
+
     asset_ids: List[str]
     name: str
     description: str

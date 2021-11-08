@@ -1,14 +1,14 @@
-from typing import Any, Dict, List, Optional, TypeVar, Generic, Type
+from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import pytest
 
 from emo.assets.domain.entity import Asset, AssetRepository, DomainRepository
+from emo.assets.domain.entity.asset_release import (AssetRelease,
+                                                    AssetReleaseRepository)
 from emo.assets.domain.entity.asset_repository import DuplicatedAssetException
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.assets.infra import bootstrap
-from emo.shared.domain import AssetId, UserId, DomainId
-from emo.assets.domain.entity.asset_release import AssetReleaseRepository, AssetRelease
-
+from emo.shared.domain import AssetId, DomainId, UserId
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]
@@ -34,9 +34,14 @@ class MemoryAssetRepository(AssetRepository):
         ids = self.find_by_ids([id], visible_only)
         return ids[0] if ids else None
 
-    def find_by_ids(self, ids: List[AssetId], visible_only=True) -> List[Asset]:
-        return [v for k, v in self._repo.items()
-                if k in ids and (not visible_only or v.is_visible())]
+    def find_by_ids(
+        self, ids: List[AssetId], visible_only=True
+    ) -> List[Asset]:
+        return [
+            v
+            for k, v in self._repo.items()
+            if k in ids and (not visible_only or v.is_visible())
+        ]
 
     def delete(self, asset: Asset):
         owners = asset.owners_id
@@ -72,7 +77,9 @@ OwnerReleaseIndex = Dict[UserId, List[DomainId]]
 
 
 class MemoryReleaseRepo(AssetReleaseRepository):
-    def __init__(self,):
+    def __init__(
+        self,
+    ):
         super().__init__()
         self._repo: Releases = {}
 
@@ -118,13 +125,14 @@ class MemoryUoW(AbstractUnitOfWork):
 
 uows = {
     "asset_uow": MemoryUoW(MemoryAssetRepository),
-    "release_uow": MemoryUoW(MemoryReleaseRepo)
+    "release_uow": MemoryUoW(MemoryReleaseRepo),
 }
+
 
 @pytest.fixture
 def bus():
     """Init test bus for passing it to tests"""
     return bootstrap.bootstrap(
         asset_uow=MemoryUoW(MemoryAssetRepository),
-        release_uow=MemoryUoW(MemoryReleaseRepo)
+        release_uow=MemoryUoW(MemoryReleaseRepo),
     )

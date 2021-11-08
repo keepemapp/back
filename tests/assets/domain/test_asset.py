@@ -1,10 +1,12 @@
-import pytest
 import datetime as dt
+
+import pytest
 
 from emo.assets.domain.entity.asset import *
 from emo.shared.domain import AssetId, DomainId, IdTypeException, UserId
-from tests.assets.domain import valid_asset, asset
-from emo.shared.domain.time_utils import current_utc_millis, current_utc, to_millis
+from emo.shared.domain.time_utils import (current_utc, current_utc_millis,
+                                          to_millis)
+from tests.assets.domain import asset, valid_asset
 
 
 @pytest.mark.unit
@@ -67,6 +69,7 @@ class TestAssetModel:
         with pytest.raises(IdTypeException):
             Asset(**valid_asset)
 
+
 @pytest.mark.unit
 class TestAssetMethods:
     def test_visibility_change(self, asset):
@@ -85,8 +88,9 @@ class TestAssetMethods:
         assert all(new in asset.owners_id for new in new_owners)
         assert prev_owner not in asset.owners_id
 
-        ownership_events = [e for e in asset.events
-                            if isinstance(e, AssetOwnershipChanged)]
+        ownership_events = [
+            e for e in asset.events if isinstance(e, AssetOwnershipChanged)
+        ]
         assert len(ownership_events) == 1
         assert ownership_events[0].owners == [o.id for o in asset.owners_id]
         assert ownership_events[0].timestamp == mod_ts

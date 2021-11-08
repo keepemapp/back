@@ -37,7 +37,7 @@ def asset_to_response(asset_dict: Dict, token: TokenData):
     "",
     status_code=status.HTTP_201_CREATED,
     response_description="If successful, redirects to the GET endpoint for the"
-                         " asset via the `location` header.",
+    " asset via the `location` header.",
     response_class=RedirectResponse,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},

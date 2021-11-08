@@ -41,7 +41,7 @@ class RegisterUser(CommandOld):
 
         self._event = UserRegistered(
             aggregate_id=self._entity.id.id,
-            aggregate=self._entity.erase_sensitive_data()
+            aggregate=self._entity.erase_sensitive_data(),
         )
 
     def execute(self) -> NoReturn:

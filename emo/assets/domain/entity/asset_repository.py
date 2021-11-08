@@ -45,7 +45,9 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_ids(self, ids: List[AssetId], visible_only=True) -> List[Asset]:
+    def find_by_ids(
+        self, ids: List[AssetId], visible_only=True
+    ) -> List[Asset]:
         """Finds assets in list that are in the database.
 
         If one id does not exist, it does not return it so you

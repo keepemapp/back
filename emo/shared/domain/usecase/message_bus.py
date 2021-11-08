@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Type, Union, TypeVar
+from typing import Callable, Dict, List, Type, TypeVar, Union
 
 from emo.shared.domain import Command, Event, RootAggregate
 from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
@@ -81,7 +81,5 @@ class MessageBus:
             handler(command)
             self.queue.extend(self.uows.collect_new_events())
         except Exception as e:
-            logger.exception(
-                '{"command":"%s"}', command
-            )
+            logger.exception('{"command":"%s"}', command)
             raise e

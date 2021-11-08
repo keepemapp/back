@@ -5,8 +5,8 @@ from typing import Dict, List, NoReturn, Optional, Union
 
 from emo.assets.domain.entity import (Asset, AssetRepository,
                                       DuplicatedAssetException)
-from emo.assets.domain.entity.asset_release import AssetRelease, \
-    AssetReleaseRepository
+from emo.assets.domain.entity.asset_release import (AssetRelease,
+                                                    AssetReleaseRepository)
 from emo.settings import settings
 from emo.shared.domain import AssetId, DomainId, UserId
 
@@ -44,9 +44,14 @@ class MemoryPersistedAssetRepository(AssetRepository):
         ids = self.find_by_ids([id], visible_only)
         return ids[0] if ids else None
 
-    def find_by_ids(self, ids: List[AssetId], visible_only=True) -> List[Asset]:
-        return [v for k, v in self._repo.items()
-                if k in ids and (not visible_only or v.is_visible())]
+    def find_by_ids(
+        self, ids: List[AssetId], visible_only=True
+    ) -> List[Asset]:
+        return [
+            v
+            for k, v in self._repo.items()
+            if k in ids and (not visible_only or v.is_visible())
+        ]
 
     def delete(self, asset: Asset):
         owners = asset.owners_id
@@ -105,10 +110,10 @@ OwnerReleaseIndex = Dict[UserId, List[DomainId]]
 
 class MemPersistedReleaseRepo(AssetReleaseRepository):
     def __init__(
-            self,
-            dbfile: Union[Path, str] = Path(
-                os.path.join(settings.DATA_FOLDER, "assetsreleasesrepo.pk")
-            ),
+        self,
+        dbfile: Union[Path, str] = Path(
+            os.path.join(settings.DATA_FOLDER, "assetsreleasesrepo.pk")
+        ),
     ):
         super().__init__()
         if isinstance(dbfile, str):

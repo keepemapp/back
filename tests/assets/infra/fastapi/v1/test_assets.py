@@ -15,7 +15,7 @@ from emo.shared.domain import UserId
 from emo.shared.infra.dependencies import event_bus, get_active_user_token
 from emo.shared.infra.fastapi.schemas import TokenData
 from tests.assets.domain import valid_asset
-from tests.assets.utils import MemoryUoW, MemoryAssetRepository, bus
+from tests.assets.utils import MemoryAssetRepository, MemoryUoW, bus
 from tests.shared.utils import MemoryEventBus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
@@ -38,7 +38,9 @@ def client(bus) -> TestClient:
     app.dependency_overrides[asset_repository] = lambda: r
     app.dependency_overrides[event_bus] = lambda: e
     app.dependency_overrides[message_bus] = lambda: bus
-    app.dependency_overrides[unit_of_work_class] = lambda: lambda: bus.uows.get(Asset)
+    app.dependency_overrides[
+        unit_of_work_class
+    ] = lambda: lambda: bus.uows.get(Asset)
     app.dependency_overrides[get_active_user_token] = active_user_token
     yield TestClient(app)
 

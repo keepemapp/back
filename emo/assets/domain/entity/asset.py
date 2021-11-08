@@ -2,8 +2,8 @@ import re
 from dataclasses import dataclass
 from typing import List, Union
 
-from emo.shared.domain import (AssetId, RootAggregate, UserId, Event,
-                               ValueObject, RootAggState, required_field)
+from emo.shared.domain import (AssetId, Event, RootAggregate, RootAggState,
+                               UserId, ValueObject, required_field)
 
 
 @dataclass(frozen=True)
@@ -44,6 +44,7 @@ UIDT = Union[UserId, str]
 @dataclass
 class Asset(RootAggregate):
     """ """
+
     owners_id: List[UserId] = required_field()
     file: FileData = required_field()
     id: AssetId = required_field()
@@ -70,24 +71,16 @@ class Asset(RootAggregate):
             raise AssetTitleException()
 
     def hide(self, mod_ts: int):
-        self._update_field(
-            mod_ts,
-            "state",
-            RootAggState.HIDDEN
-        )
+        self._update_field(mod_ts, "state", RootAggState.HIDDEN)
 
     def show(self, mod_ts: int):
-        self._update_field(
-            mod_ts,
-            "state",
-            RootAggState.ACTIVE
-        )
+        self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
     def is_visible(self) -> bool:
         return self.state == RootAggState.ACTIVE
 
     def change_owner(self, mod_ts: int, transferor: UIDT, new: List[UIDT]):
-        """ Changes asset ownership
+        """Changes asset ownership
 
         Raises `AssetOwnershipException` if the transferor does not own
         the asset.
@@ -107,11 +100,13 @@ class Asset(RootAggregate):
         news = [o for o in self.owners_id if o != transferor]
         news.extend(self._to_uids(new))
         self._update_field(mod_ts, "owners_id", news)
-        self.events.append(AssetOwnershipChanged(
-            aggregate_id=self.id.id,
-            timestamp=mod_ts,
-            owners=[uid.id for uid in self.owners_id],
-        ))
+        self.events.append(
+            AssetOwnershipChanged(
+                aggregate_id=self.id.id,
+                timestamp=mod_ts,
+                owners=[uid.id for uid in self.owners_id],
+            )
+        )
 
     @staticmethod
     def _to_uid(uid: UIDT):

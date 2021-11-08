@@ -1,19 +1,20 @@
+import dataclasses as dc
+import datetime as dt
 import os
 import time
 from typing import Any, Dict
-import dataclasses as dc
-import datetime as dt
 
 import pytest
 
-from emo.assets.domain.entity.asset import Asset
 import emo.assets.domain.entity.asset_release as ar
 import emo.assets.domain.usecase.asset_to_future_self as afs
+from emo.assets.domain.entity.asset import Asset
 from emo.assets.domain.usecase.create_asset import CreateAsset
-from tests.assets.domain.test_asset_creation import create_asset_cmd
-from emo.shared.domain import AssetId, UserId, DomainId
-from tests.assets.utils import bus
+from emo.shared.domain import AssetId, DomainId, UserId
 from emo.shared.domain.time_utils import current_utc, to_millis
+from tests.assets.domain.test_asset_creation import create_asset_cmd
+from tests.assets.utils import bus
+
 
 @pytest.mark.unit
 class TestReleaseConditions:
@@ -34,11 +35,13 @@ class TestReleaseConditions:
 class TestRelease:
     def test_creation_gives_event(self):
         r = ar.AssetRelease(
-            name="Ar", description="",
-            owner=UserId("u"), receivers=[UserId("U")],
+            name="Ar",
+            description="",
+            owner=UserId("u"),
+            receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[ar.TrueCondition()]
+            conditions=[ar.TrueCondition()],
         )
         assert len(r.events) == 1
         assert isinstance(r.events[0], ar.AssetReleaseScheduled)
@@ -49,36 +52,41 @@ class TestRelease:
         future = to_millis(current_utc() + dt.timedelta(minutes=10))
 
         r_past = ar.AssetRelease(
-            name="Ar", description="",
-            owner=UserId("u"), receivers=[UserId("U")],
+            name="Ar",
+            description="",
+            owner=UserId("u"),
+            receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[ar.TrueCondition(), ar.TimeCondition(past)]
+            conditions=[ar.TrueCondition(), ar.TimeCondition(past)],
         )
         assert r_past.is_due()
 
         r_future = ar.AssetRelease(
-            name="Ar", description="",
-            owner=UserId("u"), receivers=[UserId("U")],
+            name="Ar",
+            description="",
+            owner=UserId("u"),
+            receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[ar.TrueCondition(), ar.TimeCondition(future)]
+            conditions=[ar.TrueCondition(), ar.TimeCondition(future)],
         )
         assert r_future.is_due() is False
 
 
 @pytest.mark.unit
 class TestAssetReleaseVisibility:
-
     def test_hides_assets(self, bus, create_asset_cmd):
         asset_id = "assetId"
         owner = "1"
         history = [
-            dc.replace(create_asset_cmd, asset_id=asset_id,
-                                owners_id=[owner]),
+            dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),
             ar.AssetReleaseScheduled(
-                re_conditions=[], re_type="", owner=owner,
-                assets=[asset_id], receivers=[owner]
+                re_conditions=[],
+                re_type="",
+                owner=owner,
+                assets=[asset_id],
+                receivers=[owner],
             ),
         ]
 
@@ -102,11 +110,15 @@ class TestAssetReleaseVisibility:
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])
         )
         release = ar.AssetRelease(
-                id=DomainId(release_id), name="", description="",
-                owner=UserId(owner), receivers=[UserId(receiver)],
-                conditions=[ar.TrueCondition()], release_type="dummy",
-                assets=[AssetId(asset_id)]
-            )
+            id=DomainId(release_id),
+            name="",
+            description="",
+            owner=UserId(owner),
+            receivers=[UserId(receiver)],
+            conditions=[ar.TrueCondition()],
+            release_type="dummy",
+            assets=[AssetId(asset_id)],
+        )
         with bus.uows.get(ar.AssetRelease) as uow:
             uow.repo.put(release)
             uow.commit()
@@ -145,11 +157,15 @@ class TestAssetReleaseVisibility:
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])
         )
         release = ar.AssetRelease(
-                id=DomainId(release_id), name="", description="",
-                owner=UserId(owner), receivers=[UserId(receiver)],
-                conditions=[ar.TrueCondition()], release_type="dummy",
-                assets=[AssetId(asset_id)]
-            )
+            id=DomainId(release_id),
+            name="",
+            description="",
+            owner=UserId(owner),
+            receivers=[UserId(receiver)],
+            conditions=[ar.TrueCondition()],
+            release_type="dummy",
+            assets=[AssetId(asset_id)],
+        )
         with bus.uows.get(ar.AssetRelease) as uow:
             uow.repo.put(release)
             uow.commit()
@@ -183,12 +199,16 @@ class TestAssetReleaseVisibility:
         release_id = "123"
         scheduled = ar.AssetReleaseScheduled(
             aggregate_id=release_id,
-            re_conditions=[], re_type="", owner=owner,
-            assets=[asset_id], receivers=[owner]
+            re_conditions=[],
+            re_type="",
+            owner=owner,
+            assets=[asset_id],
+            receivers=[owner],
         )
         time.sleep(0.005)
         canceled = ar.AssetReleaseCanceled(
-                aggregate_id=release_id, assets=[asset_id])
+            aggregate_id=release_id, assets=[asset_id]
+        )
 
         history = [
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),

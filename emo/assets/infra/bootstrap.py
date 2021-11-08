@@ -1,27 +1,29 @@
 import inspect
 from typing import Callable, Dict, List, Type
 
+from emo.assets.domain.entity import asset, asset_release
 from emo.assets.domain.usecase import COMMAND_HANDLERS, EVENT_HANDLERS
-from emo.assets.infra.memrepo.repository import \
-    MemoryPersistedAssetRepository, MemPersistedReleaseRepo
-from emo.shared.infra.memrepo.unit_of_work import MemoryUoW
+from emo.assets.infra.memrepo.repository import (
+    MemoryPersistedAssetRepository, MemPersistedReleaseRepo)
 from emo.shared.domain import Command, Event
 from emo.shared.domain.usecase.message_bus import MessageBus, UoWs
-from emo.assets.domain.entity import asset, asset_release
-
+from emo.shared.infra.memrepo.unit_of_work import MemoryUoW
 
 EventHandler = Dict[Type[Event], List[Callable]]
 CommandHandler = Dict[Type[Command], Callable]
 
 
 def bootstrap(
-        asset_uow=MemoryUoW(MemoryPersistedAssetRepository),
-        release_uow=MemoryUoW(MemPersistedReleaseRepo),
+    asset_uow=MemoryUoW(MemoryPersistedAssetRepository),
+    release_uow=MemoryUoW(MemPersistedReleaseRepo),
 ) -> MessageBus:
 
-    uows = UoWs({asset.Asset: asset_uow,
-                 asset_release.AssetRelease: release_uow,
-                 })
+    uows = UoWs(
+        {
+            asset.Asset: asset_uow,
+            asset_release.AssetRelease: release_uow,
+        }
+    )
     dependencies = {**uows.as_dependencies()}
     return MessageBus(
         uows=uows,
@@ -60,6 +62,6 @@ def inject_dependencies(handler, dependencies):
         for name, dependency in dependencies.items()
         if name in params
     }
-    l = lambda message: handler(message, **deps)
-    l.__name__ = handler.__name__
-    return l
+    func = lambda message: handler(message, **deps)  # noqa: E731
+    func.__name__ = handler.__name__
+    return func

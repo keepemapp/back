@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 
 
 def to_millis(dt: datetime) -> int:
-    return int(dt.replace(tzinfo=timezone.utc).timestamp()*1000)
+    return int(dt.replace(tzinfo=timezone.utc).timestamp() * 1000)
 
 
 def current_utc() -> datetime:
@@ -16,4 +16,4 @@ def current_utc_millis() -> int:
 
 
 def utc_from_timestamp(timestamp: int) -> datetime:
-    return datetime.fromtimestamp(timestamp/1000., timezone.utc)
+    return datetime.fromtimestamp(timestamp / 1000.0, timezone.utc)

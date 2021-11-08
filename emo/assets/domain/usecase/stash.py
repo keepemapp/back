@@ -1,17 +1,16 @@
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import Dict, List
 
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.shared.domain import Command
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
 @dataclass(frozen=True)
 class Stash(Command):
-    """
+    """ """
 
-    """
     asset_ids: List[str]
-    location: Dict # TODO have a good location class
+    location: Dict  # TODO have a good location class
     name: str
     description: str
     from_users: List[str]

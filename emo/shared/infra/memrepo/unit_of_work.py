@@ -1,8 +1,7 @@
-from typing import TypeVar, Type
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
-from emo.assets.infra.memrepo.repository import MemoryPersistedAssetRepository
-from emo.shared.domain import DomainRepository
+from typing import Type
 
+from emo.shared.domain import DomainRepository
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 R = Type[DomainRepository]
 

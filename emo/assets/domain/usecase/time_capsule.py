@@ -1,8 +1,8 @@
 from dataclasses import dataclass
 from typing import List
 
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.shared.domain import Command
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
 @dataclass(frozen=True)
@@ -13,8 +13,9 @@ class CreateTimeCapsule(Command):
     owners_id: List[str]
 
 
-def create_time_capsule(cmd: CreateTimeCapsule,
-                        assetrelease_uow: AbstractUnitOfWork):
+def create_time_capsule(
+    cmd: CreateTimeCapsule, assetrelease_uow: AbstractUnitOfWork
+):
     """
     Save away some assets that will be reappear in a later point in time
     to the individuals you specify.
