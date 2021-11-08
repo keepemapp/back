@@ -5,7 +5,6 @@ from typing import List, Optional
 from emo.assets.domain.entity.asset import Asset, FileData
 from emo.assets.domain.usecase.unit_of_work import AssetUoW
 from emo.shared.domain import AssetId, Command, Event, UserId, init_id
-from emo.shared.domain.time_utils import current_utc_timestamp
 
 
 @dataclass(frozen=True)
@@ -16,38 +15,37 @@ class AssetCreated(Event):
 @dataclass(frozen=True)
 class CreateAsset(Command):
     title: str
-    description: str
     owners_id: List[str]
     file_type: str
     file_name: str
-    id: Optional[str] = field(default_factory=lambda: init_id(AssetId).id)
+    description: Optional[str] = None
+    asset_id: Optional[str] = field(default_factory=lambda: init_id(AssetId).id)
 
 
 def _compute_location(owner_id: str, asset_id: str) -> str:
     return path.join(owner_id, asset_id + ".enc")
 
 
-def create_asset(cmd: CreateAsset, uow: AssetUoW):
+def create_asset(cmd: CreateAsset, asset_uow: AssetUoW):
     """Handler to create an asset
 
     :param cmd: Command
     :type cmd: CreateAsset
-    :param uow: Unit of Work instance
-    :type uow: AssetUoW
+    :param asset_uow: Unit of Work instance
+    :type asset_uow: AssetUoW
     :return:
     """
     asset = Asset(
-        created_at=current_utc_timestamp(),
         owners_id=[UserId(u) for u in cmd.owners_id],
         file=FileData(
             type=cmd.file_type,
             name=cmd.file_name,
-            location=_compute_location(cmd.owners_id[0], cmd.id),
+            location=_compute_location(cmd.owners_id[0], cmd.asset_id),
         ),
-        id=AssetId(cmd.id),
+        id=AssetId(cmd.asset_id),
         title=cmd.title,
         description=cmd.description,
     )
-    with uow:
-        uow.repo.create(asset)
-        uow.commit()
+    with asset_uow:
+        asset_uow.repo.create(asset)
+        asset_uow.commit()

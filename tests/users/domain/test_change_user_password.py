@@ -56,4 +56,4 @@ class TestChangePassword:
     def test_event_domain_has_no_information(self, valid_pwd_change):
         cp = ChangeUserPassword(**valid_pwd_change)
         uid = cp._repository.all()[0].id
-        assert cp._event.aggregate == uid
+        assert cp._event.aggregate_id == uid

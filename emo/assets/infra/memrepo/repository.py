@@ -5,8 +5,10 @@ from typing import Dict, List, NoReturn, Optional, Union
 
 from emo.assets.domain.entity import (Asset, AssetRepository,
                                       DuplicatedAssetException)
+from emo.assets.domain.entity.asset_release import AssetRelease, \
+    AssetReleaseRepository
 from emo.settings import settings
-from emo.shared.domain import AssetId, UserId
+from emo.shared.domain import AssetId, DomainId, UserId
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]
@@ -38,12 +40,13 @@ class MemoryPersistedAssetRepository(AssetRepository):
                 self._owner_index[oid] = [asset.id]
         self.__persist()
 
-    def find_by_id(self, id: AssetId) -> Optional[Asset]:
-        ids = self.find_by_ids([id])
+    def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
+        ids = self.find_by_ids([id], visible_only)
         return ids[0] if ids else None
 
-    def find_by_ids(self, ids: List[AssetId]) -> List[Asset]:
-        return [v for k, v in self._repo.items() if k in ids]
+    def find_by_ids(self, ids: List[AssetId], visible_only=True) -> List[Asset]:
+        return [v for k, v in self._repo.items()
+                if k in ids and (not visible_only or v.is_visible())]
 
     def delete(self, asset: Asset):
         owners = asset.owners_id
@@ -89,6 +92,71 @@ class MemoryPersistedAssetRepository(AssetRepository):
         return {}
 
     def __startup_index(self) -> OwnerIndex:
+        if os.path.exists(self.INDEX_FILE):
+            with open(self.INDEX_FILE, "rb") as f:
+                r = pickle.load(f)
+            return r
+        return {}
+
+
+Releases = Dict[DomainId, AssetRelease]
+OwnerReleaseIndex = Dict[UserId, List[DomainId]]
+
+
+class MemPersistedReleaseRepo(AssetReleaseRepository):
+    def __init__(
+            self,
+            dbfile: Union[Path, str] = Path(
+                os.path.join(settings.DATA_FOLDER, "assetsreleasesrepo.pk")
+            ),
+    ):
+        super().__init__()
+        if isinstance(dbfile, str):
+            dbfile = Path(dbfile)
+        self.DB_FILE: Path = dbfile
+        self.INDEX_FILE = Path(str(dbfile).replace(".pk", "") + "-index.pk")
+        self._repo: Releases = self.__startup_db()
+        self._owner_index: OwnerReleaseIndex = self.__startup_index()
+
+    def put(self, release: AssetRelease):
+        self._repo[release.id] = release
+        self._owner_index[release.owner].append(release.id)
+        self._seen.add(release)
+        self.__persist()
+
+    def get(self, release_id: DomainId) -> AssetRelease:
+        return self._repo.get(release_id)
+
+    def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
+        result = []
+        for rid in self._owner_index.get(user_id):
+            r = self.get(rid)
+            if r.is_active():
+                result.append(r)
+        return result
+
+    def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
+        result = []
+        for rid in self._owner_index.get(user_id):
+            r = self.get(rid)
+            if r.is_past():
+                result.append(r)
+        return result
+
+    def __persist(self) -> None:
+        with open(self.DB_FILE, "wb") as f:
+            pickle.dump(self._repo, f)
+        with open(self.INDEX_FILE, "wb") as f:
+            pickle.dump(self._owner_index, f)
+
+    def __startup_db(self) -> Releases:
+        if os.path.exists(self.DB_FILE):
+            with open(self.DB_FILE, "rb") as f:
+                r = pickle.load(f)
+            return r
+        return {}
+
+    def __startup_index(self) -> OwnerReleaseIndex:
         if os.path.exists(self.INDEX_FILE):
             with open(self.INDEX_FILE, "rb") as f:
                 r = pickle.load(f)

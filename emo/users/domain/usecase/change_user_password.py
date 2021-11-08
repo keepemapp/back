@@ -27,7 +27,7 @@ class ChangeUserPassword(CommandOld):
         self.uid = user_id
         self.old = old_password
         self.new = new_password
-        self._event = UserPasswordChanged(aggregate=user_id)
+        self._event = UserPasswordChanged(aggregate_id=user_id)
 
     def execute(self) -> NoReturn:
         u = self._repository.get(self.uid)

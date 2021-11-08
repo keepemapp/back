@@ -6,7 +6,7 @@ import pytest
 from emo.assets.domain.entity import Asset
 from emo.assets.infra.memrepo.repository import MemoryPersistedAssetRepository
 from emo.shared.domain import AssetId, UserId
-from tests.assets.domain import get_asset, valid_asset
+from tests.assets.domain import asset, valid_asset
 
 
 @pytest.fixture
@@ -28,10 +28,10 @@ class TestAssetRepo:
     def test_init_string(self):
         r = MemoryPersistedAssetRepository(dbfile="sometestfile.pk")
 
-    def test_create(self, tmpdir, get_asset):
+    def test_create(self, tmpdir, asset):
         f = tmpdir.mkdir("data").join("assetsrepo2.pk")
         r = MemoryPersistedAssetRepository(dbfile=f)
-        a = get_asset
+        a = asset
         r.create(a)
         assert f.exists()
         assert len(r.all()) == 1
@@ -42,9 +42,9 @@ class TestAssetRepo:
         r = MemoryPersistedAssetRepository(dbfile=f)
         assert r.all()[0] == a
 
-    def test_cannot_create_two_assets_same_id(self, asset_repo, get_asset):
+    def test_cannot_create_two_assets_same_id(self, asset_repo, asset):
         r = asset_repo
-        a = get_asset
+        a = asset
         r.create(a)
         assert len(r.all()) == 1
         assert r.all()[0] == a
@@ -52,23 +52,23 @@ class TestAssetRepo:
         with pytest.raises(Exception):
             r.create(a)
 
-    def test_find_by_id(self, asset_repo, get_asset):
+    def test_find_by_id(self, asset_repo, asset):
         r = asset_repo
-        a = get_asset
+        a = asset
         r.create(a)
         assert r.find_by_id(a.id) == a
 
     def test_find_by_id_returns_none_when_not_matching(
-        self, asset_repo, get_asset
+        self, asset_repo, asset
     ):
         r = asset_repo
-        a = get_asset
+        a = asset
         r.create(a)
         assert not r.find_by_id(AssetId("nonexsiting id"))
 
-    def test_find_multiple_ids(self, asset_repo, valid_asset, get_asset):
+    def test_find_multiple_ids(self, asset_repo, valid_asset, asset):
         r = asset_repo
-        a = get_asset
+        a = asset
         r.create(a)
         valid_asset["id"] = AssetId("asset2id")
         a2 = Asset(**valid_asset)

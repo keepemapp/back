@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
-from emo.assets.domain.usecase.unit_of_work import AssetUoW
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.shared.domain import Command
 
 
@@ -18,7 +18,7 @@ class Stash(Command):
     to_users: List[str]
 
 
-def stash_asset(cmd: Stash, uow: AssetUoW):
+def stash_asset(cmd: Stash, assetrelease_uow: AbstractUnitOfWork):
     """
     Hide an asset in a geographical location. Once a person gets near it, it
     will discover it and take ownership.

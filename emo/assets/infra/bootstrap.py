@@ -2,22 +2,29 @@ import inspect
 from typing import Callable, Dict, List, Type
 
 from emo.assets.domain.usecase import COMMAND_HANDLERS, EVENT_HANDLERS
-from emo.assets.domain.usecase.unit_of_work import AssetUoW
-from emo.assets.infra.memrepo.unit_of_work import AssetMemoryUnitOfWork
+from emo.assets.infra.memrepo.repository import \
+    MemoryPersistedAssetRepository, MemPersistedReleaseRepo
+from emo.shared.infra.memrepo.unit_of_work import MemoryUoW
 from emo.shared.domain import Command, Event
-from emo.shared.domain.usecase.message_bus import MessageBus
+from emo.shared.domain.usecase.message_bus import MessageBus, UoWs
+from emo.assets.domain.entity import asset, asset_release
+
 
 EventHandler = Dict[Type[Event], List[Callable]]
 CommandHandler = Dict[Type[Command], Callable]
 
 
 def bootstrap(
-    uow: AssetUoW = AssetMemoryUnitOfWork(),
+        asset_uow=MemoryUoW(MemoryPersistedAssetRepository),
+        release_uow=MemoryUoW(MemPersistedReleaseRepo),
 ) -> MessageBus:
 
-    dependencies = {"uow": uow}
+    uows = UoWs({asset.Asset: asset_uow,
+                 asset_release.AssetRelease: release_uow,
+                 })
+    dependencies = {**uows.as_dependencies()}
     return MessageBus(
-        uow=uow,
+        uows=uows,
         event_handlers=injected_event_handlers(dependencies, EVENT_HANDLERS),
         command_handlers=injected_command_handlers(
             dependencies, COMMAND_HANDLERS

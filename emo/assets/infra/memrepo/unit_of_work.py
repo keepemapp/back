@@ -12,6 +12,7 @@ class AssetMemoryUnitOfWork(AssetUoW):
         return super().__enter__()
 
     def _commit(self):
+        self.repo.__persist()
         self.committed = True
 
     def rollback(self):

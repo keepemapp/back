@@ -1,13 +1,20 @@
 from __future__ import annotations
 
-import abc
+from enum import Enum, unique
 from abc import ABC
-from dataclasses import dataclass
-from datetime import datetime
-from typing import Callable, List, Optional, Protocol, Set, Type, TypeVar
+from dataclasses import dataclass, field, Field
+from dataclasses_json import dataclass_json
+from typing import Callable, List, Set, Type, TypeVar, Dict
 from uuid import uuid4
+from emo.shared.domain.time_utils import current_utc_millis
 
 from emo.settings import settings
+
+
+def required_field() -> Field:
+    def raise_err():
+        raise TypeError()
+    return field(default_factory=lambda: raise_err)
 
 
 @dataclass(frozen=True)
@@ -47,22 +54,28 @@ class IdTypeException(Exception):
         super().__init__("ID Type is not valid")
 
 
+IDT = TypeVar('IDT', str, DomainId)
+
+
+@dataclass_json
 @dataclass(frozen=True)
 class Event:
-    eventType: str = None
-    aggregate: Entity = None
-    occurredOn: datetime = datetime.utcnow()
+    eventType: str = required_field()
+    aggregate_id: IDT = required_field()
+    timestamp: int = field(default_factory=current_utc_millis)
     application: str = settings.APPLICATION_TECHNICAL_NAME
 
 
+@dataclass_json
 @dataclass(frozen=True)
 class Command:
     pass
 
 
+@dataclass_json
 @dataclass
 class Entity:
-    id: DomainId
+    id: DomainId = init_id(DomainId)
 
     def _id_type_is_valid(self, t: Type[DomainId], field: DomainId = None):
         """Raises Error if types do not match
@@ -89,9 +102,26 @@ class Entity:
         return type(self) == type(other) and self.id == other.id
 
 
+class NoValue(Enum):
+    def __repr__(self):
+        return str(self.value)
+
+
+@unique
+class RootAggState(NoValue):
+    ACTIVE = "active"
+    HIDDEN = "hidden"
+    INACTIVE = "inactive"
+    REMOVED = "removed"
+
+
 @dataclass
 class RootAggregate(Entity):
-    # _events: Optional[List[Event]]
+    """Base class with parameters that will need to be overwritten"""
+    _events: List[Event] = field(default_factory=list)
+    created_ts: int = current_utc_millis()
+    modified_ts: Dict[str, int] = field(default_factory=dict)
+    state: RootAggState = RootAggState.ACTIVE
 
     @property
     def events(self) -> List[Event]:
@@ -102,7 +132,15 @@ class RootAggregate(Entity):
         """
         return self._events
 
+    def _update_field(self, mod_ts: int, field: str, value):
+        if mod_ts >= self._modified_ts_for(field):
+            setattr(self, field, value)
+            self.modified_ts[field] = mod_ts
 
+    def _modified_ts_for(self, field: str):
+        return self.modified_ts.get(field, self.created_ts)
+
+@dataclass_json
 @dataclass(frozen=True, eq=True)
 class ValueObject:
     pass
@@ -115,18 +153,10 @@ class DomainRepository(ABC):
     It contains a `seen` variable that will allow us to collect all the
     events from every entity acted on.
     """
+    def __init__(self, **kwargs):
+        pass
 
     @property
     def seen(self) -> Set[RootAggregate]:
         return self._seen
 
-
-@dataclass
-class Tombstone(Entity):
-    """
-    Special entity marking the deletion of an entity
-    To be used with Deletion events
-    TODO is this tombstone technique correct? I feel this is layer corruption
-    """
-
-    pass

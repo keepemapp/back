@@ -13,7 +13,7 @@ from emo.assets.infra.fastapi.v1.schemas import (AssetCreate, AssetResponse,
                                                  AssetUploadAuthData)
 from emo.assets.infra.filestorage import AssetFileRepository
 from emo.assets.infra.memrepo import views
-from emo.settings import settings
+from emo.settings import settings as s
 from emo.shared.domain.usecase.message_bus import MessageBus
 from emo.shared.infra.dependencies import (create_jwt_token, decode_token,
                                            get_active_user_token)
@@ -22,7 +22,7 @@ from emo.shared.infra.fastapi.schemas import HTTPError, TokenData
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
-    **settings.API_ASSET_PATH.dict(),
+    **s.API_ASSET_PATH.dict(),
 )
 
 
@@ -62,7 +62,7 @@ async def add_asset(
     cmd = CreateAsset(**payload)
     bus.handle(cmd)
     return RedirectResponse(
-        url=settings.API_V1.concat(settings.API_ASSET_PATH).concat(cmd.id),
+        url=s.API_V1.concat(s.API_ASSET_PATH).concat(cmd.asset_id),
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -71,13 +71,13 @@ def create_asset_upload_auth_token(asset_id: str, user_id: str) -> str:
     auth = AssetUploadAuthData(asset_id=asset_id, user_id=user_id)
     return create_jwt_token(
         auth.dict(),
-        expires_delta=timedelta(minutes=settings.UPLOAD_AUTH_TOKEN_EXPIRE_SEC),
+        expires_delta=timedelta(minutes=s.UPLOAD_AUTH_TOKEN_EXPIRE_SEC),
     )  # TODO change me to seconds instead of minutes
 
 
 def create_asset_upload_path(asset_id: str, user_id: str) -> str:
     return (
-        settings.API_ASSET_PATH.concat(asset_id).prefix + "?authorizer_token="
+        s.API_ASSET_PATH.concat(asset_id).prefix + "?authorizer_token="
         f"{create_asset_upload_auth_token(asset_id, user_id)}"
     )
 

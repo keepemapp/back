@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from typing import List
 
-from emo.assets.domain.usecase.unit_of_work import AssetUoW
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.shared.domain import Command
 
 
@@ -16,7 +16,8 @@ class CreateAssetInABottle(Command):
     owner_id: str
 
 
-def create_asset_in_a_bottle(cmd: CreateAssetInABottle, uow: AssetUoW):
+def create_asset_in_a_bottle(cmd: CreateAssetInABottle,
+                             assetrelease_uow: AbstractUnitOfWork):
     """
     Save away some assets that will be reappear in a later point in time
     to the desired receivers. All assets will be

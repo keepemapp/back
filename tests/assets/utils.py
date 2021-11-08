@@ -1,12 +1,14 @@
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, TypeVar, Generic, Type
 
 import pytest
 
-from emo.assets.domain.entity import Asset, AssetRepository
+from emo.assets.domain.entity import Asset, AssetRepository, DomainRepository
 from emo.assets.domain.entity.asset_repository import DuplicatedAssetException
-from emo.assets.domain.usecase.unit_of_work import AssetUoW
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.assets.infra import bootstrap
-from emo.shared.domain import AssetId, UserId
+from emo.shared.domain import AssetId, UserId, DomainId
+from emo.assets.domain.entity.asset_release import AssetReleaseRepository, AssetRelease
+
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]
@@ -28,12 +30,13 @@ class MemoryAssetRepository(AssetRepository):
             else:
                 self._owner_index[oid] = [asset.id]
 
-    def find_by_id(self, id: AssetId) -> Optional[Asset]:
-        ids = self.find_by_ids([id])
+    def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
+        ids = self.find_by_ids([id], visible_only)
         return ids[0] if ids else None
 
-    def find_by_ids(self, ids: List[AssetId]) -> List[Asset]:
-        return [v for k, v in self._repo.items() if k in ids]
+    def find_by_ids(self, ids: List[AssetId], visible_only=True) -> List[Asset]:
+        return [v for k, v in self._repo.items()
+                if k in ids and (not visible_only or v.is_visible())]
 
     def delete(self, asset: Asset):
         owners = asset.owners_id
@@ -64,13 +67,46 @@ class MemoryAssetRepository(AssetRepository):
         self._owner_index.clear()
 
 
-class FakeAssetUoW(AssetUoW):
-    def __init__(self):
-        self.repo = MemoryAssetRepository()
+Releases = Dict[DomainId, AssetRelease]
+OwnerReleaseIndex = Dict[UserId, List[DomainId]]
+
+
+class MemoryReleaseRepo(AssetReleaseRepository):
+    def __init__(self,):
+        super().__init__()
+        self._repo: Releases = {}
+
+    def put(self, release: AssetRelease):
+        print(release.__hash__)
+        self._repo[release.id] = release
+        self._seen.add(release)
+
+    def get(self, release_id: DomainId) -> AssetRelease:
+        return self._repo.get(release_id)
+
+    def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
+        result = []
+        for _, r in self._repo.items():
+            if r.is_active() and r.owner == user_id:
+                result.append(r)
+        return result
+
+    def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
+        result = []
+        for _, r in self._repo.items():
+            if r.is_past() and r.owner == user_id:
+                result.append(r)
+        return result
+
+
+class MemoryUoW(AbstractUnitOfWork):
+    def __init__(self, repo_cls: Type[DomainRepository], **kwargs) -> None:
         super().__init__()
         self.committed = False
+        self.repo = repo_cls(**kwargs)
 
     def __enter__(self):
+        self.committed = False
         return super().__enter__()
 
     def _commit(self):
@@ -80,7 +116,15 @@ class FakeAssetUoW(AssetUoW):
         pass
 
 
+uows = {
+    "asset_uow": MemoryUoW(MemoryAssetRepository),
+    "release_uow": MemoryUoW(MemoryReleaseRepo)
+}
+
 @pytest.fixture
 def bus():
     """Init test bus for passing it to tests"""
-    return bootstrap.bootstrap(uow=FakeAssetUoW())
+    return bootstrap.bootstrap(
+        asset_uow=MemoryUoW(MemoryAssetRepository),
+        release_uow=MemoryUoW(MemoryReleaseRepo)
+    )

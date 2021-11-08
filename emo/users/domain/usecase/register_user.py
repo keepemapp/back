@@ -13,6 +13,7 @@ from emo.users.domain.usecase.exceptions import (
 @dataclass(frozen=True)
 class UserRegistered(Event):
     eventType: str = "user_created"
+    aggregate: User = None
 
 
 class RegisterUser(CommandOld):
@@ -39,6 +40,7 @@ class RegisterUser(CommandOld):
         )
 
         self._event = UserRegistered(
+            aggregate_id=self._entity.id.id,
             aggregate=self._entity.erase_sensitive_data()
         )
 

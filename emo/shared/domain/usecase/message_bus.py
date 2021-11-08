@@ -1,14 +1,28 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Type, Union
+from typing import Callable, Dict, List, Type, Union, TypeVar
 
-from emo.shared.domain import Command, Event
+from emo.shared.domain import Command, Event, RootAggregate
 from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 logger = logging.getLogger(__name__)
 
 Message = Union[Command, Event]
+
+UOWT = TypeVar("UOWT", bound=AbstractUnitOfWork)
+
+
+class UoWs(dict[Type[RootAggregate], AbstractUnitOfWork]):
+    def collect_new_events(self) -> List[Event]:
+        res = []
+        for uow in self.values():
+            for e in uow.collect_new_events():
+                res.append(e)
+        return res
+
+    def as_dependencies(self) -> Dict[str, AbstractUnitOfWork]:
+        return {k.__name__.lower() + "_uow": v for k, v in self.items()}
 
 
 class MessageBus:
@@ -24,11 +38,11 @@ class MessageBus:
 
     def __init__(
         self,
-        uow: AbstractUnitOfWork,
+        uows: UoWs,
         event_handlers: Dict[Type[Event], List[Callable]],
         command_handlers: Dict[Type[Command], Callable],
     ):
-        self.uow = uow
+        self.uows: UoWs = uows
         self.event_handlers = event_handlers
         self.command_handlers = command_handlers
         self.queue = []
@@ -51,7 +65,7 @@ class MessageBus:
                     '{"handler":"%s", "event":"%s"}', handler.__name__, event
                 )
                 handler(event)
-                self.queue.extend(self.uow.collect_new_events())
+                self.queue.extend(self.uows.collect_new_events())
             except Exception:
                 logger.exception(
                     '{"handler":"%s", "event":"%s"}', handler.__name__, event
@@ -65,7 +79,7 @@ class MessageBus:
                 '{"handler":"%s", "command":"%s"}', handler.__name__, command
             )
             handler(command)
-            self.queue.extend(self.uow.collect_new_events())
+            self.queue.extend(self.uows.collect_new_events())
         except Exception as e:
             logger.exception(
                 '{"command":"%s"}', command

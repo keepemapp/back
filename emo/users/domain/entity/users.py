@@ -5,7 +5,8 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from emo.shared.domain import RootAggregate, UserId
+from emo.shared.domain import RootAggregate, RootAggState, UserId, \
+    required_field
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "
@@ -17,11 +18,11 @@ INVALID_EMAIL = "Email is not valid"
 
 @dataclass
 class User(RootAggregate):
-    id: UserId
-    username: str
-    salt: Optional[str]
-    password_hash: Optional[str]
-    email: str
+    id: UserId = required_field()
+    username: str = required_field()
+    salt: str = ""
+    password_hash: str = ""
+    email: str = required_field()
     disabled: Optional[bool] = False
 
     @staticmethod

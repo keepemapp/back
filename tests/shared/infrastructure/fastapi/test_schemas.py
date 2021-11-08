@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 import pytest
@@ -33,7 +33,7 @@ class TestPydanticConverter:
     def test_list_of_domain_ids(self):
         @dataclass
         class DomainEntity(Entity):
-            ids: List[DomainId]
+            ids: List[DomainId] = field(default_factory=list)
 
         class EntityPyd(BaseModel):
             id: str

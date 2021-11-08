@@ -22,6 +22,8 @@ class AbstractUnitOfWork(ABC):
         for entity in self.repo.seen:
             while entity.events:
                 yield entity.events.pop(0)
+        # TODO test this... because events are saved to the Repo
+        # but they should not be!
 
     @abstractmethod
     def _commit(self) -> NoReturn:
@@ -30,3 +32,5 @@ class AbstractUnitOfWork(ABC):
     @abstractmethod
     def rollback(self) -> NoReturn:
         raise NotImplementedError
+
+

@@ -1,8 +1,10 @@
 from dataclasses import dataclass
 from typing import List, Dict
 
+from emo.assets.domain.entity.asset import Asset
 from emo.assets.domain.usecase.unit_of_work import AssetUoW
-from emo.shared.domain import Command
+from emo.shared.domain import Command, AssetId
+from emo.shared.domain.time_utils import current_utc_millis
 
 
 @dataclass(frozen=True)
@@ -11,11 +13,11 @@ class TransferAssets(Command):
     asset_ids: List[str]
     name: str
     description: str
-    from_user: List[str]
-    to_user: List[str]
+    owner: str
+    receivers: List[str]
 
 
-def transfer_asset(cmd: TransferAssets, uow: AssetUoW):
+def transfer_asset(cmd: TransferAssets, asset_uow: AssetUoW):
     """
     Changes the ownership of a group of assets
 
@@ -28,9 +30,13 @@ def transfer_asset(cmd: TransferAssets, uow: AssetUoW):
         handler to actually act on the files themselves if needed.
         here we act only on the assets metadata
 
-    :param cmd: command
-    :type cmd: TransferAssets
-    :param uow:
+    :param TransferAssets cmd: command
+    :param AssetUoW asset_uow:
     :return:
     """
-    raise NotImplementedError
+    with asset_uow as uow:
+        mod_ts = current_utc_millis()
+        for aid in cmd.asset_ids:
+            a: Asset = uow.repo.find_by_id(AssetId(aid))
+            a.change_owner(mod_ts, cmd.owner, cmd.receivers)
+        uow.commit()

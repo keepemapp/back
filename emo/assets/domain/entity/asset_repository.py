@@ -36,7 +36,7 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_id(self, id: AssetId) -> Optional[Asset]:
+    def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
         """Find asset by asset id
 
         :return: Asset matching id
@@ -45,7 +45,7 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def find_by_ids(self, ids: List[AssetId]) -> List[Asset]:
+    def find_by_ids(self, ids: List[AssetId], visible_only=True) -> List[Asset]:
         """Finds assets in list that are in the database.
 
         If one id does not exist, it does not return it so you

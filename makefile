@@ -9,7 +9,7 @@ ifeq ($(OS), Windows_NT)
 endif
 
 install: $(VENV)
-	#sudo apt-get install python3.8 python3.8-dev python3.8-venv
+	#sudo apt-get install python3.8 python3.8-dev python3.8-venv python3-pip
 	$(BIN)/$(PY) -m pip install --upgrade -r requirements.txt
 	echo "installed"
 
