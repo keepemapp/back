@@ -12,7 +12,7 @@ from emo.assets.infra.dependencies import (asset_file_repository, message_bus,
 from emo.assets.infra.fastapi.v1.schemas import (AssetCreate, AssetResponse,
                                                  AssetUploadAuthData)
 from emo.assets.infra.filestorage import AssetFileRepository
-from emo.assets.infra.memrepo import views
+from emo.assets.infra.memrepo import views_asset
 from emo.settings import settings as s
 from emo.shared.domain.usecase.message_bus import MessageBus
 from emo.shared.infra.dependencies import (create_jwt_token, decode_token,
@@ -36,8 +36,8 @@ def asset_to_response(asset_dict: Dict, token: TokenData):
 @router.post(
     "",
     status_code=status.HTTP_201_CREATED,
-    response_description="If successful, redirects to the GET endpoint for the"
-    " asset via the `location` header.",
+    response_description="If successful, redirects to the asset file upload"
+    "path (POST) via the `location` header.",
     response_class=RedirectResponse,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
@@ -62,7 +62,7 @@ async def add_asset(
     cmd = CreateAsset(**payload)
     bus.handle(cmd)
     return RedirectResponse(
-        url=s.API_V1.concat(s.API_ASSET_PATH).concat(cmd.asset_id),
+        url=create_asset_upload_path(cmd.asset_id, token.user_id),
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -110,7 +110,7 @@ async def post_asset_file(
 ):
     auth_data = decode_asset_upload_token(authorizer_token)
 
-    a = views.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
+    a = views_asset.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
 
     if not a:
         raise HTTPException(
@@ -156,7 +156,7 @@ async def get_all_assets(
     uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
 ):
     # TODO change me. Allow only admins
-    return [asset_to_response(a, token) for a in views.all(uow_cls())]
+    return [asset_to_response(a, token) for a in views_asset.all(uow_cls())]
 
 
 @router.get(
@@ -171,7 +171,7 @@ async def get_asset(
     token: TokenData = Depends(get_active_user_token),
     uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
 ):
-    a = views.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
+    a = views_asset.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
     if a:
         return asset_to_response(a, token)
     else:
@@ -191,7 +191,7 @@ async def get_asset_file(
     file_repo: AssetFileRepository = Depends(asset_file_repository),
 ):
     """Returns the asset's binary file"""
-    a = views.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
+    a = views_asset.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
     if a:
         # TODO when we go with encrypted files, media_type will be different
         return FileResponse(

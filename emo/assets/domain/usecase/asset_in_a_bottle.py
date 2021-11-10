@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from datetime import datetime
 from typing import List
 
 from emo.shared.domain import Command
@@ -9,11 +8,12 @@ from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 @dataclass(frozen=True)
 class CreateAssetInABottle(Command):
     asset_ids: List[str]
-    scheduled_date: datetime
+    """UNIX timestamp in milliseconds"""
+    scheduled_date: int
     name: str
     description: str
     receivers_id: List[str]
-    owner_id: str
+    owner: str
 
 
 def create_asset_in_a_bottle(

@@ -7,7 +7,7 @@ from typing import List, Set
 
 from emo.shared.domain import (AssetId, DomainId, DomainRepository, Event,
                                RootAggregate, RootAggState, UserId,
-                               ValueObject, init_id, required_field)
+                               ValueObject, init_id, required_field, Command)
 from emo.shared.domain.time_utils import current_utc_millis
 
 
@@ -145,4 +145,8 @@ class AssetReleaseRepository(DomainRepository):
 
     @abstractmethod
     def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def all(self) -> List[AssetRelease]:
         raise NotImplementedError

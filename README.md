@@ -104,7 +104,11 @@ Extra:
 > -- From https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
 
 Each `AggregateRoot` has its own `AbstractRepository`.
-And each `AbstractRepository` has its own `UnitOfWork`?
+And each `AbstractRepository` has its own `UnitOfWork`
+
+Since we are using messaging patterns, in the service layer we will have
+the handlers for each event or command. Ideally, those have only one repo
+and communicate with eachother via events. 
 
 ## WRITING FASTAPI endpoints
 
@@ -112,7 +116,7 @@ And each `AbstractRepository` has its own `UnitOfWork`?
 |:---------------------------|
 |Never use the `response_model` parameter when defining the endpoint **AND** using a pydantic model as return.|
 
-*DON'T** DO:
+**DON'T** DO:
 ```python
 @router.get("", response_model=List[UserResponse]})
 async def get_all_users(repo: UserRepository = Depends(user_repository)):
@@ -146,7 +150,8 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
   * [ ] for Users
 * [ ] Schema evolution in database and dataclasses. How to do it?
 * [ ] change database to a persistent one
-
+* [ ] Clean DomainID mess. Pass it to UUID or string and use type class
+* [ ] Change folder structure to a one more DDD like (domain, services, infra)
 
 
 Low prio:

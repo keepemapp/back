@@ -34,8 +34,8 @@ class Settings(BaseSettings):
     API_V1: ApiRoute = ApiRoute(prefix="/api/v1")
     API_TOKEN: ApiRoute = ApiRoute(prefix="/token", tags=["authentication"])
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
-    API_TRANSFER_PATH: ApiRoute = ApiRoute(
-        prefix="/transfers", tags=["transfers"]
+    API_RELEASE_PATH: ApiRoute = ApiRoute(
+        prefix="/releases", tags=["releases"]
     )
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
 
