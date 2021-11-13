@@ -39,6 +39,10 @@ class Settings(BaseSettings):
     )
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
 
+    API_ASSET_BOTTLE: ApiRoute = ApiRoute("in_a_bottle")
+    API_FUTURE_SELF = ApiRoute("to_future_self")
+    API_STASH = ApiRoute("stash")
+
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
     # to get a string like this run:
