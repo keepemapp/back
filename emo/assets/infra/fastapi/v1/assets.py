@@ -100,7 +100,7 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
     },
 )
-async def post_asset_file(
+async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
     token: TokenData = Depends(get_active_user_token),
@@ -156,7 +156,7 @@ async def get_all_assets(
     uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
 ):
     # TODO change me. Allow only admins
-    return [asset_to_response(a, token) for a in views_asset.all(uow_cls())]
+    return [asset_to_response(a, token) for a in views_asset.all_assets(uow_cls())]
 
 
 @router.get(

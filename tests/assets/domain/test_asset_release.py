@@ -96,7 +96,7 @@ class TestAssetReleaseVisibility:
         with bus.uows.get(Asset) as uow:
             assert not uow.repo.find_by_id(AssetId(asset_id))
             assert len(uow.repo.find_by_ids([AssetId(asset_id)])) == 0
-            all = uow.repo.all()
+            all = uow.repo.all_assets()
             asset = [a for a in all if a.id.id == asset_id][0]
             assert not asset.is_visible()
 

@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
-from emo.shared.domain import Command
+from emo.shared.domain import Command, init_id
 from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
@@ -11,6 +11,7 @@ class CreateTimeCapsule(Command):
     name: str
     description: str
     owners_id: List[str]
+    aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
 def create_time_capsule(

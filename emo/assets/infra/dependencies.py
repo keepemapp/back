@@ -1,4 +1,4 @@
-from typing import Type
+from typing import Callable
 
 from emo.assets.domain.entity import AssetRepository
 from emo.assets.domain.usecase.unit_of_work import AssetUoW
@@ -18,12 +18,12 @@ def message_bus() -> MessageBus:
     yield bootstrap()
 
 
-def unit_of_work_class() -> Type[AssetUoW]:
-    yield lambda: MemoryUoW(MemoryPersistedAssetRepository)
+def unit_of_work_class() -> Callable[[None], AssetUoW]:
+    yield lambda **kwargs: MemoryUoW(MemoryPersistedAssetRepository)
 
 
-def release_uow() -> Type[AssetUoW]:
-    yield lambda: MemoryUoW(MemPersistedReleaseRepo)
+def release_uow() -> Callable[[None], AssetUoW]:
+    yield lambda **kwargs: MemoryUoW(MemPersistedReleaseRepo)
 
 
 def asset_file_repository() -> AssetFileRepository:

@@ -117,21 +117,27 @@ and communicate with eachother via events.
 |Never use the `response_model` parameter when defining the endpoint **AND** using a pydantic model as return.|
 
 **DON'T** DO:
+
 ```python
-@router.get("", response_model=List[UserResponse]})
-async def get_all_users(repo: UserRepository = Depends(user_repository)):
-    return [to_pydantic_model(u, UserResponse) for u in repo.all()]
+@router.get("", response_model=List[UserResponse]
+
+})
+async
+
+def get_all_users(repo: UserRepository = Depends(user_repository)):
+  return [to_pydantic_model(u, UserResponse) for u in repo.all_assets()]
 ```
 If you do it, it will execute twice all the validators you might have defined in your
 model, causing unexpected behaviour. (see https://stackoverflow.com/a/69104403/5375579)
 
 **DO**
+
 ```python
 @router.get("", responses={
-    status.HTTP_200_OK: {"model": List[UserResponse]}
+  status.HTTP_200_OK: {"model": List[UserResponse]}
 })
 async def get_all_users(repo: UserRepository = Depends(user_repository)):
-    return [to_pydantic_model(u, UserResponse) for u in repo.all()]
+  return [to_pydantic_model(u, UserResponse) for u in repo.all_assets()]
 ```
 
 |:warning: ALERT|
@@ -152,7 +158,8 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 * [ ] change database to a persistent one
 * [ ] Clean DomainID mess. Pass it to UUID or string and use type class
 * [ ] Change folder structure to a one more DDD like (domain, services, infra)
-
+* [ ] Automatically add userID that makes the call to the create asset and transfers
+* [ ] Erase `emo/shared/infra/memrepo/message_bus.py`
 
 Low prio:
 * [ ] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas

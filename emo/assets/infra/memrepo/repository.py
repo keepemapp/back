@@ -125,12 +125,17 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
 
     def put(self, release: AssetRelease):
         self._repo[release.id] = release
+        if not self._owner_index.get(release.owner):
+            self._owner_index.update({release.owner: []})
         self._owner_index[release.owner].append(release.id)
         self._seen.add(release)
         self.__persist()
 
     def get(self, release_id: DomainId) -> AssetRelease:
         return self._repo.get(release_id)
+
+    def all(self) -> List[AssetRelease]:
+        return list(self._repo.values())
 
     def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
         result = []

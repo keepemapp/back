@@ -6,7 +6,7 @@ import pytest
 import emo.assets.domain.entity.asset_release as ar
 import emo.assets.domain.usecase.asset_to_future_self as afs
 from emo.shared.domain import AssetId, UserId
-from emo.shared.domain.time_utils import current_utc
+from emo.shared.domain.time_utils import current_utc, to_millis
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 
@@ -20,8 +20,8 @@ class TestAssetFutureSelf:
         history = [
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),
             afs.CreateAssetToFutureSelf(
-                asset_ids=[asset_id],
-                scheduled_date=scheduled_date,
+                assets=[asset_id],
+                scheduled_date=to_millis(scheduled_date),
                 name="note",
                 owner=owner,
             ),

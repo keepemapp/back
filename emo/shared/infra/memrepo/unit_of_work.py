@@ -12,10 +12,12 @@ class MemoryUoW(AbstractUnitOfWork):
         self.__repo_cls = repo_cls
         self.__repo_kwargs = kwargs
         self.committed = False
+        self.repo = None
 
     def __enter__(self):
         self.committed = False
-        self.repo: R = R(**self.__repo_kwargs)
+
+        self.repo: DomainRepository = self.__repo_cls(**self.__repo_kwargs)
         return super().__enter__()
 
     def _commit(self):

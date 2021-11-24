@@ -44,5 +44,7 @@ class TestMemoryAssetViews:
         )
         assert not owner_non_existing
 
-        should_exist = views_asset.find_by_id_and_owner(id, owner, uow_with_asset)
+        should_exist = views_asset.find_by_id_and_owner(
+            id, owner, uow_with_asset
+        )
         assert should_exist["id"] == asset.id.id

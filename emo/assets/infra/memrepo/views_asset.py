@@ -16,7 +16,7 @@ def asset_to_flat_dict(a: Asset):
     return d
 
 
-def all(uow: AssetUoW) -> List[Dict]:
+def all_assets(uow: AssetUoW) -> List[Dict]:
     with uow:
         return [asset_to_flat_dict(a) for a in uow.repo.all()]
 
@@ -35,6 +35,22 @@ def find_by_id_and_owner(
             AssetId(asset_id), UserId(user_id)
         )
         return asset_to_flat_dict(asset) if asset else None
+
+
+def are_assets_active(uow: AssetUoW, assets: List[str], user: str = None
+                      ) -> bool:
+    """Returns `True` if all assets exist and are visible.
+
+    If a user is passed, it checks the ownership of all assets.
+    """
+    with uow:
+        all_assets = uow.repo.find_by_ids([AssetId(a) for a in assets])
+        if len(all_assets) != len(assets):
+            return False
+        elif user and not all(UserId(user) in a.owners_id for a in all_assets):
+            return False
+        else:
+            return True
 
 
 def find_by_ownerid(user_id: str, uow: AssetUoW) -> List[Dict]:

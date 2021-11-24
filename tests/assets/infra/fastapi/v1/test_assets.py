@@ -102,7 +102,7 @@ class TestRegisterAsset:
 class TestGetAssets:
     def test_user_assets(self, client):
         _, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.user_id])
-        aid1 = r1.headers["location"].split("/")[-1]
+        aid1 = r1.headers["location"].split("/")[-1].split("?")[0]
 
         response = client.get(
             s.API_V1.concat(s.API_USER_PATH).prefix
@@ -117,7 +117,7 @@ class TestGetAssets:
         _, r2 = create_asset(
             client, 1, ["other-user", ACTIVE_USER_TOKEN.user_id]
         )
-        aid2 = r2.headers["location"].split("/")[-1]
+        aid2 = r2.headers["location"].split("/")[-1].split("?")[0]
 
         response = client.get(
             s.API_V1.concat(s.API_USER_PATH).prefix
@@ -127,11 +127,11 @@ class TestGetAssets:
         assert response.status_code == 200
         json = response.json()
         assert len(json) == 2
-        assert [a.get("id") for a in json] == [aid1, aid2]
+        assert [a.get("id").split("?")[0] for a in json] == [aid1, aid2]
 
     def test_get_individual_asset(self, client):
         a, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.user_id])
-        aid1 = r1.headers["location"].split("/")[-1]
+        aid1 = r1.headers["location"].split("/")[-1].split("?")[0]
         response = client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
         resp = response.json()

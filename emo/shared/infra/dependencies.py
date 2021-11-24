@@ -50,13 +50,12 @@ async def get_authorized_token(
 async def get_active_user_token(
     token: TokenData = Depends(get_authorized_token),
 ) -> TokenData:
-    inactive_user_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Operation forbidden for inactive users",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
     if token.disabled:
-        raise inactive_user_exception
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Operation forbidden for inactive users",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return token
 
 

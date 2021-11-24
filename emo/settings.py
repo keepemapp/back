@@ -26,6 +26,9 @@ class ApiRoute:
     def __str__(self) -> str:
         return self.prefix
 
+    def path(self) -> str:
+        return ("/" + self.prefix).replace("//", "/")
+
 
 class Settings(BaseSettings):
     APPLICATION_NAME: str = "My Heritage"
@@ -34,16 +37,14 @@ class Settings(BaseSettings):
     API_V1: ApiRoute = ApiRoute(prefix="/api/v1")
     API_TOKEN: ApiRoute = ApiRoute(prefix="/token", tags=["authentication"])
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
-    API_RELEASE_PATH: ApiRoute = ApiRoute(
-        prefix="/releases", tags=["releases"]
-    )
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
 
-    API_ASSET_BOTTLE: ApiRoute = ApiRoute("in_a_bottle")
-    API_FUTURE_SELF = ApiRoute("to_future_self")
-    API_STASH = ApiRoute("stash")
+    API_RELEASE: ApiRoute = ApiRoute(prefix="/releases", tags=["releases"])
+    API_ASSET_BOTTLE: ApiRoute = ApiRoute("/in_a_bottle")
+    API_FUTURE_SELF = ApiRoute("/to_future_self")
+    API_STASH = ApiRoute("/stash")
 
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000  # TODO change me
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
     # to get a string like this run:
     # openssl rand -hex 32

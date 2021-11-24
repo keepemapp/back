@@ -1,7 +1,7 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, List
 
-from emo.shared.domain import Command
+from emo.shared.domain import Command, init_id
 from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
@@ -13,8 +13,9 @@ class Stash(Command):
     location: Dict  # TODO have a good location class
     name: str
     description: str
-    from_users: List[str]
-    to_users: List[str]
+    owner: str
+    receivers: List[str]
+    aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
 def stash_asset(cmd: Stash, assetrelease_uow: AbstractUnitOfWork):

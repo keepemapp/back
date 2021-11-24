@@ -1,10 +1,11 @@
-import flatdict
 from dataclasses import asdict
 from typing import Dict, List, Optional
 
+import flatdict
+
 import emo.assets.domain.entity.asset_release as ar
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 from emo.shared.domain import DomainId, UserId
+from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
 def to_flat_dict(a: ar.AssetRelease):
@@ -36,8 +37,9 @@ def get(release: str, uow: AbstractUnitOfWork) -> Optional[Dict]:
         return to_flat_dict(uow.repo.get(DomainId(release)))
 
 
-def get_releases(user: str, uow: AbstractUnitOfWork,
-                 active=True) -> List[Dict]:
+def get_releases(
+    user: str, uow: AbstractUnitOfWork, active=True
+) -> List[Dict]:
     with uow:
         if active:
             releases = uow.repo.user_active_releases(UserId(user))

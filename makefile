@@ -18,6 +18,7 @@ install-dev: install $(DATA_FOLDER) requirements-dev.txt
 
 $(DATA_FOLDER):
 	mkdir $(DATA_FOLDER)
+	mkdir $(DATA_FOLDER)/assets
 
 $(VENV): requirements.txt
 	$(PY) -m venv venv
@@ -57,6 +58,9 @@ clean:
 	find . -type d -name __pycache__ -delete
 	find . -type d -name .pytest_cache -exec rm -r {} +
 	find . -type d -name .coverage_html -exec rm -r {} +
+
+clean-data:
+	find $(DATA_FOLDER) -type f -delete
 
 clean-deep: clean
 	rm -rf $(VENV)

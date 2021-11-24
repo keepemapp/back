@@ -45,7 +45,7 @@ class TransferId(DomainId):
     pass
 
 
-def init_id(id_type: Callable) -> DomainId:
+def init_id(id_type: Callable = DomainId) -> DomainId:
     return id_type(id=str(uuid4()))
 
 
@@ -112,6 +112,7 @@ class NoValue(Enum):
 @unique
 class RootAggState(NoValue):
     ACTIVE = "active"
+    PENDING_VALIDATION = "pending_validation"
     HIDDEN = "hidden"
     INACTIVE = "inactive"
     REMOVED = "removed"

@@ -1,9 +1,9 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
 from emo.assets.domain.entity.asset import Asset
 from emo.assets.domain.usecase.unit_of_work import AssetUoW
-from emo.shared.domain import AssetId, Command
+from emo.shared.domain import AssetId, Command, init_id
 from emo.shared.domain.time_utils import current_utc_millis
 
 
@@ -13,9 +13,10 @@ class TransferAssets(Command):
 
     asset_ids: List[str]
     name: str
-    description: str
     owner: str
     receivers: List[str]
+    description: str = None
+    aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
 def transfer_asset(cmd: TransferAssets, asset_uow: AssetUoW):

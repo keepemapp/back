@@ -91,6 +91,9 @@ class MemoryReleaseRepo(AssetReleaseRepository):
     def get(self, release_id: DomainId) -> AssetRelease:
         return self._repo.get(release_id)
 
+    def all(self) -> List[AssetRelease]:
+        return list(self._repo.values())
+
     def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
         result = []
         for _, r in self._repo.items():

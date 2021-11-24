@@ -1,19 +1,20 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List
 
-from emo.shared.domain import Command
+from emo.shared.domain import Command, init_id
 from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
 @dataclass(frozen=True)
 class CreateAssetInABottle(Command):
-    asset_ids: List[str]
+    assets: List[str]
     """UNIX timestamp in milliseconds"""
     scheduled_date: int
     name: str
-    description: str
-    receivers_id: List[str]
+    receivers: List[str]
     owner: str
+    description: str = None
+    aggregate_id: str = field(default_factory=init_id().id)
 
 
 def create_asset_in_a_bottle(
