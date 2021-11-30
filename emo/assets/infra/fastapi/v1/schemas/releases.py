@@ -8,28 +8,33 @@ from emo.settings import settings
 from emo.shared.infra.fastapi.schemas import Links
 
 
-class TransferAssets(BaseModel):
-    asset_ids: List[str]
+class TransferBase(BaseModel):
+    assets: List[str]
     name: str
-    receivers: List[str]
     description: str = None
 
+    @validator("assets", always=True)
+    def clean_assets(cls, v):
+        return settings.API_ASSET_PATH.remove_from(v)
 
-class CreateAssetToFutureSelf(BaseModel):
-    assets: List[str]
+
+class TransferAssets(TransferBase):
+    receivers: List[str]
+
+    @validator("receivers", always=True)
+    def clean_users(cls, v):
+        return settings.API_USER_PATH.remove_from(v)
+
+
+class CreateAssetToFutureSelf(TransferBase):
     """UNIX timestamp in milliseconds"""
     scheduled_date: int
-    name: str
-    description: str = None
 
 
-class CreateAssetInABottle(BaseModel):
-    assets: List[str]
+class CreateAssetInABottle(TransferAssets):
     """UNIX timestamp in milliseconds"""
     scheduled_date: int
-    name: str
     receivers: List[str]
-    description: str = None
 
 
 class ReleaseConditions(BaseModel):

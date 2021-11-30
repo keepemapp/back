@@ -100,7 +100,7 @@ class Asset(RootAggregate):
         news = [o for o in self.owners_id if o != transferor]
         news.extend(self._to_uids(new))
         self._update_field(mod_ts, "owners_id", news)
-        self.events.append(
+        self._events.append(
             AssetOwnershipChanged(
                 aggregate_id=self.id.id,
                 timestamp=mod_ts,
@@ -115,3 +115,6 @@ class Asset(RootAggregate):
     @staticmethod
     def _to_uids(uids: List[UIDT]):
         return [Asset._to_uid(u) for u in uids]
+
+    def __hash__(self):
+        return hash(self.id.id)

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from dataclasses import Field, dataclass, field
 from enum import Enum, unique
 from typing import Callable, Dict, List, Set, Type, TypeVar
@@ -25,6 +25,9 @@ class DomainId:
 
     def __eq__(self, other):
         return self.id == other.id
+
+    def __hash__(self):
+        return hash(self.id)
 
     # def __str__(self):
     #     return id
@@ -103,6 +106,9 @@ class Entity:
     def __eq__(self, other) -> bool:
         return type(self) == type(other) and self.id == other.id
 
+    def __hash__(self):
+        return hash(self.id)
+
 
 class NoValue(Enum):
     def __repr__(self):
@@ -129,7 +135,9 @@ class RootAggregate(Entity):
 
     @property
     def events(self) -> List[Event]:
-        """Property returning events to process
+        """Property returning events.
+
+        Do not access it directly if you are
 
         :return: List of events
         :rtype: List[Event]
@@ -165,3 +173,7 @@ class DomainRepository(ABC):
     @property
     def seen(self) -> Set[RootAggregate]:
         return self._seen
+
+    def commit(self):
+        """Optional method to be used for commit"""
+        pass

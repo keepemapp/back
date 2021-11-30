@@ -38,7 +38,11 @@ class MemoryPersistedAssetRepository(AssetRepository):
                 self._owner_index[oid].append(asset.id)
             else:
                 self._owner_index[oid] = [asset.id]
-        self.__persist()
+        self._seen.add(asset)
+
+    def update(self, asset: Asset) -> None:
+        self._repo[asset.id] = asset
+        self._seen.add(asset)
 
     def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
         ids = self.find_by_ids([id], visible_only)
@@ -61,7 +65,6 @@ class MemoryPersistedAssetRepository(AssetRepository):
                 self._owner_index[oid] = [
                     a for a in self._owner_index[oid] if a != asset.id
                 ]
-            self.__persist()
         except KeyError:
             pass
 
@@ -83,7 +86,7 @@ class MemoryPersistedAssetRepository(AssetRepository):
     def all(self) -> List[Asset]:
         return list(self._repo.values())
 
-    def __persist(self) -> None:
+    def commit(self) -> None:
         with open(self.DB_FILE, "wb") as f:
             pickle.dump(self._repo, f)
         with open(self.INDEX_FILE, "wb") as f:
@@ -129,7 +132,7 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
             self._owner_index.update({release.owner: []})
         self._owner_index[release.owner].append(release.id)
         self._seen.add(release)
-        self.__persist()
+        self.commit()
 
     def get(self, release_id: DomainId) -> AssetRelease:
         return self._repo.get(release_id)
@@ -153,7 +156,7 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
                 result.append(r)
         return result
 
-    def __persist(self) -> None:
+    def commit(self) -> None:
         with open(self.DB_FILE, "wb") as f:
             pickle.dump(self._repo, f)
         with open(self.INDEX_FILE, "wb") as f:

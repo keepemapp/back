@@ -33,11 +33,18 @@ class TestAssetRepo:
         r = MemoryPersistedAssetRepository(dbfile=f)
         a = asset
         r.create(a)
+        r.commit()
         assert f.exists()
         assert len(r.all()) == 1
         assert r.all()[0] == a
 
-        # Assert we persist at create
+    def test_persists_at_commit(self, tmpdir, asset):
+        f = tmpdir.mkdir("data").join("assetsrepo2.pk")
+        r = MemoryPersistedAssetRepository(dbfile=f)
+        a = asset
+        r.create(a)
+        r.commit()
+
         del r
         r = MemoryPersistedAssetRepository(dbfile=f)
         assert r.all()[0] == a
@@ -46,16 +53,19 @@ class TestAssetRepo:
         r = asset_repo
         a = asset
         r.create(a)
+        r.commit()
         assert len(r.all()) == 1
         assert r.all()[0] == a
 
         with pytest.raises(Exception):
             r.create(a)
+            r.commit()
 
     def test_find_by_id(self, asset_repo, asset):
         r = asset_repo
         a = asset
         r.create(a)
+        r.commit()
         assert r.find_by_id(a.id) == a
 
     def test_find_by_id_returns_none_when_not_matching(
@@ -64,15 +74,18 @@ class TestAssetRepo:
         r = asset_repo
         a = asset
         r.create(a)
+        r.commit()
         assert not r.find_by_id(AssetId("nonexsiting id"))
 
     def test_find_multiple_ids(self, asset_repo, valid_asset, asset):
         r = asset_repo
         a = asset
         r.create(a)
+        r.commit()
         valid_asset["id"] = AssetId("asset2id")
         a2 = Asset(**valid_asset)
         r.create(a2)
+        r.commit()
 
         assert len(r.all()) == 2
 
@@ -86,6 +99,7 @@ class TestAssetRepo:
         r = asset_repo
         a = Asset(**valid_asset)
         r.create(a)
+        r.commit()
 
         valid_asset["id"] = AssetId("asset2id")
         first_user = valid_asset["owners_id"][0]

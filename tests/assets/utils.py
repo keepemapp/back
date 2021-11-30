@@ -30,6 +30,9 @@ class MemoryAssetRepository(AssetRepository):
             else:
                 self._owner_index[oid] = [asset.id]
 
+    def update(self, asset: Asset) -> None:
+        self._repo[asset.id] = asset
+
     def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
         ids = self.find_by_ids([id], visible_only)
         return ids[0] if ids else None
@@ -121,6 +124,7 @@ class MemoryUoW(AbstractUnitOfWork):
 
     def _commit(self):
         self.committed = True
+        print("Seen elements ", self.repo.seen)
 
     def rollback(self):
         pass

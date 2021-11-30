@@ -17,9 +17,7 @@ class UoWs(dict[Type[RootAggregate], AbstractUnitOfWork]):
     def collect_new_events(self) -> List[Event]:
         res = []
         for uow in self.values():
-            with uow:
-                for e in uow.collect_new_events():
-                    res.append(e)
+            res.extend(uow.collect_new_events())
         return res
 
     def as_dependencies(self) -> Dict[str, AbstractUnitOfWork]:

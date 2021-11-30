@@ -29,6 +29,14 @@ class ApiRoute:
     def path(self) -> str:
         return ("/" + self.prefix).replace("//", "/")
 
+    def remove_from(self, id_with_path):
+        """Removes API path information from the passed parameter"""
+        if isinstance(id_with_path, list):
+            return [s.replace(self.prefix, '').replace('/', '')
+                    for s in id_with_path]
+        else:
+            return id_with_path.replace(self.prefix, '').replace('/', '')
+
 
 class Settings(BaseSettings):
     APPLICATION_NAME: str = "My Heritage"

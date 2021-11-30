@@ -1,34 +1,40 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import NoReturn
+from typing import List
 
-from emo.shared.domain import DomainRepository
+from emo.shared.domain import DomainRepository, Event
 
 
 class AbstractUnitOfWork(ABC):
     repo: DomainRepository
 
+    def __init__(self):
+        self._events: List[Event] = []
+
     def __enter__(self):
         return self
 
-    def __exit__(self, *args) -> NoReturn:
+    def __exit__(self, *args):
         self.rollback()
 
-    def commit(self) -> NoReturn:
+    def commit(self):
+        self._events.extend(self._collect_events_from_entities())
         self._commit()
 
-    def collect_new_events(self):
+    def _collect_events_from_entities(self):
         for entity in self.repo.seen:
             while entity.events:
                 yield entity.events.pop(0)
-        # TODO test this... because events are saved to the Repo
-        # but they should not be!
+
+    def collect_new_events(self):
+        while self._events:
+            yield self._events.pop(0)
 
     @abstractmethod
-    def _commit(self) -> NoReturn:
+    def _commit(self):
         raise NotImplementedError
 
     @abstractmethod
-    def rollback(self) -> NoReturn:
+    def rollback(self):
         raise NotImplementedError

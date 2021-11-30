@@ -21,6 +21,7 @@ class MemoryUoW(AbstractUnitOfWork):
         return super().__enter__()
 
     def _commit(self):
+        self.repo.commit()
         self.committed = True
 
     def rollback(self):

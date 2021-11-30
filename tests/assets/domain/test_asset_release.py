@@ -96,8 +96,8 @@ class TestAssetReleaseVisibility:
         with bus.uows.get(Asset) as uow:
             assert not uow.repo.find_by_id(AssetId(asset_id))
             assert len(uow.repo.find_by_ids([AssetId(asset_id)])) == 0
-            all = uow.repo.all_assets()
-            asset = [a for a in all if a.id.id == asset_id][0]
+            assets = uow.repo.all()
+            asset = [a for a in assets if a.id.id == asset_id][0]
             assert not asset.is_visible()
 
     def test_cancellation_returns_visibility(self, bus, create_asset_cmd):
@@ -169,7 +169,7 @@ class TestAssetReleaseVisibility:
         with bus.uows.get(ar.AssetRelease) as uow:
             uow.repo.put(release)
             uow.commit()
-        for e in release.events:
+        for e in uow.collect_new_events():
             bus.handle(e)
 
         # When
@@ -177,7 +177,8 @@ class TestAssetReleaseVisibility:
             r: ar.AssetRelease = uow.repo.get(DomainId(release_id))
             r.release()
             uow.commit()
-        for e in r.events:
+        for e in uow.collect_new_events():
+            print(e)
             bus.handle(e)
 
         # Then

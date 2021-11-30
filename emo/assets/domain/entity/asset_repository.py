@@ -36,6 +36,11 @@ class AssetRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
+    def update(self, asset: Asset) -> None:
+        """Updates an asset"""
+        raise NotImplementedError
+
+    @abstractmethod
     def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
         """Find asset by asset id
 
