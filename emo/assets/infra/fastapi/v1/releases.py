@@ -144,7 +144,7 @@ async def add_asset_bottle(
 
 
 @router.post(
-    "/stash",
+    s.API_STASH.path(),
     **BASE_API_POST_DEF,
     response_description="Stashes a group of assets.\n"
     + "If successful, redirects to the GET endpoint.",
