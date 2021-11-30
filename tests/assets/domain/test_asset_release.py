@@ -6,12 +6,12 @@ from typing import Any, Dict
 
 import pytest
 
-import emo.assets.domain.entity.asset_release as ar
-import emo.assets.domain.usecase.asset_to_future_self as afs
-from emo.assets.domain.entity.asset import Asset
-from emo.assets.domain.usecase.create_asset import CreateAsset
-from emo.shared.domain import AssetId, DomainId, UserId
-from emo.shared.domain.time_utils import current_utc, to_millis
+import kpm.assets.domain.entity.asset_release as ar
+import kpm.assets.domain.usecase.asset_to_future_self as afs
+from kpm.assets.domain.entity.asset import Asset
+from kpm.assets.domain.usecase.create_asset import CreateAsset
+from kpm.shared.domain import AssetId, DomainId, UserId
+from kpm.shared.domain.time_utils import current_utc, to_millis
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 

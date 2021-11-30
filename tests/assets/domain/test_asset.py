@@ -2,9 +2,9 @@ import datetime as dt
 
 import pytest
 
-from emo.assets.domain.entity.asset import *
-from emo.shared.domain import AssetId, DomainId, IdTypeException, UserId
-from emo.shared.domain.time_utils import (current_utc, current_utc_millis,
+from kpm.assets.domain.entity.asset import *
+from kpm.shared.domain import AssetId, DomainId, IdTypeException, UserId
+from kpm.shared.domain.time_utils import (current_utc, current_utc_millis,
                                           to_millis)
 from tests.assets.domain import asset, valid_asset
 

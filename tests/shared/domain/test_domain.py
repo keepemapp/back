@@ -2,10 +2,10 @@ import datetime as dt
 
 import pytest
 
-from emo.assets.domain.entity import (Asset, AssetTitleException,
+from kpm.assets.domain.entity import (Asset, AssetTitleException,
                                       EmptyOwnerException)
-from emo.shared.domain import RootAggregate, RootAggState
-from emo.shared.domain.time_utils import current_utc, to_millis
+from kpm.shared.domain import RootAggregate, RootAggState
+from kpm.shared.domain.time_utils import current_utc, to_millis
 from tests.assets.domain import asset, valid_asset
 
 

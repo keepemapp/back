@@ -5,8 +5,8 @@ import pytest
 from pydantic import BaseModel, ValidationError
 from pydantic.dataclasses import dataclass as pydataclass
 
-from emo.shared.domain import DomainId, Entity, ValueObject
-from emo.shared.infra.fastapi.schema_utils import to_pydantic_model
+from kpm.shared.domain import DomainId, Entity, ValueObject
+from kpm.shared.infra.fastapi.schema_utils import to_pydantic_model
 
 
 @pytest.mark.unit

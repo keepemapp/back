@@ -27,12 +27,12 @@ $(VENV): requirements.txt
 
 .PHONY: format
 format: $(VENV)
-	$(BIN)/black --line-length 79 emo tests
-	$(BIN)/isort emo tests
+	$(BIN)/black --line-length 79 kpm tests
+	$(BIN)/isort kpm tests
 
 .PHONY: lint
 lint: $(VENV)
-	$(BIN)/flake8 emo
+	$(BIN)/flake8 kpm
 
 .PHONY: test-only
 test-only: $(VENV)
@@ -46,11 +46,11 @@ precommit: format test clean
 
 .PHONY: run-dev
 run-dev: $(VENV) $(DATA_FOLDER)
-	$(BIN)/uvicorn emo.main:app --reload --no-server-header
+	$(BIN)/uvicorn kpm.main:app --reload --no-server-header
 
 .PHONY: run
 run: $(VENV)
-	$(BIN)/uvicorn emo.main:app --no-server-header
+	$(BIN)/uvicorn kpm.main:app --no-server-header
 
 clean:
 	find . -type f -name .coverage -delete

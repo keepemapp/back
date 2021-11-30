@@ -1,8 +1,7 @@
 [run]
 omit =
-    emo/__main__.py
-    emo/__init__.py
-    emo/assets/infra/routers/*
+    kpm/__main__.py
+    kpm/__init__.py
 [report]
 exclude_lines =
     @abstractmethod

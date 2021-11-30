@@ -2,13 +2,13 @@ from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
 
 import pytest
 
-from emo.assets.domain.entity import Asset, AssetRepository, DomainRepository
-from emo.assets.domain.entity.asset_release import (AssetRelease,
+from kpm.assets.domain.entity import Asset, AssetRepository, DomainRepository
+from kpm.assets.domain.entity.asset_release import (AssetRelease,
                                                     AssetReleaseRepository)
-from emo.assets.domain.entity.asset_repository import DuplicatedAssetException
-from emo.assets.infra import bootstrap
-from emo.shared.domain import AssetId, DomainId, UserId
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
+from kpm.assets.domain.entity.asset_repository import DuplicatedAssetException
+from kpm.assets.infra import bootstrap
+from kpm.shared.domain import AssetId, DomainId, UserId
+from kpm.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]

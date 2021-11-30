@@ -1,4 +1,4 @@
-from emo.shared.security import *
+from kpm.shared.security import *
 
 
 def test_salt():

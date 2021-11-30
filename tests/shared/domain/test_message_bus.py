@@ -3,9 +3,9 @@ from typing import NoReturn
 import pytest
 
 
-from emo.shared.domain.usecase import message_bus as mb
-from emo.shared.domain import Command, Event, RootAggregate, DomainRepository
-from emo.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
+from kpm.shared.domain.usecase import message_bus as mb
+from kpm.shared.domain import Command, Event, RootAggregate, DomainRepository
+from kpm.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
 class TestEvent(Event):

@@ -2,10 +2,10 @@ from typing import Any, Dict
 
 import pytest
 
-from emo.users.domain.entity.users import User
-from emo.users.domain.usecase.exceptions import (
+from kpm.users.domain.entity.users import User
+from kpm.users.domain.usecase.exceptions import (
     EmailAlreadyExistsException, UsernameAlreadyExistsException)
-from emo.users.domain.usecase.register_user import RegisterUser, UserRegistered
+from kpm.users.domain.usecase.register_user import RegisterUser, UserRegistered
 from tests.users.utils import MemoryUserRepository
 from tests.utils import TestEventPublisher
 

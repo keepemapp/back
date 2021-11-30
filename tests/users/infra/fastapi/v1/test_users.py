@@ -1,8 +1,8 @@
 import pytest
 
-from emo.settings import settings as s
-from emo.users.domain.entity.users import INVALID_USERNAME
-from emo.users.infra.fastapi.v1.schemas.users import UserCreate
+from kpm.settings import settings as s
+from kpm.users.domain.entity.users import INVALID_USERNAME
+from kpm.users.infra.fastapi.v1.schemas.users import UserCreate
 from tests.users.infra.fastapi import client
 
 user_route: str = s.API_V1.concat(s.API_USER_PATH).prefix

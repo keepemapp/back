@@ -1,10 +1,10 @@
 import pytest
 
-from emo.shared.security import salt_password, verify_password
-from emo.users.domain.entity.users import User
-from emo.users.domain.usecase.change_user_password import (ChangeUserPassword,
+from kpm.shared.security import salt_password, verify_password
+from kpm.users.domain.entity.users import User
+from kpm.users.domain.usecase.change_user_password import (ChangeUserPassword,
                                                            UserPasswordChanged)
-from emo.users.domain.usecase.exceptions import MissmatchPasswordException
+from kpm.users.domain.usecase.exceptions import MissmatchPasswordException
 from tests.users.domain import (DataType, pwd_group, user_repo_with_test_user,
                                 valid_user)
 from tests.utils import TestEventPublisher

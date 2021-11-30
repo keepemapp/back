@@ -3,10 +3,10 @@ import datetime as dt
 
 import pytest
 
-import emo.assets.domain.entity.asset_release as ar
-import emo.assets.domain.usecase.asset_to_future_self as afs
-from emo.shared.domain import AssetId, UserId
-from emo.shared.domain.time_utils import current_utc, to_millis
+import kpm.assets.domain.entity.asset_release as ar
+import kpm.assets.domain.usecase.asset_to_future_self as afs
+from kpm.shared.domain import AssetId, UserId
+from kpm.shared.domain.time_utils import current_utc, to_millis
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 

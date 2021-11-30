@@ -2,8 +2,8 @@ from typing import Any, Dict
 
 import pytest
 
-from emo.shared.domain import DomainId, UserId
-from emo.users.domain.entity.users import User
+from kpm.shared.domain import DomainId, UserId
+from kpm.users.domain.entity.users import User
 from tests.users.utils import MemoryUserRepository
 
 DataType = Dict[str, Any]

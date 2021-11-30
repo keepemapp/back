@@ -4,16 +4,16 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from emo.assets.domain.entity.asset import Asset
-from emo.assets.infra.bootstrap import bootstrap
-from emo.assets.infra.dependencies import (asset_repository, message_bus,
+from kpm.assets.domain.entity.asset import Asset
+from kpm.assets.infra.bootstrap import bootstrap
+from kpm.assets.infra.dependencies import (asset_repository, message_bus,
                                            unit_of_work_class)
-from emo.assets.infra.fastapi.v1 import assets_router
-from emo.assets.infra.fastapi.v1.schemas import AssetCreate, AssetResponse
-from emo.settings import settings as s
-from emo.shared.domain import UserId
-from emo.shared.infra.dependencies import event_bus, get_active_user_token
-from emo.shared.infra.fastapi.schemas import TokenData
+from kpm.assets.infra.fastapi.v1 import assets_router
+from kpm.assets.infra.fastapi.v1.schemas import AssetCreate, AssetResponse
+from kpm.settings import settings as s
+from kpm.shared.domain import UserId
+from kpm.shared.infra.dependencies import event_bus, get_active_user_token
+from kpm.shared.infra.fastapi.schemas import TokenData
 from tests.assets.domain import valid_asset
 from tests.assets.utils import MemoryAssetRepository, MemoryUoW, bus
 from tests.shared.utils import MemoryEventBus

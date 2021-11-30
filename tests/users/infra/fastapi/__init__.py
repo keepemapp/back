@@ -2,9 +2,9 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from emo.shared.infra.dependencies import event_bus
-from emo.users.infra.dependencies import user_repository
-from emo.users.infra.fastapi.v1 import users_router
+from kpm.shared.infra.dependencies import event_bus
+from kpm.users.infra.dependencies import user_repository
+from kpm.users.infra.fastapi.v1 import users_router
 from tests.shared.utils import MemoryEventBus
 from tests.users.utils import MemoryUserRepository
 

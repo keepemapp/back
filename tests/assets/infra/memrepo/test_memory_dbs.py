@@ -3,9 +3,9 @@ import string
 
 import pytest
 
-from emo.assets.domain.entity import Asset
-from emo.assets.infra.memrepo.repository import MemoryPersistedAssetRepository
-from emo.shared.domain import AssetId, UserId
+from kpm.assets.domain.entity import Asset
+from kpm.assets.infra.memrepo.repository import MemoryPersistedAssetRepository
+from kpm.shared.domain import AssetId, UserId
 from tests.assets.domain import asset, valid_asset
 
 

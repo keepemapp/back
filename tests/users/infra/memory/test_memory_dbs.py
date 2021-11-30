@@ -1,9 +1,9 @@
 import pytest
 
-from emo.shared.domain import Event
-from emo.shared.infra.memrepo.message_bus import NoneEventPub
-from emo.users.domain.entity.users import User
-from emo.users.infra.memrepo.repository import MemoryPersistedUserRepository
+from kpm.shared.domain import Event
+from kpm.shared.infra.memrepo.message_bus import NoneEventPub
+from kpm.users.domain.entity.users import User
+from kpm.users.infra.memrepo.repository import MemoryPersistedUserRepository
 from tests.users.domain import valid_user
 
 

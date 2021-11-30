@@ -2,8 +2,8 @@ from typing import Any, Dict
 
 import pytest
 
-from emo.shared.domain import UserId
-from emo.users.domain.usecase.query_user import QueryUser
+from kpm.shared.domain import UserId
+from kpm.users.domain.usecase.query_user import QueryUser
 from tests.users.domain import user_repo_with_test_user, valid_user
 from tests.users.utils import MemoryUserRepository
 

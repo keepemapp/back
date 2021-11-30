@@ -1,8 +1,8 @@
 from typing import Dict, List, Optional
 
-from emo.shared.domain import UserId
-from emo.users.domain.entity.user_repository import UserRepository
-from emo.users.domain.entity.users import User
+from kpm.shared.domain import UserId
+from kpm.users.domain.entity.user_repository import UserRepository
+from kpm.users.domain.entity.users import User
 
 Users = Dict[str, User]
 

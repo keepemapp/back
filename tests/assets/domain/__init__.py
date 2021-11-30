@@ -2,8 +2,8 @@ from typing import Any, Dict
 
 import pytest
 
-from emo.assets.domain.entity import Asset, FileData
-from emo.shared.domain import AssetId, UserId
+from kpm.assets.domain.entity import Asset, FileData
+from kpm.shared.domain import AssetId, UserId
 
 DataType = Dict[str, Any]
 
