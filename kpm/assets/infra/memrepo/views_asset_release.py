@@ -24,6 +24,7 @@ def to_flat_dict(a: ar.AssetRelease):
             d["conditions"]["immediate"] = True
         elif isinstance(c, ar.TimeCondition):
             d["conditions"]["release_time"] = c.release_ts
+    d["modified_ts"] = a.last_modified()
     return d
 
 

@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-from abc import ABC, abstractmethod
+from abc import ABC
 from dataclasses import Field, dataclass, field
 from enum import Enum, unique
-from typing import Callable, Dict, List, Set, Type, TypeVar
+from typing import Callable, Dict, List, Set, Type, TypeVar, Optional
 from uuid import uuid4
 
 from dataclasses_json import dataclass_json
@@ -151,6 +151,13 @@ class RootAggregate(Entity):
 
     def _modified_ts_for(self, field: str):
         return self.modified_ts.get(field, self.created_ts)
+
+    def last_modified(self) -> Optional[int]:
+        """Returns last modified UNIX time in milliseconds"""
+        if self.modified_ts:
+            return max(self.modified_ts.values())
+        else:
+            return None
 
 
 @dataclass_json

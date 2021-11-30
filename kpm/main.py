@@ -5,7 +5,6 @@ import string
 import time
 import os
 
-import git
 import uvicorn
 from fastapi import FastAPI, Request
 
@@ -38,12 +37,16 @@ Try to:
 
 """
 
-repo = git.Repo(search_parent_directories=True)
+version = '0.1'
+if os.name != 'nt':
+    import git
+    repo = git.Repo(search_parent_directories=True)
+    version = repo.git.rev_parse(repo.head, short=True)
 
 app = FastAPI(
     title=s.APPLICATION_NAME,
     description=description,
-    version=repo.git.rev_parse(repo.head, short=True),
+    version=version,
 )
 
 app.include_router(users_router)

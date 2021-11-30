@@ -11,19 +11,28 @@ from kpm.shared.infra.fastapi.schemas import Links
 class AssetBase(BaseModel):
     title: str
     description: str
+    """Optional. If no owners are specified, the calling user is added"""
     owners_id: List[str]
     file_type: str
     file_name: str
 
 
 class AssetCreate(AssetBase):
-    pass
+    owners_id: List[str]
+
+    @validator("owners_id", always=True)
+    def clean_owners_id(cls, v):
+        return settings.API_USER_PATH.remove_from(v)
 
 
 class AssetResponse(AssetBase):
     id: str
     links: Optional[Links]
     upload_path: Optional[str]
+    """UNIX timestamp in milliseconds"""
+    created_ts: int
+    """UNIX timestamp in milliseconds"""
+    modified_ts: Optional[int]
 
     @validator("links", always=True)
     def populate_links(cls, _, values):

@@ -12,6 +12,7 @@ def asset_to_flat_dict(a: Asset):
     d = dict(flatdict.FlatDict(asdict(a), delimiter="_"))
     d["id"] = d.pop("id_id")
     d["owners_id"] = [oid["id"] for oid in d.pop("owners_id")]
+    d["modified_ts"] = a.last_modified()
     del d["_events"]
     return d
 

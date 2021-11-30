@@ -53,6 +53,10 @@ class ReleaseBase(BaseModel):
     receivers: List[str]
     assets: List[str]
     conditions: ReleaseConditions
+    """UNIX timestamp in milliseconds"""
+    created_ts: int
+    """UNIX timestamp in milliseconds"""
+    modified_ts: Optional[int]
 
 
 class ReleaseResponse(ReleaseBase):
