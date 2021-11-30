@@ -63,7 +63,6 @@ def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
         )
 
 
-
 @router.get(
     s.API_RELEASE.path(),
     responses={

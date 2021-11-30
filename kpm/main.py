@@ -25,7 +25,6 @@ if __name__ == "__main__":
     )
     logger = logging.getLogger(__name__)
 
-
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         idem = "".join(
@@ -51,4 +50,4 @@ if __name__ == "__main__":
 
         return response
 
-    uvicorn.run(app, host="localhost", port=8000)#, logger=logger)
+    uvicorn.run(app, host="localhost", port=8000)  # , logger=logger)
