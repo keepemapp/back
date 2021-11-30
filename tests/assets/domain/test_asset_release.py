@@ -130,7 +130,6 @@ class TestAssetReleaseVisibility:
             r: ar.AssetRelease = uow.repo.get(DomainId(release_id))
             r.cancel()
             uow.commit()
-        print(r.events)
         for e in r.events:
             bus.handle(e)
 
@@ -178,7 +177,6 @@ class TestAssetReleaseVisibility:
             r.release()
             uow.commit()
         for e in uow.collect_new_events():
-            print(e)
             bus.handle(e)
 
         # Then

@@ -18,7 +18,6 @@ def uow_with_asset(asset, bus):
 class TestMemoryAssetViews:
     def test_asset_to_python_dict(self, asset):
         r = views_asset.asset_to_flat_dict(asset)
-        print(r)
         assert r.get("file_type") == asset.file.type
         assert r.get("file_name") == asset.file.name
         assert r.get("id") == asset.id.id

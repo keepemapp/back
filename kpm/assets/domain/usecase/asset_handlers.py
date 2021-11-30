@@ -31,8 +31,6 @@ def change_asset_owner(event: ar.AssetReleased, asset_uow: AssetUoW):
     with asset_uow as uow:
         for aid in event.assets:
             a: Asset = uow.repo.find_by_id(AssetId(aid), visible_only=False)
-            print("PRe owners", a.owners_id)
             a.change_owner(event.timestamp, event.owner, event.receivers)
             uow.repo.update(a)
-            print("post owners", a.owners_id)
         uow.commit()

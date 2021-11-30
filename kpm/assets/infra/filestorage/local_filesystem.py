@@ -29,7 +29,6 @@ class AssetFileRepository:
         async with aiofiles.open(file_path, "wb") as of:
             while content := await file.read(1024):
                 await of.write(content)
-        print("file written to ", of.name)
 
     def delete(self, location: str):
         loc_split = self.location_to_list(location)

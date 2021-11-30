@@ -87,7 +87,6 @@ class MemoryReleaseRepo(AssetReleaseRepository):
         self._repo: Releases = {}
 
     def put(self, release: AssetRelease):
-        print(release.__hash__)
         self._repo[release.id] = release
         self._seen.add(release)
 
@@ -124,7 +123,6 @@ class MemoryUoW(AbstractUnitOfWork):
 
     def _commit(self):
         self.committed = True
-        print("Seen elements ", self.repo.seen)
 
     def rollback(self):
         pass
