@@ -7,7 +7,6 @@ from kpm.users.domain.usecase.exceptions import (
     EmailAlreadyExistsException, UsernameAlreadyExistsException)
 from kpm.users.domain.usecase.register_user import RegisterUser, UserRegistered
 from tests.users.utils import MemoryUserRepository
-from tests.utils import TestEventPublisher
 
 DataType = Dict[str, Any]
 
@@ -22,7 +21,6 @@ def valid_data() -> DataType:
         "password": "password",
         "email": "mail@mnail.com",
         "repository": repo,
-        "message_bus": TestEventPublisher(),
     }
     repo.clean_all()
     del repo
@@ -57,14 +55,6 @@ class TestRegisterUser:
         assert repo.get(u.id) == u
         assert u.salt
         assert u.password_hash
-
-    def test_event_is_published(self, valid_data):
-        r = RegisterUser(**valid_data)
-        r.execute()
-        e = r._event
-        bus = valid_data.get("message_bus")
-
-        assert bus.published_event == e
 
     def test_email_is_unique(self, valid_data):
         r = RegisterUser(**valid_data)

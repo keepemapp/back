@@ -8,13 +8,7 @@ from starlette import status
 
 from kpm.settings import settings
 from kpm.settings import settings as cfg
-from kpm.shared.domain.usecase import EventPublisher
 from kpm.shared.infra.fastapi.schemas import TokenData
-from kpm.shared.infra.memrepo.message_bus import NoneEventPub
-
-
-def event_bus() -> EventPublisher:
-    yield NoneEventPub()
 
 
 oauth2_scheme = OAuth2PasswordBearer(

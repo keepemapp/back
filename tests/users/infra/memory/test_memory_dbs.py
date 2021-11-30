@@ -1,17 +1,8 @@
 import pytest
 
-from kpm.shared.domain import Event
-from kpm.shared.infra.memrepo.message_bus import NoneEventPub
 from kpm.users.domain.entity.users import User
 from kpm.users.infra.memrepo.repository import MemoryPersistedUserRepository
 from tests.users.domain import valid_user
-
-
-@pytest.mark.unit
-class TestEventPub:
-    def test_add_event(self):
-        p = NoneEventPub()
-        p.publish(Event())
 
 
 @pytest.mark.unit

@@ -1,17 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import NoReturn
 
-from kpm.shared.domain import DomainRepository, Event
-
-
-class EventPublisher(ABC):
-    """
-    Represents the Event bus interface
-    """
-
-    @abstractmethod
-    def publish(self, event: Event) -> NoReturn:
-        raise NotImplementedError
+from kpm.shared.domain import DomainRepository
 
 
 class UseCase(ABC):
@@ -25,10 +15,9 @@ class Query(UseCase):
 
 class CommandOld(UseCase):
     def __init__(
-        self, *, repository: DomainRepository, message_bus: EventPublisher
+        self, *, repository: DomainRepository
     ):
         self._repository = repository
-        self._message_bus = message_bus
 
     @abstractmethod
     def execute(self) -> NoReturn:

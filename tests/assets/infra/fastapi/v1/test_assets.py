@@ -5,18 +5,15 @@ from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
 from kpm.assets.domain.entity.asset import Asset
-from kpm.assets.infra.bootstrap import bootstrap
 from kpm.assets.infra.dependencies import (asset_repository, message_bus,
                                            unit_of_work_class)
 from kpm.assets.infra.fastapi.v1 import assets_router
-from kpm.assets.infra.fastapi.v1.schemas import AssetCreate, AssetResponse
+from kpm.assets.infra.fastapi.v1.schemas import AssetCreate
 from kpm.settings import settings as s
-from kpm.shared.domain import UserId
-from kpm.shared.infra.dependencies import event_bus, get_active_user_token
+from kpm.shared.infra.dependencies import get_active_user_token
 from kpm.shared.infra.fastapi.schemas import TokenData
 from tests.assets.domain import valid_asset
-from tests.assets.utils import MemoryAssetRepository, MemoryUoW, bus
-from tests.shared.utils import MemoryEventBus
+from tests.assets.utils import MemoryAssetRepository, bus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
 ACTIVE_USER_TOKEN = TokenData(user_id="uid", disabled=False)
@@ -34,9 +31,7 @@ def client(bus) -> TestClient:
     app.include_router(assets_router)
 
     r = MemoryAssetRepository()
-    e = MemoryEventBus()
     app.dependency_overrides[asset_repository] = lambda: r
-    app.dependency_overrides[event_bus] = lambda: e
     app.dependency_overrides[message_bus] = lambda: bus
     app.dependency_overrides[
         unit_of_work_class

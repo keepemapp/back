@@ -3,8 +3,6 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 
 from kpm.settings import settings
-from kpm.shared.domain.usecase import EventPublisher
-from kpm.shared.infra.dependencies import event_bus
 from kpm.shared.infra.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.infra.fastapi.schemas import HTTPError
 from kpm.users.domain.entity.user_repository import UserRepository
@@ -50,12 +48,11 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 async def register_user(
     *,
     repo: UserRepository = Depends(user_repository),
-    bus: EventPublisher = Depends(event_bus),
     new_user: UserCreate
 ):
     try:
         uc = RegisterUser(
-            repository=repo, message_bus=bus, **new_user.__dict__
+            repository=repo, **new_user.__dict__
         )
     except (Exception, ValueError) as e:
         raise HTTPException(

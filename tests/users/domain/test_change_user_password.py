@@ -7,7 +7,6 @@ from kpm.users.domain.usecase.change_user_password import (ChangeUserPassword,
 from kpm.users.domain.usecase.exceptions import MissmatchPasswordException
 from tests.users.domain import (DataType, pwd_group, user_repo_with_test_user,
                                 valid_user)
-from tests.utils import TestEventPublisher
 
 
 @pytest.fixture
@@ -19,7 +18,6 @@ def valid_pwd_change(user_repo_with_test_user) -> DataType:
         "old_password": pwd_group["plain"],
         "new_password": "newPassword",
         "repository": user_repo_with_test_user,
-        "message_bus": TestEventPublisher(),
     }
 
 
@@ -44,14 +42,6 @@ class TestChangePassword:
         cp = ChangeUserPassword(**valid_pwd_change)
         with pytest.raises(MissmatchPasswordException) as _:
             cp.execute()
-
-    def test_event_published(self, valid_pwd_change):
-        cp = ChangeUserPassword(**valid_pwd_change)
-        cp.execute()
-        e = cp._event
-        bus = valid_pwd_change.get("message_bus")
-
-        assert bus.published_event == e
 
     def test_event_domain_has_no_information(self, valid_pwd_change):
         cp = ChangeUserPassword(**valid_pwd_change)

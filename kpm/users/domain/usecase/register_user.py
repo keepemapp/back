@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import NoReturn
 
 from kpm.shared.domain import Event, UserId, init_id
-from kpm.shared.domain.usecase import CommandOld, EventPublisher
+from kpm.shared.domain.usecase import CommandOld
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
@@ -26,9 +26,8 @@ class RegisterUser(CommandOld):
         email: str,
         *,
         repository: UserRepository,
-        message_bus: EventPublisher
     ):
-        super().__init__(repository=repository, message_bus=message_bus)
+        super().__init__(repository=repository)
         salt = generate_salt()
         self._entity = User(
             username=username,
@@ -51,4 +50,3 @@ class RegisterUser(CommandOld):
         if self._repository.exists_username(e.username):
             raise UsernameAlreadyExistsException()
         self._repository.create(e)
-        self._message_bus.publish(self._event)

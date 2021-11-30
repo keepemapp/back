@@ -151,15 +151,19 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 * [ ] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
   Either give them the publish_url or the view URL for the file when they do a `get` on the asset
 * [X] Test asset file upload and retrieval
-* [ ] Implement command responsibility segregation for POST APIs (do not return result and just redirect. See https://stackoverflow.com/questions/62119138/how-to-do-a-post-redirect-get-prg-in-fastapi)
+* Implement command responsibility segregation for POST APIs (do not return result and just redirect. See https://stackoverflow.com/questions/62119138/how-to-do-a-post-redirect-get-prg-in-fastapi)
   * [X] For assets
   * [ ] for Users
-* [ ] Schema evolution in database and dataclasses. How to do it?
-* [ ] change database to a persistent one
+* Database
+  * [ ] change database to a persistent one
+  * [ ] Schema evolution in database and dataclasses. How to do it?
 * [ ] Clean DomainID mess. Pass it to UUID or string and use type class
 * [ ] Change folder structure to a one more DDD like (domain, services, infra)
 * [ ] Automatically add userID that makes the call to the create asset and transfers
-* [ ] Erase `emo/shared/infra/memrepo/message_bus.py`
+* [X] Erase `emo/shared/infra/memrepo/message_bus.py`
+* Improve GET responses  
+  * [ ] Limit GET responses (paging, max items...)
+  * [ ] Allow ordering of responses (assets, releases...)
 
 Low prio:
 * [ ] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas
