@@ -5,14 +5,45 @@ import string
 import time
 import os
 
+import git
 import uvicorn
 from fastapi import FastAPI, Request
 
 from kpm.assets.infra.fastapi.v1 import assets_router
 from kpm.users.infra.fastapi.v1 import users_router
+from kpm.settings import settings as s
+
+description = """
+Keepem API helps you managing your emotional assets and memories 💖
+
+## Users
+
+You can register a new user and log in
+
+## Assets 🖼️📹📄🎵
+
+You can create assets (via 2 part transaction for now)
+
+## Kepp'em moving 💌🏃
+
+You can share your memories in multiple and creative ways: with others or even 
+yourself!
+
+Try to:
+* Send an asset to your future self ✉️🔮
+* Create a time capsule ⏳🎁
+* Stash an asset somewhere to be recovered in the future 🌍
+* Send it away inside a bottle 🧴🏖️
+* Give it to someone 🤝
+
+"""
+
+repo = git.Repo(search_parent_directories=True)
 
 app = FastAPI(
-    title="MyHeritage",
+    title=s.APPLICATION_NAME,
+    description=description,
+    version=repo.git.rev_parse(repo.head, short=True),
 )
 
 app.include_router(users_router)

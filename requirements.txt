@@ -12,3 +12,4 @@ passlib
 bcrypt
 flatdict
 dataclasses-json
+gitpython
