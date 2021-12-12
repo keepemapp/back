@@ -166,6 +166,8 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
   * [ ] Allow ordering of responses (assets, releases...)
 * [X] Add Creation and modification date as API response for assets, transfers...
 * [ ] Auto-add owner to assets and releases if none is passed
+* [ ] Add error messageID to the ones returned by the API (for translations)
+
 
 Low prio:
 * [ ] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas
