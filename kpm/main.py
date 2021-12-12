@@ -1,16 +1,16 @@
 import logging
+import os
 import pathlib
 import random
 import string
 import time
-import os
 
 import uvicorn
 from fastapi import FastAPI, Request
 
 from kpm.assets.infra.fastapi.v1 import assets_router
-from kpm.users.infra.fastapi.v1 import users_router
 from kpm.settings import settings as s
+from kpm.users.infra.fastapi.v1 import users_router
 
 description = """
 Keepem API helps you managing your emotional assets and memories 💖
@@ -25,7 +25,7 @@ You can create assets (via 2 part transaction for now)
 
 ## Kepp'em moving 💌🏃
 
-You can share your memories in multiple and creative ways: with others or even 
+You can share your memories in multiple and creative ways: with others or even
 yourself!
 
 Try to:
@@ -37,9 +37,10 @@ Try to:
 
 """
 
-version = '0.1'
-if os.name != 'nt':
+version = "0.1"
+if os.name != "nt":
     import git
+
     repo = git.Repo(search_parent_directories=True)
     version = repo.git.rev_parse(repo.head, short=True)
 
@@ -62,7 +63,8 @@ if __name__ == "__main__":
     @app.middleware("http")
     async def log_requests(request: Request, call_next):
         idem = "".join(
-            random.choices(string.ascii_uppercase + string.digits, k=6))
+            random.choices(string.ascii_uppercase + string.digits, k=6)
+        )
         logger.info(
             '{"rid":"%s", "method":"%s", "path": "%s"}',
             idem,

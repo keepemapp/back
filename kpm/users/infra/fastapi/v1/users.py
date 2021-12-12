@@ -46,14 +46,10 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
     },
 )
 async def register_user(
-    *,
-    repo: UserRepository = Depends(user_repository),
-    new_user: UserCreate
+    *, repo: UserRepository = Depends(user_repository), new_user: UserCreate
 ):
     try:
-        uc = RegisterUser(
-            repository=repo, **new_user.__dict__
-        )
+        uc = RegisterUser(repository=repo, **new_user.__dict__)
     except (Exception, ValueError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)

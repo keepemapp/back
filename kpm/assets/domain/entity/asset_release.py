@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Set
 
-from kpm.shared.domain import (AssetId, DomainId, DomainRepository,
-                               Event, RootAggregate, RootAggState, UserId,
+from kpm.shared.domain import (AssetId, DomainId, DomainRepository, Event,
+                               RootAggregate, RootAggState, UserId,
                                ValueObject, init_id, required_field)
 from kpm.shared.domain.time_utils import current_utc_millis
 

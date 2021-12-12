@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 
 import kpm.assets.infra.fastapi.v1.schemas.releases as schemas
+import kpm.assets.infra.memrepo.views_asset as assets
 import kpm.assets.infra.memrepo.views_asset_release as views
 from kpm.assets.domain.entity.asset import Asset
 from kpm.assets.domain.usecase import asset_in_a_bottle as b
@@ -16,7 +17,6 @@ from kpm.shared.domain.usecase.message_bus import MessageBus
 from kpm.shared.infra.dependencies import get_active_user_token
 from kpm.shared.infra.fastapi.exceptions import UNAUTHORIZED_GENERIC
 from kpm.shared.infra.fastapi.schemas import HTTPError, TokenData
-import kpm.assets.infra.memrepo.views_asset as assets
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -52,8 +52,8 @@ def assert_same_user(a, b):
 
 def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
     uow = bus.uows[Asset]
-    as_clear = [a.replace('/assets/', '') for a in asset_list]
-    o_clear = owner.replace('/users/', '')
+    as_clear = [a.replace("/assets/", "") for a in asset_list]
+    o_clear = owner.replace("/users/", "")
 
     if not assets.are_assets_active(uow, as_clear, o_clear):
         return HTTPException(

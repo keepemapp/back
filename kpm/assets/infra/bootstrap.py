@@ -18,10 +18,12 @@ def bootstrap(
     release_uow=MemoryUoW(MemPersistedReleaseRepo),
 ) -> MessageBus:
 
-    uows = UoWs({
-        asset.Asset: asset_uow,
-        asset_release.AssetRelease: release_uow,
-    })
+    uows = UoWs(
+        {
+            asset.Asset: asset_uow,
+            asset_release.AssetRelease: release_uow,
+        }
+    )
     dependencies = {**uows.as_dependencies()}
     return MessageBus(
         uows=uows,

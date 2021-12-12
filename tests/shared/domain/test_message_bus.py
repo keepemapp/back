@@ -2,9 +2,8 @@ from typing import NoReturn
 
 import pytest
 
-
+from kpm.shared.domain import Command, DomainRepository, Event, RootAggregate
 from kpm.shared.domain.usecase import message_bus as mb
-from kpm.shared.domain import Command, Event, RootAggregate, DomainRepository
 from kpm.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
@@ -93,14 +92,13 @@ def handler(cmd_event, uow, trigger=False):
         uow.repo.put(agg)
         uow.commit()
 
+
 @pytest.mark.unit
 class TestMessageBus:
     def test_events(self):
         uow = AggUoW()
         uows = mb.UoWs({Agg1: uow})
-        EVENT_HANDLERS = {
-            TestEvent: [lambda event: handler(event, uow)]
-        }
+        EVENT_HANDLERS = {TestEvent: [lambda event: handler(event, uow)]}
         COMMAND_HANDLERS = {}
         bus = mb.MessageBus(uows, EVENT_HANDLERS, COMMAND_HANDLERS)
 
@@ -121,7 +119,9 @@ class TestMessageBus:
         uow = AggUoW()
         uows = mb.UoWs({Agg1: uow})
         EVENT_HANDLERS = {TestEvent: [lambda event: handler(event, uow)]}
-        COMMAND_HANDLERS = {TestCommand: lambda event: handler(event, uow, True)}
+        COMMAND_HANDLERS = {
+            TestCommand: lambda event: handler(event, uow, True)
+        }
         bus = mb.MessageBus(uows, EVENT_HANDLERS, COMMAND_HANDLERS)
 
         bus.handle(TestCommand())

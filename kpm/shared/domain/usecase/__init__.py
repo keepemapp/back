@@ -14,9 +14,7 @@ class Query(UseCase):
 
 
 class CommandOld(UseCase):
-    def __init__(
-        self, *, repository: DomainRepository
-    ):
+    def __init__(self, *, repository: DomainRepository):
         self._repository = repository
 
     @abstractmethod

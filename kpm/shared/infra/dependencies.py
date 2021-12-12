@@ -10,7 +10,6 @@ from kpm.settings import settings
 from kpm.settings import settings as cfg
 from kpm.shared.infra.fastapi.schemas import TokenData
 
-
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=settings.API_V1.concat(settings.API_TOKEN).prefix
 )

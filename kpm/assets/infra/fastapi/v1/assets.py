@@ -156,8 +156,9 @@ async def get_all_assets(
     uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
 ):
     # TODO change me. Allow only admins
-    return [asset_to_response(a, token)
-            for a in views_asset.all_assets(uow_cls())]
+    return [
+        asset_to_response(a, token) for a in views_asset.all_assets(uow_cls())
+    ]
 
 
 @router.get(

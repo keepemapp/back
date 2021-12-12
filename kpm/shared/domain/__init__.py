@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC
 from dataclasses import Field, dataclass, field
 from enum import Enum, unique
-from typing import Callable, Dict, List, Set, Type, TypeVar, Optional
+from typing import Callable, Dict, List, Optional, Set, Type, TypeVar
 from uuid import uuid4
 
 from dataclasses_json import dataclass_json

@@ -38,8 +38,9 @@ def find_by_id_and_owner(
         return asset_to_flat_dict(asset) if asset else None
 
 
-def are_assets_active(uow: AssetUoW, assets: List[str], user: str = None
-                      ) -> bool:
+def are_assets_active(
+    uow: AssetUoW, assets: List[str], user: str = None
+) -> bool:
     """Returns `True` if all assets exist and are visible.
 
     If a user is passed, it checks the ownership of all assets.

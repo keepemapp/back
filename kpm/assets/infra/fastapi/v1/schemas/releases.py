@@ -28,11 +28,13 @@ class TransferAssets(TransferBase):
 
 class CreateAssetToFutureSelf(TransferBase):
     """UNIX timestamp in milliseconds"""
+
     scheduled_date: int
 
 
 class CreateAssetInABottle(TransferAssets):
     """UNIX timestamp in milliseconds"""
+
     scheduled_date: int
     receivers: List[str]
 
