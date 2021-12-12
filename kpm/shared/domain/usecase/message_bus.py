@@ -13,7 +13,7 @@ Message = Union[Command, Event]
 UOWT = TypeVar("UOWT", bound=AbstractUnitOfWork)
 
 
-class UoWs(dict[Type[RootAggregate], AbstractUnitOfWork]):
+class UoWs(Dict[Type[RootAggregate], AbstractUnitOfWork]):
     def collect_new_events(self) -> List[Event]:
         res = []
         for uow in self.values():
