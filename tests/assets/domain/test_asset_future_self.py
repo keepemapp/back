@@ -35,4 +35,4 @@ class TestAssetFutureSelf:
             user_rel = releases.user_active_releases(UserId(owner))
             assert len(user_rel) == 1
             assert user_rel[0].assets == [AssetId(asset_id)]
-            assert not user_rel[0].is_due()
+            assert not user_rel[0].can_trigger()

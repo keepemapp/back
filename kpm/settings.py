@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass, field
+from datetime import timedelta
 from os import path
 from typing import Dict, List, Union
 
@@ -15,13 +16,16 @@ class ApiRoute:
     def dict(self) -> Dict:
         return asdict(self)
 
-    def concat(self, other: Union[ApiRoute, str]) -> ApiRoute:
-        if isinstance(other, ApiRoute):
-            return ApiRoute(
-                prefix=self.prefix + other.prefix, tags=self.tags + other.tags
-            )
-        else:
-            return ApiRoute(prefix=self.prefix + "/" + other, tags=self.tags)
+    def concat(self, *others: Union[ApiRoute, str]) -> ApiRoute:
+        res = self
+        for o in others:
+            if isinstance(o, ApiRoute):
+                res = ApiRoute(
+                    prefix=res.prefix + o.prefix, tags=res.tags + o.tags
+                )
+            else:
+                res = ApiRoute(prefix=res.prefix + "/" + o, tags=res.tags)
+        return res
 
     def __str__(self) -> str:
         return self.prefix
@@ -45,6 +49,9 @@ class Settings(BaseSettings):
     APPLICATION_TECHNICAL_NAME: str = "Keepem"
 
     API_V1: ApiRoute = ApiRoute(prefix="/api/v1")
+    API_HEALTH: ApiRoute = ApiRoute(prefix="/health")
+    API_VERSION: ApiRoute = ApiRoute(prefix="/version")
+
     API_TOKEN: ApiRoute = ApiRoute(prefix="/token", tags=["authentication"])
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
@@ -56,12 +63,16 @@ class Settings(BaseSettings):
 
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000  # TODO change me
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
-    # to get a string like this run:
+
+    JWT_ACCESS_EXPIRE_TIME: timedelta = timedelta(minutes=15)
+    JWT_REFRESH_EXPIRE_TIME: timedelta = timedelta(days=60)
     # openssl rand -hex 32
-    SECRET_KEY = (
+    JWT_SECRET_KEY = (
         "09d25e094faa6ca2556c818166b7a9563b93f7099f6f0f4caa6cf63b88e8d3e7"
     )
-    ALGORITHM = "HS256"
+    JWT_DECODE_ALGORITHMS: set = {"HS384", "HS512"}
+    JWT_ALGORITHM = "HS384"
+
     DATA_FOLDER = path.join(
         path.dirname(path.dirname(path.abspath(__file__))), "data"
     )

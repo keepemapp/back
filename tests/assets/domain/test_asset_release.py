@@ -60,7 +60,7 @@ class TestRelease:
             release_type="example",
             conditions=[ar.TrueCondition(), ar.TimeCondition(past)],
         )
-        assert r_past.is_due()
+        assert r_past.can_trigger()
 
         r_future = ar.AssetRelease(
             name="Ar",
@@ -71,7 +71,7 @@ class TestRelease:
             release_type="example",
             conditions=[ar.TrueCondition(), ar.TimeCondition(future)],
         )
-        assert r_future.is_due() is False
+        assert r_future.can_trigger() is False
 
 
 @pytest.mark.unit

@@ -48,7 +48,6 @@ precommit: format test clean
 run-dev: $(VENV) $(DATA_FOLDER)
 	$(BIN)/uvicorn kpm.main:app --reload --no-server-header
 
-.PHONY: run
 run: $(VENV)
 	$(BIN)/uvicorn kpm.main:app --no-server-header
 

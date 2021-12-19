@@ -1,4 +1,4 @@
-from typing import List, Type
+from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
@@ -6,17 +6,16 @@ from fastapi.responses import RedirectResponse
 import kpm.assets.infra.fastapi.v1.schemas.releases as schemas
 import kpm.assets.infra.memrepo.views_asset as assets
 import kpm.assets.infra.memrepo.views_asset_release as views
-from kpm.assets.domain.entity.asset import Asset
 from kpm.assets.domain.usecase import asset_in_a_bottle as b
 from kpm.assets.domain.usecase import asset_to_future_self as afs
 from kpm.assets.domain.usecase import stash as st
-from kpm.assets.domain.usecase.unit_of_work import AssetUoW
-from kpm.assets.infra.dependencies import message_bus, release_uow
+from kpm.assets.infra.dependencies import message_bus
 from kpm.settings import settings as s
 from kpm.shared.domain.usecase.message_bus import MessageBus
-from kpm.shared.infra.dependencies import get_active_user_token
+from kpm.shared.infra.auth_jwt import AccessToken
+from kpm.shared.infra.dependencies import get_access_token
 from kpm.shared.infra.fastapi.exceptions import UNAUTHORIZED_GENERIC
-from kpm.shared.infra.fastapi.schemas import HTTPError, TokenData
+from kpm.shared.infra.fastapi.schemas import HTTPError
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -51,11 +50,10 @@ def assert_same_user(a, b):
 
 
 def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
-    uow = bus.uows[Asset]
     as_clear = [a.replace("/assets/", "") for a in asset_list]
     o_clear = owner.replace("/users/", "")
 
-    if not assets.are_assets_active(uow, as_clear, o_clear):
+    if not assets.are_assets_active(as_clear, bus=bus, user=o_clear):
         return HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Some assets do not exist or are not modifyable",
@@ -69,15 +67,13 @@ def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
         status.HTTP_200_OK: {"model": List[schemas.ReleaseResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
+    tags=["admin"],
 )
 async def get_releases(
-    token: TokenData = Depends(get_active_user_token),
-    uow_cls: Type[AssetUoW] = Depends(release_uow),
+    # token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
 ):
-    return [
-        schemas.ReleaseResponse(**r)
-        for r in views.get_releases(token.user_id, uow_cls())
-    ]
+    return [schemas.ReleaseResponse(**r) for r in views.all(bus=bus)]
 
 
 @router.get(
@@ -89,12 +85,12 @@ async def get_releases(
     },
 )
 async def get_release(
-    transfer_id: str,
-    token: TokenData = Depends(get_active_user_token),
-    uow_cls: Type[AssetUoW] = Depends(release_uow),
+    release_id: str,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
 ):
-    release = views.get(transfer_id, uow_cls())
-    if release and release.get("owner") == token.user_id:
+    release = views.get(release_id, bus=bus)
+    if release and release.get("owner") == token.subject:
         return schemas.ReleaseResponse(**release)
     else:
         raise UNAUTHORIZED_GENERIC
@@ -108,15 +104,15 @@ async def get_release(
 )
 async def add_asset_future_self(
     create: schemas.CreateAssetToFutureSelf,
-    token: TokenData = Depends(get_active_user_token),
+    token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.user_id)
+    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
     if error:
         raise error
 
     payload = create.__dict__
-    cmd = afs.CreateAssetToFutureSelf(owner=token.user_id, **payload)
+    cmd = afs.CreateAssetToFutureSelf(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
 
@@ -129,15 +125,15 @@ async def add_asset_future_self(
 )
 async def add_asset_bottle(
     create: schemas.CreateAssetInABottle,
-    token: TokenData = Depends(get_active_user_token),
+    token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.user_id)
+    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
     if error:
         return error
 
     payload = create.__dict__
-    cmd = b.CreateAssetInABottle(owner=token.user_id, **payload)
+    cmd = b.CreateAssetInABottle(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
 
@@ -150,14 +146,14 @@ async def add_asset_bottle(
 )
 async def add_stash(
     create: schemas.CreateAssetInABottle,
-    token: TokenData = Depends(get_active_user_token),
+    token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.user_id)
+    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
     if error:
         return error
 
     payload = create.__dict__
-    cmd = st.Stash(owner=token.user_id, **payload)
+    cmd = st.Stash(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)

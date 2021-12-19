@@ -6,7 +6,7 @@ from typing import Callable, Dict, List, Type, TypeVar, Union
 from kpm.shared.domain import Command, Event, RootAggregate
 from kpm.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger("kpm")
 
 Message = Union[Command, Event]
 

@@ -91,11 +91,13 @@ class AssetRelease(RootAggregate):
     def is_past(self) -> bool:
         return self.state in [RootAggState.INACTIVE, RootAggState.REMOVED]
 
-    def is_due(self) -> bool:
+    def can_trigger(self) -> bool:
         """If all the condition are met, returns `True`."""
         return all([c.is_met() for c in self.conditions])
 
     def release(self):
+        if not self.can_trigger():
+            raise Exception(f"Release {self.id} not ready to be released.")
         ts = current_utc_millis()
         self._update_field(ts, "state", RootAggState.INACTIVE)
         self._events.append(

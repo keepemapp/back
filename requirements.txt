@@ -1,5 +1,5 @@
 fastapi
-fastapi-login
+fastapi-jwt-auth
 uvicorn
 pydantic
 pydantic[email]

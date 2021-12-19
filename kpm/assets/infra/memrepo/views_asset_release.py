@@ -5,6 +5,7 @@ import flatdict
 
 import kpm.assets.domain.entity.asset_release as ar
 from kpm.shared.domain import DomainId, UserId
+from kpm.shared.domain.usecase.message_bus import MessageBus
 from kpm.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
 
 
@@ -19,6 +20,7 @@ def to_flat_dict(a: ar.AssetRelease):
     del d["_events"]
     d.pop("conditions")
     d["conditions"] = {}
+    d["state"] = d["state"].value
     for c in a.conditions:
         if isinstance(c, ar.TrueCondition):
             d["conditions"]["immediate"] = True
@@ -28,19 +30,30 @@ def to_flat_dict(a: ar.AssetRelease):
     return d
 
 
-def all(uow: AbstractUnitOfWork) -> List[Dict]:
+def all(uow: AbstractUnitOfWork = None, bus: MessageBus = None) -> List[Dict]:
+    if not uow:
+        uow = bus.uows.get(ar.AssetRelease)
     with uow:
         return [to_flat_dict(r) for r in uow.repo.all()]
 
 
-def get(release: str, uow: AbstractUnitOfWork) -> Optional[Dict]:
+def get(
+    release: str, uow: AbstractUnitOfWork = None, bus: MessageBus = None
+) -> Optional[Dict]:
+    if not uow:
+        uow = bus.uows.get(ar.AssetRelease)
     with uow:
         return to_flat_dict(uow.repo.get(DomainId(release)))
 
 
 def get_releases(
-    user: str, uow: AbstractUnitOfWork, active=True
+    user: str,
+    active=True,
+    uow: AbstractUnitOfWork = None,
+    bus: MessageBus = None,
 ) -> List[Dict]:
+    if not uow:
+        uow = bus.uows.get(ar.AssetRelease)
     with uow:
         if active:
             releases = uow.repo.user_active_releases(UserId(user))

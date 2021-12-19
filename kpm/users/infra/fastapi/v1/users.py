@@ -27,11 +27,15 @@ router = APIRouter(
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
-async def read_users_me(current_user: User = Depends(get_current_active_user)):
+async def my_user(current_user: User = Depends(get_current_active_user)):
     return to_pydantic_model(current_user, UserResponse)
 
 
-@router.get("", responses={status.HTTP_200_OK: {"model": List[UserResponse]}})
+@router.get(
+    "",
+    responses={status.HTTP_200_OK: {"model": List[UserResponse]}},
+    tags=["admin"],
+)
 async def get_all_users(repo: UserRepository = Depends(user_repository)):
     # TODO change me. Allow only admins
     return [to_pydantic_model(u, UserResponse) for u in repo.all()]

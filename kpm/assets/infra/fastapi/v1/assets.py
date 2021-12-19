@@ -1,24 +1,23 @@
 from datetime import timedelta
-from typing import Dict, List, Type
+from typing import Dict, List
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, RedirectResponse
 from jose import JWTError
 
 from kpm.assets.domain.usecase.create_asset import CreateAsset
-from kpm.assets.domain.usecase.unit_of_work import AssetUoW
-from kpm.assets.infra.dependencies import (asset_file_repository, message_bus,
-                                           unit_of_work_class)
+from kpm.assets.infra.dependencies import asset_file_repository, message_bus
 from kpm.assets.infra.fastapi.v1.schemas import (AssetCreate, AssetResponse,
                                                  AssetUploadAuthData)
 from kpm.assets.infra.filestorage import AssetFileRepository
 from kpm.assets.infra.memrepo import views_asset
 from kpm.settings import settings as s
 from kpm.shared.domain.usecase.message_bus import MessageBus
+from kpm.shared.infra.auth_jwt import AccessToken
 from kpm.shared.infra.dependencies import (create_jwt_token, decode_token,
-                                           get_active_user_token)
+                                           get_access_token)
 from kpm.shared.infra.fastapi.exceptions import UNAUTHORIZED_GENERIC
-from kpm.shared.infra.fastapi.schemas import HTTPError, TokenData
+from kpm.shared.infra.fastapi.schemas import HTTPError
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -26,10 +25,10 @@ router = APIRouter(
 )
 
 
-def asset_to_response(asset_dict: Dict, token: TokenData):
+def asset_to_response(asset_dict: Dict, token: AccessToken):
     resp = AssetResponse(**asset_dict)
     # TODO provide upload path only if no file was uploaded before
-    resp.upload_path = create_asset_upload_path(resp.id, token.user_id)
+    resp.upload_path = create_asset_upload_path(resp.id, token.subject)
     return resp
 
 
@@ -46,10 +45,10 @@ def asset_to_response(asset_dict: Dict, token: TokenData):
 )
 async def add_asset(
     new_asset: AssetCreate,
-    token: TokenData = Depends(get_active_user_token),
+    token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    if token.user_id not in new_asset.owners_id:
+    if token.subject not in new_asset.owners_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=str("Cannot create an asset you are not owner of"),
@@ -62,7 +61,7 @@ async def add_asset(
     cmd = CreateAsset(**payload)
     bus.handle(cmd)
     return RedirectResponse(
-        url=create_asset_upload_path(cmd.asset_id, token.user_id),
+        url=create_asset_upload_path(cmd.asset_id, token.subject),
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -103,14 +102,14 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
 async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
-    token: TokenData = Depends(get_active_user_token),
+    token: AccessToken = Depends(get_access_token),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
-    uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
+    bus: MessageBus = Depends(message_bus),
     file: UploadFile = File(...),
 ):
     auth_data = decode_asset_upload_token(authorizer_token)
 
-    a = views_asset.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
+    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
 
     if not a:
         raise HTTPException(
@@ -123,7 +122,7 @@ async def add_asset_file(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Mismatch in asset id and authorization",
         )
-    if auth_data.user_id != token.user_id:
+    if auth_data.user_id != token.subject:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="You do not own this authorization",
@@ -150,14 +149,15 @@ async def add_asset_file(
         status.HTTP_200_OK: {"model": List[AssetResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
+    tags=["admin"],
 )
 async def get_all_assets(
-    token: TokenData = Depends(get_active_user_token),
-    uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
 ):
     # TODO change me. Allow only admins
     return [
-        asset_to_response(a, token) for a in views_asset.all_assets(uow_cls())
+        asset_to_response(a, token) for a in views_asset.all_assets(bus=bus)
     ]
 
 
@@ -170,10 +170,10 @@ async def get_all_assets(
 )
 async def get_asset(
     asset_id: str,
-    token: TokenData = Depends(get_active_user_token),
-    uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
 ):
-    a = views_asset.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
+    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
     if a:
         return asset_to_response(a, token)
     else:
@@ -188,16 +188,19 @@ async def get_asset(
 )
 async def get_asset_file(
     asset_id: str,
-    token: TokenData = Depends(get_active_user_token),
-    uow_cls: Type[AssetUoW] = Depends(unit_of_work_class),
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
 ):
     """Returns the asset's binary file"""
-    a = views_asset.find_by_id_and_owner(asset_id, token.user_id, uow_cls())
+    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
     if a:
         # TODO when we go with encrypted files, media_type will be different
-        return FileResponse(
-            file_repo.get(a["file_location"]), media_type=a["file_type"]
-        )
+        try:
+            return FileResponse(
+                file_repo.get(a["file_location"]), media_type=a["file_type"]
+            )
+        except RuntimeError as e:
+            raise HTTPException(detail=e.msg)
     else:
         raise UNAUTHORIZED_GENERIC

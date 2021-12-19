@@ -105,7 +105,7 @@ class TestGetUsers:
         tok_log = client.post(
             login_route, data={"username": user.email, "password": USER_PWD}
         )
-        token = tok_log.json().get("access_token")
+
         response = client.get(
             user_route + "/me", headers={"Authorization": f"Bearer asd2"}
         )
@@ -113,12 +113,14 @@ class TestGetUsers:
         assert response.status_code == 401
 
     def test_login(self, client):
-        user, response = create_user(client)
+        user, create_resp = create_user(client)
         response = client.post(
             login_route, data={"username": user.email, "password": USER_PWD}
         )
         assert response.status_code == 200
-        assert response.json().get("token_type") == "bearer"
+        assert response.json().get("user_id") == create_resp.json().get("id")
+        assert "refresh_token" in response.json()
+        assert "access_token" in response.json()
 
     def test_successful_login_returns_user_id(self, client):
         user, resp1 = create_user(client)

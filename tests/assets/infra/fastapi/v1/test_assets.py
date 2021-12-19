@@ -4,19 +4,17 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from kpm.assets.domain.entity.asset import Asset
-from kpm.assets.infra.dependencies import (asset_repository, message_bus,
-                                           unit_of_work_class)
+from kpm.assets.infra.dependencies import message_bus
 from kpm.assets.infra.fastapi.v1 import assets_router
 from kpm.assets.infra.fastapi.v1.schemas import AssetCreate
 from kpm.settings import settings as s
-from kpm.shared.infra.dependencies import get_active_user_token
-from kpm.shared.infra.fastapi.schemas import TokenData
+from kpm.shared.infra.auth_jwt import AccessToken
+from kpm.shared.infra.dependencies import get_access_token
 from tests.assets.domain import valid_asset
-from tests.assets.utils import MemoryAssetRepository, bus
+from tests.assets.utils import bus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
-ACTIVE_USER_TOKEN = TokenData(user_id="uid", disabled=False)
+ACTIVE_USER_TOKEN = AccessToken(subject="uid")
 
 
 def active_user_token():
@@ -30,13 +28,8 @@ def client(bus) -> TestClient:
     )
     app.include_router(assets_router)
 
-    r = MemoryAssetRepository()
-    app.dependency_overrides[asset_repository] = lambda: r
     app.dependency_overrides[message_bus] = lambda: bus
-    app.dependency_overrides[
-        unit_of_work_class
-    ] = lambda: lambda: bus.uows.get(Asset)
-    app.dependency_overrides[get_active_user_token] = active_user_token
+    app.dependency_overrides[get_access_token] = active_user_token
     yield TestClient(app)
 
 
@@ -55,7 +48,7 @@ def create_asset(client: TestClient, num: int, uids: List[str]):
 @pytest.mark.unit
 class TestRegisterAsset:
     def test_create(self, client):
-        uids = [ACTIVE_USER_TOKEN.user_id]
+        uids = [ACTIVE_USER_TOKEN.subject]
         asset = AssetCreate(
             title=f"Asset number",
             description=f"Description for",
@@ -69,7 +62,7 @@ class TestRegisterAsset:
         assert "location" in response.headers.keys()
 
     def test_create_multiple_owners(self, client):
-        uids = [ACTIVE_USER_TOKEN.user_id, "other-owner"]
+        uids = [ACTIVE_USER_TOKEN.subject, "other-owner"]
         asset = AssetCreate(
             title=f"Asset number",
             description=f"Description for",
@@ -96,7 +89,7 @@ class TestRegisterAsset:
 @pytest.mark.unit
 class TestGetAssets:
     def test_user_assets(self, client):
-        _, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.user_id])
+        _, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.subject])
         aid1 = r1.headers["location"].split("/")[-1].split("?")[0]
 
         response = client.get(
@@ -110,7 +103,7 @@ class TestGetAssets:
 
         # Second asset
         _, r2 = create_asset(
-            client, 1, ["other-user", ACTIVE_USER_TOKEN.user_id]
+            client, 1, ["other-user", ACTIVE_USER_TOKEN.subject]
         )
         aid2 = r2.headers["location"].split("/")[-1].split("?")[0]
 
@@ -125,7 +118,7 @@ class TestGetAssets:
         assert [a.get("id").split("?")[0] for a in json] == [aid1, aid2]
 
     def test_get_individual_asset(self, client):
-        a, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.user_id])
+        a, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.subject])
         aid1 = r1.headers["location"].split("/")[-1].split("?")[0]
         response = client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
@@ -143,7 +136,7 @@ class TestGetAssets:
         assert response.status_code == 401
 
     def test_get_multiple_owners_asset(self, client):
-        owners = ["other_owner", ACTIVE_USER_TOKEN.user_id]
+        owners = ["other_owner", ACTIVE_USER_TOKEN.subject]
         _, r1 = create_asset(client, 0, owners)
         aid1 = r1.headers["location"].split("/")[-1]
         response = client.get(ASSET_ROUTE + "/" + aid1)

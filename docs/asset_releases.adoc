@@ -1,0 +1,33 @@
+= Asset release actions
+
+This page contains a
+
+|===
+|Type |Transfers to |When it release |Where it will release
+
+|In a bottle
+|You choose
+|Range of time
+|N/A
+|Future self
+|Yourself
+|You choose
+|N/A
+|Stash
+|You choose
+|N/A
+|Where you choose
+|Time capsule
+|You choose
+|You choose
+|Where you choose
+|Transfer
+|You choose
+|Immediate
+|N/A
+|===
+
+WHen we say that `You choose` there are multiple options:
+
+* Who is candidate of receiving that
+* How many people will receive it (the first, all, co-ownership...)
