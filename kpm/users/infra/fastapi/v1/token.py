@@ -37,7 +37,7 @@ def check_user(user: Optional[User], password: str):
     password_is_valid = verify_password(salted_pwd, user.password_hash)
 
     if password_is_valid:
-        logger.info(f"User '{user.id.id}' correctly authenticated")
+        logger.info(f"Auth success for user '{user.id.id}'")
         return user
     else:
         logger.info(f"Auth failure for user '{user.id.id}'")
@@ -63,16 +63,6 @@ def authenticate_by_id(
 
 
 @router.post(s.API_TOKEN.path(), deprecated=True)
-async def login_token(
-    repo: UserRepository = Depends(user_repository),
-    form_data: OAuth2PasswordRequestForm = Depends(),
-):
-    """
-    Deprecated. Please use `/login`
-    """
-    return await login_for_access_token(repo, form_data)
-
-
 @router.post("/login", response_model=LoginResponse)
 async def login_for_access_token(
     repo: UserRepository = Depends(user_repository),
@@ -109,6 +99,53 @@ async def refresh_access_token(
 
     For accessing /refresh endpoint remember to **change access_token**
     *with refresh_token* in the header `Authorization: Bearer <refresh_token>`
+
+    From RFC 6749 https://datatracker.ietf.org/doc/html/rfc6749#section-1.5
+
+    ```
+    +--------+                                           +---------------+
+    |        |--(A)------- Authorization Grant --------->|               |
+    |        |                                           |               |
+    |        |<-(B)----------- Access Token -------------|               |
+    |        |               & Refresh Token             |               |
+    |        |                                           |               |
+    |        |                            +----------+   |               |
+    |        |--(C)---- Access Token ---->|          |   |               |
+    |        |                            |          |   |               |
+    |        |<-(D)- Protected Resource --| Resource |   | Authorization |
+    | Client |                            |  Server  |   |     Server    |
+    |        |--(E)---- Access Token ---->|          |   |               |
+    |        |                            |          |   |               |
+    |        |<-(F)- Invalid Token Error -|          |   |               |
+    |        |                            +----------+   |               |
+    |        |                                           |               |
+    |        |--(G)----------- Refresh Token ----------->|               |
+    |        |                                           |               |
+    |        |<-(H)----------- Access Token -------------|               |
+    +--------+           & Optional Refresh Token        +---------------+
+    ```
+
+     The flow illustrated includes the following steps:
+
+    (A)  The client requests an access token by authenticating with the
+         authorization server and presenting an authorization grant.
+
+    (B)  The authorization server authenticates the client and validates
+         the authorization grant, and if valid, issues an access token
+         and a refresh token.
+
+    (C)  The client makes a protected resource request to the resource
+         server by presenting the access token.
+
+    (D)  The resource server validates the access token, and if valid,
+         serves the request.
+
+    (E)  Steps (C) and (D) repeat until the access token expires.  If the
+         client knows the access token expired, it skips to step (G);
+         otherwise, it makes another protected resource request.
+
+    (F)  Since the access token is invalid, the resource server returns
+         an invalid token error.
     """
     q = QueryUser(repository=repo)
     user = q.fetch_by_id(UserId(token.subject))
@@ -116,6 +153,6 @@ async def refresh_access_token(
     scopes = token.scopes  # Intersect with current user permissions
     access_token = AccessToken(subject=user.id.id, scopes=scopes, fresh=False)
     return {
-        "access_token": access_token,
+        "access_token": access_token.to_token(),
         "access_token_expires": access_token.exp_time,
     }

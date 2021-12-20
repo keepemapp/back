@@ -21,7 +21,8 @@ logger = logging.getLogger("kpm")
 
 
 def decode_token(token: str, cls: Type[T]) -> T:
-    payload = jwt.decode(token, cfg.SECRET_KEY, algorithms=[cfg.JWT_ALGORITHM])
+    payload = jwt.decode(token, cfg.JWT_SECRET_KEY,
+                         algorithms=[cfg.JWT_ALGORITHM])
     return cls(**payload)
 
 
@@ -42,7 +43,7 @@ async def get_access_token(t: str = Depends(oauth2_scheme)) -> AccessToken:
 
 async def get_refresh_token(t: str = Depends(oauth2_scheme)) -> RefreshToken:
     token = from_token(t)
-    if token.is_access() and token.is_valid():
+    if token.is_refresh() and token.is_valid():
         return token
     else:
         raise HTTPException(
