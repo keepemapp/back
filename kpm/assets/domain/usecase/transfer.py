@@ -4,7 +4,7 @@ from typing import List
 from kpm.assets.domain.entity.asset import Asset
 from kpm.assets.domain.usecase.unit_of_work import AssetUoW
 from kpm.shared.domain import AssetId, Command, init_id
-from kpm.shared.domain.time_utils import current_utc_millis
+from kpm.shared.domain.time_utils import now_utc_millis
 
 
 @dataclass(frozen=True)
@@ -37,7 +37,7 @@ def transfer_asset(cmd: TransferAssets, asset_uow: AssetUoW):
     :return:
     """
     with asset_uow as uow:
-        mod_ts = current_utc_millis()
+        mod_ts = now_utc_millis()
         for aid in cmd.asset_ids:
             a: Asset = uow.repo.find_by_id(AssetId(aid))
             a.change_owner(mod_ts, cmd.owner, cmd.receivers)

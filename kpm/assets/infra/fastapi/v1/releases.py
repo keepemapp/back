@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
+from fastapi_pagination import Page, Params, paginate
 
 import kpm.assets.infra.fastapi.v1.schemas.releases as schemas
 import kpm.assets.infra.memrepo.views_asset as assets
@@ -64,22 +65,26 @@ def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
 @router.get(
     s.API_RELEASE.path(),
     responses={
-        status.HTTP_200_OK: {"model": List[schemas.ReleaseResponse]},
+        status.HTTP_200_OK: {"model": Page[schemas.ReleaseResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
     tags=["admin"],
 )
 async def get_releases(
-    # token: AccessToken = Depends(get_access_token),
+    params: Params = Depends(),
+    token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    return [schemas.ReleaseResponse(**r) for r in views.all(bus=bus)]
+    # TODO filter or allow only admins
+    return paginate(
+        [schemas.ReleaseResponse(**r) for r in views.all(bus=bus)], params
+    )
 
 
 @router.get(
     s.API_RELEASE.path() + "/{release_id}",
     responses={
-        status.HTTP_200_OK: {"model": List[schemas.ReleaseResponse]},
+        status.HTTP_200_OK: {"model": schemas.ReleaseResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
         status.HTTP_404_NOT_FOUND: {"model": HTTPError},
     },

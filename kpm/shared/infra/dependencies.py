@@ -9,6 +9,7 @@ from starlette import status
 
 from kpm.settings import settings
 from kpm.settings import settings as cfg
+from kpm.shared.domain.time_utils import now_utc
 from kpm.shared.infra.auth_jwt import AccessToken, RefreshToken, from_token
 
 oauth2_scheme = OAuth2PasswordBearer(
@@ -21,8 +22,9 @@ logger = logging.getLogger("kpm")
 
 
 def decode_token(token: str, cls: Type[T]) -> T:
-    payload = jwt.decode(token, cfg.JWT_SECRET_KEY,
-                         algorithms=[cfg.JWT_ALGORITHM])
+    payload = jwt.decode(
+        token, cfg.JWT_SECRET_KEY, algorithms=[cfg.JWT_ALGORITHM]
+    )
     return cls(**payload)
 
 
@@ -58,9 +60,9 @@ def create_jwt_token(
 ) -> str:
     to_encode = data.copy()
     if expires_delta:
-        expire = datetime.utcnow() + expires_delta
+        expire = now_utc() + expires_delta
     else:
-        expire = datetime.utcnow() + timedelta(minutes=15)
+        expire = now_utc() + timedelta(minutes=15)
     to_encode.update({"exp": expire})
     encoded_jwt = jwt.encode(
         to_encode, settings.JWT_SECRET_KEY, algorithm=settings.JWT_ALGORITHM

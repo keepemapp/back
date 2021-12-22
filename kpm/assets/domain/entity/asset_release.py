@@ -7,7 +7,7 @@ from typing import List, Set
 from kpm.shared.domain import (AssetId, DomainId, DomainRepository, Event,
                                RootAggregate, RootAggState, UserId,
                                ValueObject, init_id, required_field)
-from kpm.shared.domain.time_utils import current_utc_millis
+from kpm.shared.domain.time_utils import now_utc_millis
 
 
 @dataclass(frozen=True)
@@ -53,7 +53,7 @@ class TimeCondition(ReleaseCondition):
     release_ts: int
 
     def is_met(self) -> bool:
-        return self.release_ts < current_utc_millis()
+        return self.release_ts < now_utc_millis()
 
 
 @dataclass
@@ -98,7 +98,7 @@ class AssetRelease(RootAggregate):
     def release(self):
         if not self.can_trigger():
             raise Exception(f"Release {self.id} not ready to be released.")
-        ts = current_utc_millis()
+        ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.INACTIVE)
         self._events.append(
             AssetReleased(
@@ -113,7 +113,7 @@ class AssetRelease(RootAggregate):
 
     def cancel(self):
         """Cancels the event."""
-        ts = current_utc_millis()
+        ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.REMOVED)
         self._events.append(
             AssetReleaseCanceled(

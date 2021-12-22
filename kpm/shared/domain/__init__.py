@@ -9,7 +9,7 @@ from uuid import uuid4
 from dataclasses_json import dataclass_json
 
 from kpm.settings import settings
-from kpm.shared.domain.time_utils import current_utc_millis
+from kpm.shared.domain.time_utils import now_utc_millis
 
 
 def required_field() -> Field:
@@ -67,7 +67,7 @@ IDT = TypeVar("IDT", str, DomainId)
 class Event:
     eventType: str = required_field()
     aggregate_id: IDT = required_field()
-    timestamp: int = field(default_factory=current_utc_millis)
+    timestamp: int = field(default_factory=now_utc_millis)
     application: str = settings.APPLICATION_TECHNICAL_NAME
 
 
@@ -129,7 +129,7 @@ class RootAggregate(Entity):
     """Base class with parameters that will need to be overwritten"""
 
     _events: List[Event] = field(default_factory=list)
-    created_ts: int = current_utc_millis()
+    created_ts: int = now_utc_millis()
     modified_ts: Dict[str, int] = field(default_factory=dict)
     state: RootAggState = RootAggState.ACTIVE
 

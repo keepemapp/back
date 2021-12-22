@@ -6,7 +6,7 @@ import pytest
 import kpm.assets.domain.entity.asset_release as ar
 import kpm.assets.domain.usecase.asset_to_future_self as afs
 from kpm.shared.domain import AssetId, UserId
-from kpm.shared.domain.time_utils import current_utc, to_millis
+from kpm.shared.domain.time_utils import now_utc, to_millis
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 
@@ -16,7 +16,7 @@ class TestAssetFutureSelf:
     def test_creates_asset_future(self, bus, create_asset_cmd):
         asset_id = "assetId"
         owner = "1"
-        scheduled_date = current_utc() + dt.timedelta(minutes=10)
+        scheduled_date = now_utc() + dt.timedelta(minutes=10)
         history = [
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),
             afs.CreateAssetToFutureSelf(

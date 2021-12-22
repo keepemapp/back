@@ -103,7 +103,7 @@ class TestReleases:
         releases = response.json()
 
         assert response.status_code == 200
-        assert len(releases) == 1
+        assert len(releases["items"]) == 1
 
     def test_list_all(self, client, populated_bus):
         response = client.get(s.API_V1.concat(s.API_RELEASE).path())

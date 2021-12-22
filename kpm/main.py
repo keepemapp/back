@@ -95,5 +95,6 @@ logger.error("loglevel=" + logging.getLevelName(logger.getEffectiveLevel()))
 
 app.logger = logger
 
+
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)

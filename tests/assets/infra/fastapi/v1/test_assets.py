@@ -1,3 +1,5 @@
+import pathlib
+from os.path import join
 from typing import List
 
 import pytest
@@ -90,7 +92,7 @@ class TestRegisterAsset:
 class TestGetAssets:
     def test_user_assets(self, client):
         _, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.subject])
-        aid1 = r1.headers["location"].split("/")[-1].split("?")[0]
+        aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
 
         response = client.get(
             s.API_V1.concat(s.API_USER_PATH).prefix
@@ -99,13 +101,13 @@ class TestGetAssets:
         )
         assert response.status_code == 200
         json = response.json()
-        assert len(json) == 1
+        assert len(json["items"]) == 1
 
         # Second asset
         _, r2 = create_asset(
             client, 1, ["other-user", ACTIVE_USER_TOKEN.subject]
         )
-        aid2 = r2.headers["location"].split("/")[-1].split("?")[0]
+        aid2 = r2.headers["location"].split("/")[-2].split("?")[0]
 
         response = client.get(
             s.API_V1.concat(s.API_USER_PATH).prefix
@@ -114,12 +116,15 @@ class TestGetAssets:
         )
         assert response.status_code == 200
         json = response.json()
-        assert len(json) == 2
-        assert [a.get("id").split("?")[0] for a in json] == [aid1, aid2]
+        assert len(json["items"]) == 2
+        assert [a.get("id").split("?")[0] for a in json["items"]] == [
+            aid1,
+            aid2,
+        ]
 
     def test_get_individual_asset(self, client):
         a, r1 = create_asset(client, 0, [ACTIVE_USER_TOKEN.subject])
-        aid1 = r1.headers["location"].split("/")[-1].split("?")[0]
+        aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
         response = client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
         resp = response.json()
@@ -138,7 +143,7 @@ class TestGetAssets:
     def test_get_multiple_owners_asset(self, client):
         owners = ["other_owner", ACTIVE_USER_TOKEN.subject]
         _, r1 = create_asset(client, 0, owners)
-        aid1 = r1.headers["location"].split("/")[-1]
+        aid1 = r1.headers["location"].split("/")[-2]
         response = client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
 
@@ -156,13 +161,14 @@ class TestUploadAsset:
             file_name=f"test_uploaded_file.txt",
         )
         response = client.post(ASSET_ROUTE, json=asset.dict())
-        upload_loc = s.API_V1.concat(response.headers['location']).path()
-        with open('resources/test_uploaded_file.txt', 'rb') as f:
+        upload_loc = s.API_V1.concat(response.headers["location"]).path()
+        cwd = pathlib.Path(__file__).parent.resolve()
+        with open(join(cwd, "resources", "test_uploaded_file.txt"), "rb") as f:
             upload = client.post(upload_loc, files={"file": f})
         assert upload.status_code == 201
-        assert upload.headers['location'] in upload_loc
+        assert upload.headers["location"] in upload_loc
 
-        res = client.get(s.API_V1.concat(upload.headers['location']).path())
+        res = client.get(s.API_V1.concat(upload.headers["location"]).path())
         assert res.status_code == 200
-        with open('resources/test_uploaded_file.txt', 'rb') as f:
+        with open(join(cwd, "resources", "test_uploaded_file.txt"), "rb") as f:
             assert f.read() == res._content

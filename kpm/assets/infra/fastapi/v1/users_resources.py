@@ -1,6 +1,5 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, status
+from fastapi_pagination import Page, Params, paginate
 
 import kpm.assets.infra.memrepo.views_asset_release as views_releases
 from kpm.assets.infra.dependencies import message_bus
@@ -24,31 +23,36 @@ router = APIRouter(
     "/me" + settings.API_ASSET_PATH.prefix,
     tags=settings.API_ASSET_PATH.tags,
     responses={
-        status.HTTP_200_OK: {"model": List[AssetResponse]},
+        status.HTTP_200_OK: {"model": Page[AssetResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
 async def get_user_assets(
+    params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
     assets = views_asset.find_by_ownerid(token.subject, bus=bus)
-    return [asset_to_response(a, token) for a in assets]
+    return paginate([asset_to_response(a, token) for a in assets], params)
 
 
 @router.get(
     "/me" + settings.API_RELEASE.prefix,
     tags=settings.API_RELEASE.tags,
     responses={
-        status.HTTP_200_OK: {"model": List[ReleaseResponse]},
+        status.HTTP_200_OK: {"model": Page[ReleaseResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
 async def get_user_releases(
+    params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    return [
-        ReleaseResponse(**r)
-        for r in views_releases.get_releases(token.subject, bus=bus)
-    ]
+    return paginate(
+        [
+            ReleaseResponse(**r)
+            for r in views_releases.get_releases(token.subject, bus=bus)
+        ],
+        params,
+    )

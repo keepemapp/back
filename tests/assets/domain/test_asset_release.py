@@ -11,7 +11,7 @@ import kpm.assets.domain.usecase.asset_to_future_self as afs
 from kpm.assets.domain.entity.asset import Asset
 from kpm.assets.domain.usecase.create_asset import CreateAsset
 from kpm.shared.domain import AssetId, DomainId, UserId
-from kpm.shared.domain.time_utils import current_utc, to_millis
+from kpm.shared.domain.time_utils import now_utc, to_millis
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 
@@ -23,11 +23,11 @@ class TestReleaseConditions:
 
     def test_time_condition(self):
         assert ar.TrueCondition().is_met() == True
-        past = to_millis(current_utc() + dt.timedelta(minutes=-10))
+        past = to_millis(now_utc() + dt.timedelta(minutes=-10))
         past_rel = ar.TimeCondition(past)
         assert past_rel.is_met()
 
-        future_date = to_millis(current_utc() + dt.timedelta(minutes=10))
+        future_date = to_millis(now_utc() + dt.timedelta(minutes=10))
         assert ar.TimeCondition(future_date).is_met() is False
 
 
@@ -48,8 +48,8 @@ class TestRelease:
         assert DomainId(r.events[0].aggregate_id) == r.id
 
     def test_multiple_conditions(self):
-        past = to_millis(current_utc() + dt.timedelta(minutes=-10))
-        future = to_millis(current_utc() + dt.timedelta(minutes=10))
+        past = to_millis(now_utc() + dt.timedelta(minutes=-10))
+        future = to_millis(now_utc() + dt.timedelta(minutes=10))
 
         r_past = ar.AssetRelease(
             name="Ar",

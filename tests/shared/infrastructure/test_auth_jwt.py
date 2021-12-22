@@ -1,3 +1,5 @@
+import time
+
 import pytest
 
 from kpm.shared.infra.auth_jwt import *
@@ -53,6 +55,7 @@ class TestJWTToken:
 
     def test_can_decode_access_token(self):
         t = AccessToken(subject="user123")
+        time.sleep(0.5)
         res = from_token(t.to_token())
 
         assert isinstance(res, AccessToken)

@@ -6,12 +6,7 @@ from typing import List, Optional, Union
 from jose import jwt
 
 from kpm.settings import settings as s
-
-
-def _int_from_datetime(value: datetime) -> int:
-    if not isinstance(value, datetime):
-        raise TypeError("a datetime is required")
-    return int(value.timestamp())
+from kpm.shared.domain.time_utils import now_utc_sec, to_secs
 
 
 def _get_expire_time(
@@ -71,10 +66,10 @@ class JWTToken:
     """If values are obtained from another token, do not allow to transform
     back."""
 
-    jwt_id: str = field(default=str(uuid.uuid4()))
+    jwt_id: str = field(default_factory=lambda: str(uuid.uuid4()))
     exp_time: int = None
-    not_before: int = _int_from_datetime(datetime.now(timezone.utc))
-    issued_at: int = _int_from_datetime(datetime.now(timezone.utc))
+    not_before: int = field(default_factory=now_utc_sec)
+    issued_at: int = field(default_factory=now_utc_sec)
     can_generate_str: bool = True
 
     def __post_init__(self):
@@ -98,7 +93,7 @@ class JWTToken:
 
     def is_valid(self, scope: str = None) -> bool:
         """Checks if token validity conditions are met"""
-        current_time = _int_from_datetime(datetime.now(timezone.utc))
+        current_time = now_utc_sec()
         time_is_valid = self.not_before <= current_time < self.exp_time
         scope_is_valid = scope in self.scopes if scope else True
 

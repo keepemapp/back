@@ -1,8 +1,9 @@
 from datetime import timedelta
-from typing import Dict, List
+from typing import Dict
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.responses import FileResponse, RedirectResponse
+from fastapi_pagination import Page, Params, paginate
 from jose import JWTError
 
 from kpm.assets.domain.usecase.create_asset import CreateAsset
@@ -102,12 +103,10 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
 async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
-    request: Request,
     token: AccessToken = Depends(get_access_token),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
     bus: MessageBus = Depends(message_bus),
     file: UploadFile = File(...),
-
 ):
     auth_data = decode_asset_upload_token(authorizer_token)
     a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
@@ -142,7 +141,7 @@ async def add_asset_file(
         )
     await file_repo.create(a["file_location"], file)
     return RedirectResponse(
-        url=router.url_path_for('get_asset_file', asset_id=asset_id),
+        url=router.url_path_for("get_asset_file", asset_id=asset_id),
         status_code=status.HTTP_201_CREATED,
     )
 
@@ -150,19 +149,21 @@ async def add_asset_file(
 @router.get(
     "",
     responses={
-        status.HTTP_200_OK: {"model": List[AssetResponse]},
+        status.HTTP_200_OK: {"model": Page[AssetResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
     tags=["admin"],
 )
 async def get_all_assets(
+    params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
     # TODO change me. Allow only admins
-    return [
-        asset_to_response(a, token) for a in views_asset.all_assets(bus=bus)
-    ]
+    return paginate(
+        [asset_to_response(a, token) for a in views_asset.all_assets(bus=bus)],
+        params,
+    )
 
 
 @router.get(

@@ -4,7 +4,7 @@ import pytest
 
 from kpm.assets.domain.entity.asset import *
 from kpm.shared.domain import AssetId, DomainId, IdTypeException, UserId
-from kpm.shared.domain.time_utils import (current_utc, current_utc_millis,
+from kpm.shared.domain.time_utils import (now_utc, now_utc_millis,
                                           to_millis)
 from tests.assets.domain import asset, valid_asset
 
@@ -73,16 +73,16 @@ class TestAssetModel:
 @pytest.mark.unit
 class TestAssetMethods:
     def test_visibility_change(self, asset):
-        asset.hide(current_utc_millis())
+        asset.hide(now_utc_millis())
         assert not asset.is_visible()
 
-        asset.show(current_utc_millis())
+        asset.show(now_utc_millis())
         assert asset.is_visible()
 
     def test_ownership_change(self, asset):
         prev_owner = asset.owners_id[0]
         new_owners = [UserId("two")]
-        mod_ts = current_utc_millis()
+        mod_ts = now_utc_millis()
         asset.change_owner(mod_ts, prev_owner, new_owners)
 
         assert all(new in asset.owners_id for new in new_owners)
@@ -97,7 +97,7 @@ class TestAssetMethods:
         assert ownership_events[0].aggregate_id == asset.id.id
 
     def test_cannot_change_in_past(self, asset):
-        past = to_millis(current_utc() + dt.timedelta(minutes=-10))
+        past = to_millis(now_utc() + dt.timedelta(minutes=-10))
         prev_owner = asset.owners_id[0]
         new_owners = [UserId("two")]
 
@@ -108,7 +108,7 @@ class TestAssetMethods:
     def test_cannot_change_if_not_owner(self, asset):
         prev_owner = UserId("I DO NOT OWN IT")
         new_owners = [UserId("two")]
-        mod_ts = current_utc_millis()
+        mod_ts = now_utc_millis()
 
         with pytest.raises(AssetOwnershipException):
             asset.change_owner(mod_ts, prev_owner, new_owners)
@@ -116,7 +116,7 @@ class TestAssetMethods:
     def test_change_same_owner_not_updates(self, asset):
         prev_owner = asset.owners_id[0]
         new_owners = [prev_owner]
-        mod_ts = to_millis(current_utc() + dt.timedelta(minutes=10))
+        mod_ts = to_millis(now_utc() + dt.timedelta(minutes=10))
         asset.change_owner(mod_ts, prev_owner, new_owners)
 
         assert asset._modified_ts_for("owners_id") < mod_ts
@@ -126,7 +126,7 @@ class TestAssetMethods:
 
         prev_owner = asset.owners_id[0]
         new_owners = [UserId("one"), UserId("two")]
-        mod_ts = to_millis(current_utc() + dt.timedelta(minutes=10))
+        mod_ts = to_millis(now_utc() + dt.timedelta(minutes=10))
         asset.change_owner(mod_ts, prev_owner, new_owners)
 
         assert asset._modified_ts_for("owners_id") < mod_ts

@@ -1,6 +1,5 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi_pagination import Page, Params, paginate
 
 from kpm.settings import settings
 from kpm.shared.infra.fastapi.schema_utils import to_pydantic_model
@@ -23,7 +22,7 @@ router = APIRouter(
 @router.get(
     "/me",
     responses={
-        status.HTTP_200_OK: {"model": List[UserResponse]},
+        status.HTTP_200_OK: {"model": UserResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
@@ -33,12 +32,16 @@ async def my_user(current_user: User = Depends(get_current_active_user)):
 
 @router.get(
     "",
-    responses={status.HTTP_200_OK: {"model": List[UserResponse]}},
+    responses={status.HTTP_200_OK: {"model": Page[UserResponse]}},
     tags=["admin"],
 )
-async def get_all_users(repo: UserRepository = Depends(user_repository)):
+async def get_all_users(
+    params: Params = Depends(), repo: UserRepository = Depends(user_repository)
+):
     # TODO change me. Allow only admins
-    return [to_pydantic_model(u, UserResponse) for u in repo.all()]
+    return paginate(
+        [to_pydantic_model(u, UserResponse) for u in repo.all()], params
+    )
 
 
 @router.post(
