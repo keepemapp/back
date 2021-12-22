@@ -1,7 +1,7 @@
 from datetime import timedelta
 from typing import Dict, List
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, Request, status
 from fastapi.responses import FileResponse, RedirectResponse
 from jose import JWTError
 
@@ -76,7 +76,7 @@ def create_asset_upload_auth_token(asset_id: str, user_id: str) -> str:
 
 def create_asset_upload_path(asset_id: str, user_id: str) -> str:
     return (
-        s.API_ASSET_PATH.concat(asset_id).prefix + "?authorizer_token="
+        s.API_ASSET_PATH.concat(asset_id).prefix + "/file?authorizer_token="
         f"{create_asset_upload_auth_token(asset_id, user_id)}"
     )
 
@@ -92,7 +92,7 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
 
 
 @router.post(
-    "/{asset_id}",
+    "/{asset_id}/file",
     responses={
         status.HTTP_201_CREATED: {},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
@@ -102,13 +102,14 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
 async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
+    request: Request,
     token: AccessToken = Depends(get_access_token),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
     bus: MessageBus = Depends(message_bus),
     file: UploadFile = File(...),
+
 ):
     auth_data = decode_asset_upload_token(authorizer_token)
-
     a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
 
     if not a:
@@ -140,7 +141,10 @@ async def add_asset_file(
             detail="File type does not match",
         )
     await file_repo.create(a["file_location"], file)
-    return {}  # TODO return URL to get the image??
+    return RedirectResponse(
+        url=router.url_path_for('get_asset_file', asset_id=asset_id),
+        status_code=status.HTTP_201_CREATED,
+    )
 
 
 @router.get(

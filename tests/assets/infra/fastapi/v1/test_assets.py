@@ -141,3 +141,28 @@ class TestGetAssets:
         aid1 = r1.headers["location"].split("/")[-1]
         response = client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
+
+
+@pytest.mark.unit
+class TestUploadAsset:
+    def test_upload(self, client):
+        # Setup
+        uids = [ACTIVE_USER_TOKEN.subject]
+        asset = AssetCreate(
+            title=f"Asset number",
+            description=f"Description for",
+            owners_id=uids,
+            file_type=f"",
+            file_name=f"test_uploaded_file.txt",
+        )
+        response = client.post(ASSET_ROUTE, json=asset.dict())
+        upload_loc = s.API_V1.concat(response.headers['location']).path()
+        with open('resources/test_uploaded_file.txt', 'rb') as f:
+            upload = client.post(upload_loc, files={"file": f})
+        assert upload.status_code == 201
+        assert upload.headers['location'] in upload_loc
+
+        res = client.get(s.API_V1.concat(upload.headers['location']).path())
+        assert res.status_code == 200
+        with open('resources/test_uploaded_file.txt', 'rb') as f:
+            assert f.read() == res._content

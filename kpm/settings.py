@@ -28,7 +28,7 @@ class ApiRoute:
         return res
 
     def __str__(self) -> str:
-        return self.prefix
+        return self.path()
 
     def path(self) -> str:
         return ("/" + self.prefix).replace("//", "/")
