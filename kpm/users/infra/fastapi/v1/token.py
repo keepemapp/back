@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
 from kpm.settings import settings as s
-from kpm.shared.domain import UserId
-from kpm.shared.infra.auth_jwt import AccessToken, RefreshToken
-from kpm.shared.infra.dependencies import get_refresh_token
+from kpm.shared.domain.model import UserId
+from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
+from kpm.shared.entrypoints.fastapi.dependencies import get_refresh_token
 from kpm.shared.security import salt_password, verify_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User

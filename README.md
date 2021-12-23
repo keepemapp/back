@@ -32,20 +32,33 @@ We divide the packages in:
 emo
 ├── main.py
 ├── settings.py
-├── shared
-│   ├── domain
-│   │   └── usecase
-│   │       ├── event.py
-│   │       └── validations.py
-│   ├── infra
-│   │   └── fastapi
-│   │       ├── schema_utils.py
-│   │       └── schemas.py
-│   └── security.py
 ├── assets
-│   ├── domain
-│   └── infra
-└── users
+│   ├── adapters  # Contains databases, views, publishers, notifications code...
+│   │   ├── filestorage
+│   │   │   └── ....py
+│   │   └── memrepo
+│   │       └── ....py
+│   ├── domain  # Domain logic
+│   │   ├── commands.py
+│   │   ├── events.py
+│   │   ├── model.py
+│   │   └── repositories.py  # Abstract interfaces
+│   ├── entrypoints
+│   │   ├── redis_eventconsumer # Example
+│   │   └── fastapi
+│   │       ├── schema_utils.py
+│   │       └── schemas.py
+│   └── service_layer  # Reactions to commands and events
+│       ├── schema_utils.py
+│       └── schemas.py
+├── shared
+│   ├── adapters
+│   ├── domain
+│   ├── entrypoints
+│   └── service_layer
+│       ├── message_bus.py
+│       └── unit_of_work.py
+└── users # Still old structure. To be changes
     ├── domain
     │   ├── entity
     │   │   ├── user_repository.py

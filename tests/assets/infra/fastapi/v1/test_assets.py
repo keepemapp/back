@@ -6,13 +6,12 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from kpm.assets.infra.dependencies import message_bus
-from kpm.assets.infra.fastapi.v1 import assets_router
-from kpm.assets.infra.fastapi.v1.schemas import AssetCreate
+from kpm.assets.entrypoints.fastapi.dependencies import message_bus
+from kpm.assets.entrypoints.fastapi.v1 import assets_router
+from kpm.assets.entrypoints.fastapi.v1.schemas import AssetCreate
 from kpm.settings import settings as s
-from kpm.shared.infra.auth_jwt import AccessToken
-from kpm.shared.infra.dependencies import get_access_token
-from tests.assets.domain import valid_asset
+from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
 from tests.assets.utils import bus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix

@@ -5,7 +5,8 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from kpm.shared.domain import RootAggregate, UserId, required_field
+from kpm.shared.domain import required_field
+from kpm.shared.domain.model import RootAggregate, UserId
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "

@@ -1,8 +1,9 @@
 from dataclasses import dataclass
 from typing import NoReturn
 
-from kpm.shared.domain import Event, UserId
-from kpm.shared.domain.usecase import CommandOld
+from kpm.shared.domain.commands import CommandOld
+from kpm.shared.domain.events import Event
+from kpm.shared.domain.model import UserId
 from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.usecase.exceptions import MissmatchPasswordException

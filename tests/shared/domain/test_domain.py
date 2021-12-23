@@ -2,9 +2,7 @@ import datetime as dt
 
 import pytest
 
-from kpm.assets.domain.entity import (Asset, AssetTitleException,
-                                      EmptyOwnerException)
-from kpm.shared.domain import RootAggregate, RootAggState
+from kpm.shared.domain.model import RootAggregate, RootAggState
 from kpm.shared.domain.time_utils import now_utc, to_millis
 from tests.assets.domain import asset, valid_asset
 

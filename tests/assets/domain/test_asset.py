@@ -2,10 +2,12 @@ import datetime as dt
 
 import pytest
 
-from kpm.assets.domain.entity.asset import *
-from kpm.shared.domain import AssetId, DomainId, IdTypeException, UserId
-from kpm.shared.domain.time_utils import (now_utc, now_utc_millis,
-                                          to_millis)
+from kpm.assets.domain.commands import AssetOwnershipChanged
+from kpm.assets.domain.model import (Asset, AssetOwnershipException,
+                                     AssetTitleException, EmptyOwnerException)
+from kpm.shared.domain import DomainId, IdTypeException
+from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.time_utils import now_utc, now_utc_millis, to_millis
 from tests.assets.domain import asset, valid_asset
 
 

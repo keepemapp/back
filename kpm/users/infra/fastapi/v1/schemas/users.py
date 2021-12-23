@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, validator
 
 from kpm.settings import settings
-from kpm.shared.infra.fastapi.schemas import Links
+from kpm.shared.entrypoints.fastapi.schemas import Links
 
 
 class UserBase(BaseModel):

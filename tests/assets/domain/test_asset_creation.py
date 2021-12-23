@@ -2,10 +2,9 @@ from typing import Any, Dict
 
 import pytest
 
-from kpm.assets.domain.entity.asset import Asset
-from kpm.assets.domain.entity.asset_repository import DuplicatedAssetException
-from kpm.assets.domain.usecase.create_asset import CreateAsset
-from kpm.shared.domain import AssetId
+from kpm.assets.domain.commands import CreateAsset
+from kpm.assets.domain.model import Asset, DuplicatedAssetException
+from kpm.shared.domain.model import AssetId
 from tests.assets.utils import bus
 
 DataType = Dict[str, Any]

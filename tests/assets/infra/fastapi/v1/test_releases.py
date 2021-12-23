@@ -1,19 +1,16 @@
 import dataclasses as dc
-from typing import List
 
 import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-import kpm.assets.domain.entity.asset_release as ar
-import kpm.assets.domain.usecase.asset_to_future_self as afs
-import kpm.assets.infra.fastapi.v1.schemas.releases as schema
-from kpm.assets.domain.usecase import release_handlers as rh
-from kpm.assets.infra.dependencies import message_bus
-from kpm.assets.infra.fastapi.v1 import assets_router
+import kpm.assets.domain.commands as cmds
+import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schema
+from kpm.assets.entrypoints.fastapi.dependencies import message_bus
+from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
-from kpm.shared.infra.auth_jwt import AccessToken
-from kpm.shared.infra.dependencies import get_access_token
+from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 
@@ -38,13 +35,13 @@ class TestReleases:
     @staticmethod
     @pytest.fixture
     def populated_bus(bus, create_asset_cmd):
-        to_cancel = afs.CreateAssetToFutureSelf(
+        to_cancel = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
             scheduled_date=123232,
             name="note",
             owner=OWNER1,
         )
-        to_trigger = afs.CreateAssetToFutureSelf(
+        to_trigger = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
             scheduled_date=123232,
             name="note",
@@ -65,21 +62,21 @@ class TestReleases:
                 owners_id=[OWNER1, OWNER2],
             ),
             to_cancel,
-            afs.CreateAssetToFutureSelf(
+            cmds.CreateAssetToFutureSelf(
                 assets=[ASSET_ID2],
                 scheduled_date=123232,
                 name="note",
                 owner=OWNER2,
             ),
-            afs.CreateAssetToFutureSelf(
+            cmds.CreateAssetToFutureSelf(
                 assets=[ASSET_ID3],
                 scheduled_date=123232,
                 name="note",
                 owner=OWNER1,
             ),
-            rh.CancelRelease(aggregate_id=to_cancel.aggregate_id),
+            cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id),
             to_trigger,
-            rh.TriggerRelease(aggregate_id=to_trigger.aggregate_id),
+            cmds.TriggerRelease(aggregate_id=to_trigger.aggregate_id),
         ]
         for msg in setup:
             bus.handle(msg)

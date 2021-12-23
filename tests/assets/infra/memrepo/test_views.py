@@ -1,7 +1,7 @@
 import pytest
 
-from kpm.assets.domain.entity.asset import Asset
-from kpm.assets.infra.memrepo import views_asset
+from kpm.assets.adapters.memrepo import views_asset
+from kpm.assets.domain.model import Asset
 from tests.assets.domain import asset, valid_asset
 from tests.assets.utils import bus
 

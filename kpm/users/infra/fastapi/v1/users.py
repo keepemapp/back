@@ -2,8 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
 from kpm.settings import settings
-from kpm.shared.infra.fastapi.schema_utils import to_pydantic_model
-from kpm.shared.infra.fastapi.schemas import HTTPError
+from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
+from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.exceptions import (

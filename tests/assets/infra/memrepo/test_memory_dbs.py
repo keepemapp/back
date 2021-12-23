@@ -3,9 +3,9 @@ import string
 
 import pytest
 
-from kpm.assets.domain.entity import Asset
-from kpm.assets.infra.memrepo.repository import MemoryPersistedAssetRepository
-from kpm.shared.domain import AssetId, UserId
+from kpm.assets.adapters.memrepo import MemoryPersistedAssetRepository
+from kpm.assets.domain.model import Asset
+from kpm.shared.domain.model import AssetId, UserId
 from tests.assets.domain import asset, valid_asset
 
 

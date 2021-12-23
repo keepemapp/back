@@ -1,7 +1,7 @@
 from typing import List, Optional
 
-from kpm.shared.domain import UserId
-from kpm.shared.domain.usecase import Query
+from kpm.shared.domain.commands import Query
+from kpm.shared.domain.model import UserId
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 

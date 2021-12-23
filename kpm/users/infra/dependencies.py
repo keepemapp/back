@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 
-from kpm.shared.domain import UserId
-from kpm.shared.infra.auth_jwt import AccessToken
-from kpm.shared.infra.dependencies import get_access_token
-from kpm.shared.infra.fastapi.exceptions import UNAUTHORIZED_GENERIC
+from kpm.shared.domain.model import UserId
+from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
+from kpm.shared.entrypoints.fastapi.exceptions import UNAUTHORIZED_GENERIC
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.query_user import QueryUser

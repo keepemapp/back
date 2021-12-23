@@ -1,14 +1,16 @@
-from typing import Any, Dict, Generic, List, Optional, Type, TypeVar
+from typing import Any, Dict, List, Optional, Type
 
 import pytest
 
-from kpm.assets.domain.entity import Asset, AssetRepository, DomainRepository
-from kpm.assets.domain.entity.asset_release import (AssetRelease,
-                                                    AssetReleaseRepository)
-from kpm.assets.domain.entity.asset_repository import DuplicatedAssetException
-from kpm.assets.infra import bootstrap
-from kpm.shared.domain import AssetId, DomainId, UserId
-from kpm.shared.domain.usecase.unit_of_work import AbstractUnitOfWork
+from kpm.assets.domain.model import (Asset, AssetRelease,
+                                     DuplicatedAssetException)
+from kpm.assets.domain.repositories import (AssetReleaseRepository,
+                                            AssetRepository)
+from kpm.assets.entrypoints import bootstrap
+from kpm.shared.domain import DomainId
+from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.repository import DomainRepository
+from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]

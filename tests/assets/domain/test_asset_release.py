@@ -1,16 +1,13 @@
 import dataclasses as dc
 import datetime as dt
-import os
 import time
-from typing import Any, Dict
 
 import pytest
 
-import kpm.assets.domain.entity.asset_release as ar
-import kpm.assets.domain.usecase.asset_to_future_self as afs
-from kpm.assets.domain.entity.asset import Asset
-from kpm.assets.domain.usecase.create_asset import CreateAsset
-from kpm.shared.domain import AssetId, DomainId, UserId
+import kpm.assets.domain.events as events
+import kpm.assets.domain.model as model
+from kpm.shared.domain import DomainId
+from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.time_utils import now_utc, to_millis
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
@@ -19,57 +16,57 @@ from tests.assets.utils import bus
 @pytest.mark.unit
 class TestReleaseConditions:
     def test_true_conditon(self):
-        assert ar.TrueCondition().is_met()
+        assert model.TrueCondition().is_met()
 
     def test_time_condition(self):
-        assert ar.TrueCondition().is_met() == True
+        assert model.TrueCondition().is_met() == True
         past = to_millis(now_utc() + dt.timedelta(minutes=-10))
-        past_rel = ar.TimeCondition(past)
+        past_rel = model.TimeCondition(past)
         assert past_rel.is_met()
 
         future_date = to_millis(now_utc() + dt.timedelta(minutes=10))
-        assert ar.TimeCondition(future_date).is_met() is False
+        assert model.TimeCondition(future_date).is_met() is False
 
 
 @pytest.mark.unit
 class TestRelease:
     def test_creation_gives_event(self):
-        r = ar.AssetRelease(
+        r = model.AssetRelease(
             name="Ar",
             description="",
             owner=UserId("u"),
             receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[ar.TrueCondition()],
+            conditions=[model.TrueCondition()],
         )
         assert len(r.events) == 1
-        assert isinstance(r.events[0], ar.AssetReleaseScheduled)
+        assert isinstance(r.events[0], events.AssetReleaseScheduled)
         assert DomainId(r.events[0].aggregate_id) == r.id
 
     def test_multiple_conditions(self):
         past = to_millis(now_utc() + dt.timedelta(minutes=-10))
         future = to_millis(now_utc() + dt.timedelta(minutes=10))
 
-        r_past = ar.AssetRelease(
+        r_past = model.AssetRelease(
             name="Ar",
             description="",
             owner=UserId("u"),
             receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[ar.TrueCondition(), ar.TimeCondition(past)],
+            conditions=[model.TrueCondition(), model.TimeCondition(past)],
         )
         assert r_past.can_trigger()
 
-        r_future = ar.AssetRelease(
+        r_future = model.AssetRelease(
             name="Ar",
             description="",
             owner=UserId("u"),
             receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[ar.TrueCondition(), ar.TimeCondition(future)],
+            conditions=[model.TrueCondition(), model.TimeCondition(future)],
         )
         assert r_future.can_trigger() is False
 
@@ -81,8 +78,8 @@ class TestAssetReleaseVisibility:
         owner = "1"
         history = [
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),
-            ar.AssetReleaseScheduled(
-                re_conditions=[],
+            events.AssetReleaseScheduled(
+                re_conditions={},
                 re_type="",
                 owner=owner,
                 assets=[asset_id],
@@ -93,7 +90,7 @@ class TestAssetReleaseVisibility:
         for msg in history:
             bus.handle(msg)
 
-        with bus.uows.get(Asset) as uow:
+        with bus.uows.get(model.Asset) as uow:
             assert not uow.repo.find_by_id(AssetId(asset_id))
             assert len(uow.repo.find_by_ids([AssetId(asset_id)])) == 0
             assets = uow.repo.all()
@@ -109,41 +106,41 @@ class TestAssetReleaseVisibility:
         bus.handle(
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])
         )
-        release = ar.AssetRelease(
+        release = model.AssetRelease(
             id=DomainId(release_id),
             name="",
             description="",
             owner=UserId(owner),
             receivers=[UserId(receiver)],
-            conditions=[ar.TrueCondition()],
+            conditions=[model.TrueCondition()],
             release_type="dummy",
             assets=[AssetId(asset_id)],
         )
-        with bus.uows.get(ar.AssetRelease) as uow:
+        with bus.uows.get(model.AssetRelease) as uow:
             uow.repo.put(release)
             uow.commit()
         for e in release.events:
             bus.handle(e)
 
         # When
-        with bus.uows.get(ar.AssetRelease) as uow:
-            r: ar.AssetRelease = uow.repo.get(DomainId(release_id))
+        with bus.uows.get(model.AssetRelease) as uow:
+            r: model.AssetRelease = uow.repo.get(DomainId(release_id))
             r.cancel()
             uow.commit()
         for e in r.events:
             bus.handle(e)
 
         # Then
-        with bus.uows.get(Asset) as uow:
-            a: Asset = uow.repo.find_by_id(AssetId(asset_id))
+        with bus.uows.get(model.Asset) as uow:
+            a: model.Asset = uow.repo.find_by_id(AssetId(asset_id))
             assert a.is_visible()
             assert len(a.owners_id) == 1
             assert a.owners_id[0] == UserId(owner)
 
-        with bus.uows.get(ar.AssetRelease) as uow:
+        with bus.uows.get(model.AssetRelease) as uow:
             rs = uow.repo.user_past_releases(UserId(owner))
             assert len(rs) == 1
-            r: ar.AssetRelease = rs[0]
+            r: model.AssetRelease = rs[0]
             assert r.is_past()
 
     def test_release(self, bus, create_asset_cmd):
@@ -155,57 +152,57 @@ class TestAssetReleaseVisibility:
         bus.handle(
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])
         )
-        release = ar.AssetRelease(
+        release = model.AssetRelease(
             id=DomainId(release_id),
             name="",
             description="",
             owner=UserId(owner),
             receivers=[UserId(receiver)],
-            conditions=[ar.TrueCondition()],
+            conditions=[model.TrueCondition()],
             release_type="dummy",
             assets=[AssetId(asset_id)],
         )
-        with bus.uows.get(ar.AssetRelease) as uow:
+        with bus.uows.get(model.AssetRelease) as uow:
             uow.repo.put(release)
             uow.commit()
         for e in uow.collect_new_events():
             bus.handle(e)
 
         # When
-        with bus.uows.get(ar.AssetRelease) as uow:
-            r: ar.AssetRelease = uow.repo.get(DomainId(release_id))
+        with bus.uows.get(model.AssetRelease) as uow:
+            r: model.AssetRelease = uow.repo.get(DomainId(release_id))
             r.release()
             uow.commit()
         for e in uow.collect_new_events():
             bus.handle(e)
 
         # Then
-        with bus.uows.get(Asset) as uow:
-            a: Asset = uow.repo.find_by_id(AssetId(asset_id))
+        with bus.uows.get(model.Asset) as uow:
+            a: model.Asset = uow.repo.find_by_id(AssetId(asset_id))
             assert a.is_visible()
             assert len(a.owners_id) == 1
             assert a.owners_id[0] == UserId("2")
 
-        with bus.uows.get(ar.AssetRelease) as uow:
+        with bus.uows.get(model.AssetRelease) as uow:
             rs = uow.repo.user_past_releases(UserId(owner))
             assert len(rs) == 1
-            r: ar.AssetRelease = rs[0]
+            r: model.AssetRelease = rs[0]
             assert r.is_past()
 
     def test_asset_visibility_idempotent(self, bus, create_asset_cmd):
         asset_id = "assetId"
         owner = "1"
         release_id = "123"
-        scheduled = ar.AssetReleaseScheduled(
+        scheduled = events.AssetReleaseScheduled(
             aggregate_id=release_id,
-            re_conditions=[],
+            re_conditions={},
             re_type="",
             owner=owner,
             assets=[asset_id],
             receivers=[owner],
         )
         time.sleep(0.005)
-        canceled = ar.AssetReleaseCanceled(
+        canceled = events.AssetReleaseCanceled(
             aggregate_id=release_id, assets=[asset_id]
         )
 
@@ -218,6 +215,6 @@ class TestAssetReleaseVisibility:
         for msg in history:
             bus.handle(msg)
 
-        with bus.uows.get(Asset) as uow:
+        with bus.uows.get(model.Asset) as uow:
             a = uow.repo.find_by_id(AssetId(asset_id))
             assert a.is_visible()
