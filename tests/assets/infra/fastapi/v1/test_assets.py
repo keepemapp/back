@@ -11,7 +11,7 @@ from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.assets.entrypoints.fastapi.v1.schemas import AssetCreate
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from tests.assets.utils import bus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
@@ -137,7 +137,7 @@ class TestGetAssets:
 
     def test_non_existing_asset_gives_unauthorized(self, client):
         response = client.get(ASSET_ROUTE + "/random-asset-id")
-        assert response.status_code == 401
+        assert response.status_code == 403
 
     def test_get_multiple_owners_asset(self, client):
         owners = ["other_owner", ACTIVE_USER_TOKEN.subject]

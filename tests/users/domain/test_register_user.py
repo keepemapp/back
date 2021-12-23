@@ -2,6 +2,7 @@ from typing import Any, Dict
 
 import pytest
 
+from kpm.shared.domain.model import RootAggState
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.exceptions import (
     EmailAlreadyExistsException, UsernameAlreadyExistsException)
@@ -38,6 +39,7 @@ class TestRegisterUser:
         assert r._event
         assert isinstance(r._event, UserRegistered)
         assert isinstance(r._event.aggregate, User)
+        assert r._event.aggregate.state == RootAggState.PENDING_VALIDATION
 
     def test_sensitive_information_cleared_from_event(self, valid_data):
         r = RegisterUser(**valid_data)

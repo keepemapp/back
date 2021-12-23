@@ -4,7 +4,7 @@ import pytest
 
 from kpm.shared.domain.model import UserId
 from kpm.users.domain.usecase.query_user import QueryUser
-from tests.users.domain import user_repo_with_test_user, valid_user
+from tests.users.domain import *
 from tests.users.utils import MemoryUserRepository
 
 

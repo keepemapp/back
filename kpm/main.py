@@ -5,7 +5,7 @@ import pathlib
 import uvicorn
 from fastapi import FastAPI
 
-from kpm.assets.entrypoint.fastapi.v1 import assets_router
+from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.users.infra.fastapi.v1 import users_router
 

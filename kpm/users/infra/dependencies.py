@@ -1,9 +1,9 @@
 from fastapi import Depends, HTTPException, status
 
+import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
-from kpm.shared.entrypoints.fastapi.exceptions import UNAUTHORIZED_GENERIC
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.query_user import QueryUser
@@ -36,18 +36,6 @@ async def get_current_user(
 async def get_current_active_user(
     current_user: User = Depends(get_current_user),
 ) -> User:
-    if current_user.disabled:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Inactive user"
-        )
+    if current_user.is_disabled():
+        raise ex.USER_INACTIVE
     return current_user
-
-
-async def get_admin_user(
-    token: AccessToken = Depends(get_access_token),
-    user: User = Depends(get_current_user),
-):
-    if token.is_valid(scope="admin") and token.is_fresh():
-        return user
-    else:
-        raise UNAUTHORIZED_GENERIC

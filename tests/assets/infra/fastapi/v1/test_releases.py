@@ -10,7 +10,7 @@ from kpm.assets.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
 
@@ -189,4 +189,4 @@ class TestFutureSelf:
         response = client.post(
             s.API_V1.concat(s.API_FUTURE_SELF).prefix, json=payload.dict()
         )
-        assert response.status_code == 401
+        assert response.status_code == 403

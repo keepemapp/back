@@ -1,13 +1,14 @@
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
+import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings as s
 from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
-from kpm.shared.entrypoints.fastapi.dependencies import get_refresh_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
 from kpm.shared.security import salt_password, verify_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
@@ -24,14 +25,8 @@ logger = logging.getLogger("kpm")
 
 def check_user(user: Optional[User], password: str):
     """Validates user and its password"""
-    unauth_exception = HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Incorrect username or password",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
     if not user:
-        raise unauth_exception
+        raise ex.USER_CREDENTIALS_ER
 
     salted_pwd = salt_password(password, user.salt)
     password_is_valid = verify_password(salted_pwd, user.password_hash)
@@ -41,7 +36,7 @@ def check_user(user: Optional[User], password: str):
         return user
     else:
         logger.info(f"Auth failure for user '{user.id.id}'")
-        raise unauth_exception
+        raise ex.USER_CREDENTIALS_ER
 
 
 def authenticate_by_email(
@@ -72,6 +67,11 @@ async def login_for_access_token(
     With credentials, creates new access and refresh tokens
     """
     user = authenticate_by_email(repo, form_data.username, form_data.password)
+
+    if user.is_disabled():
+        if user.is_pending_validation():
+            raise ex.USER_PENDING_VALIDATION
+        raise ex.USER_INACTIVE
 
     access_token = AccessToken(subject=user.id.id, scopes=[], fresh=True)
     # TODO not create a new refresh token if one already exists

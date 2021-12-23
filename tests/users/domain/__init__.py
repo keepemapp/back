@@ -3,7 +3,7 @@ from typing import Any, Dict
 import pytest
 
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import UserId
+from kpm.shared.domain.model import RootAggState, UserId
 from kpm.users.domain.entity.users import User
 from tests.users.utils import MemoryUserRepository
 
@@ -28,10 +28,25 @@ def valid_user() -> DataType:
 
 
 @pytest.fixture
-def user_repo_with_test_user(valid_user) -> MemoryUserRepository:
+def active_user(valid_user) -> DataType:
+    valid_user["state"] = RootAggState.ACTIVE
+    yield valid_user
+
+
+@pytest.fixture
+def user_repo_with_test_user(active_user) -> MemoryUserRepository:
     repo = MemoryUserRepository()
-    repo.create(User(**valid_user))
+    repo.create(User(**active_user))
     try:
         yield repo
     finally:
         repo.clean_all()
+
+
+__all__ = [
+    "valid_user",
+    "active_user",
+    "user_repo_with_test_user",
+    "DataType",
+    "pwd_group",
+]

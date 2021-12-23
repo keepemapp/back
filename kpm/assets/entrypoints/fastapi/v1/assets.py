@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi_pagination import Page, Params, paginate
 from jose import JWTError
 
+import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.adapters.filestorage import AssetFileRepository
 from kpm.assets.adapters.memrepo import views_asset
 from kpm.assets.domain.commands import CreateAsset
@@ -16,10 +17,9 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetCreate,
                                                        AssetUploadAuthData)
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import (create_jwt_token,
-                                                         decode_token,
-                                                         get_access_token)
-from kpm.shared.entrypoints.fastapi.exceptions import UNAUTHORIZED_GENERIC
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import (create_jwt_token,
+                                                             decode_token,
+                                                             get_access_token)
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
@@ -100,6 +100,7 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
     responses={
         status.HTTP_201_CREATED: {},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
     },
 )
@@ -122,14 +123,11 @@ async def add_asset_file(
 
     if auth_data.asset_id != asset_id:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_400_BAD_REQUEST,
             detail="Mismatch in asset id and authorization",
         )
     if auth_data.user_id != token.subject:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="You do not own this authorization",
-        )
+        raise ex.FORBIDDEN_GENERIC
 
     if a["file_name"] != file.filename:
         raise HTTPException(
@@ -154,6 +152,7 @@ async def add_asset_file(
     responses={
         status.HTTP_200_OK: {"model": Page[AssetResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
     tags=["admin"],
 )
@@ -174,6 +173,7 @@ async def get_all_assets(
     responses={
         status.HTTP_200_OK: {"model": AssetResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
 )
 async def get_asset(
@@ -185,13 +185,14 @@ async def get_asset(
     if a:
         return asset_to_response(a, token)
     else:
-        raise UNAUTHORIZED_GENERIC
+        raise ex.FORBIDDEN_GENERIC
 
 
 @router.get(
     "/{asset_id}/file",
     responses={
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
 )
 async def get_asset_file(
@@ -211,4 +212,4 @@ async def get_asset_file(
         except RuntimeError as e:
             raise HTTPException(detail=e.msg)
     else:
-        raise UNAUTHORIZED_GENERIC
+        raise ex.FORBIDDEN_GENERIC

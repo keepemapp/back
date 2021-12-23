@@ -8,11 +8,11 @@ import kpm.assets.adapters.memrepo.views_asset as assets
 import kpm.assets.adapters.memrepo.views_asset_release as views
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schemas
+import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.entrypoints.fastapi.dependencies import message_bus
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
-from kpm.shared.entrypoints.fastapi.exceptions import UNAUTHORIZED_GENERIC
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
@@ -43,7 +43,7 @@ def post_response(*args) -> RedirectResponse:
 def assert_same_user(a, b):
     if a not in b:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail=str("You are not the owner"),
         )
 
@@ -54,7 +54,7 @@ def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
 
     if not assets.are_assets_active(as_clear, bus=bus, user=o_clear):
         return HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Some assets do not exist or are not modifyable",
             headers={"WWW-Authenticate": "Bearer"},
         )
@@ -65,6 +65,7 @@ def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
     responses={
         status.HTTP_200_OK: {"model": Page[schemas.ReleaseResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
     tags=["admin"],
 )
@@ -84,6 +85,7 @@ async def get_releases(
     responses={
         status.HTTP_200_OK: {"model": schemas.ReleaseResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
         status.HTTP_404_NOT_FOUND: {"model": HTTPError},
     },
 )
@@ -96,7 +98,7 @@ async def get_release(
     if release and release.get("owner") == token.subject:
         return schemas.ReleaseResponse(**release)
     else:
-        raise UNAUTHORIZED_GENERIC
+        raise ex.FORBIDDEN_GENERIC
 
 
 @router.post(

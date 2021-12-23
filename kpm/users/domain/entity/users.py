@@ -2,11 +2,10 @@ from __future__ import annotations
 
 import dataclasses
 import re
-from dataclasses import dataclass
-from typing import Optional
+from dataclasses import dataclass, field
 
 from kpm.shared.domain import required_field
-from kpm.shared.domain.model import RootAggregate, UserId
+from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "
@@ -23,7 +22,7 @@ class User(RootAggregate):
     salt: str = ""
     password_hash: str = ""
     email: str = required_field()
-    disabled: Optional[bool] = False
+    state: RootAggState = field(default=RootAggState.PENDING_VALIDATION)
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:
@@ -42,8 +41,17 @@ class User(RootAggregate):
         if not self._email_is_valid(self.email):
             raise ValueError(INVALID_EMAIL)
 
+    def activate(self) -> User:
+        return dataclasses.replace(self, state=RootAggState.ACTIVE)
+
     def disable(self) -> User:
-        return dataclasses.replace(self, disabled=True)
+        return dataclasses.replace(self, state=RootAggState.INACTIVE)
+
+    def is_disabled(self) -> bool:
+        return self.state not in [RootAggState.ACTIVE]
+
+    def is_pending_validation(self):
+        return self.state in [RootAggState.PENDING_VALIDATION]
 
     def erase_sensitive_data(self) -> User:
         return dataclasses.replace(self, salt=None, password_hash=None)

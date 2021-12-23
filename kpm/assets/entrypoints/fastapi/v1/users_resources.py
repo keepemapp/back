@@ -9,7 +9,7 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetResponse,
                                                        ReleaseResponse)
 from kpm.settings import settings
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import get_access_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 

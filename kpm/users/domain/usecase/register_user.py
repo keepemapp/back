@@ -36,7 +36,6 @@ class RegisterUser(CommandOld):
             email=email,
             id=init_id(UserId),
             salt=salt,
-            disabled=False,
             password_hash=hash_password(salt_password(password, salt)),
         )
 

@@ -6,7 +6,8 @@ from kpm.settings import settings as s
 from kpm.shared.domain.time_utils import now_utc_sec
 from kpm.shared.entrypoints.auth_jwt import from_token
 from tests.users.infra.fastapi import client
-from tests.users.infra.fastapi.v1.test_users import create_user
+from tests.users.infra.fastapi.v1.test_users import (create_active_user,
+                                                     create_user)
 
 user_route: str = s.API_V1.concat(s.API_USER_PATH).prefix
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix
@@ -20,10 +21,20 @@ class TestJwtTokens:
 
     @pytest.fixture
     def client_with_user(self, client):
-        user, response = create_user(client)
+        user, response = create_active_user(client)
         self.user_email = user.email
         self.user_pwd = user.password
         return client
+
+    def test_no_token_for_users_pending_validation(self, client):
+        user, _ = create_user(client)
+        self.user_email = user.email
+        self.user_pwd = user.password
+        response = client.post(
+            login_route,
+            data={"username": self.user_email, "password": self.user_pwd},
+        )
+        assert response.status_code == 403
 
     def test_validity(self, client_with_user):
         time.sleep(1)

@@ -5,8 +5,7 @@ from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.change_user_password import (ChangeUserPassword,
                                                            UserPasswordChanged)
 from kpm.users.domain.usecase.exceptions import MissmatchPasswordException
-from tests.users.domain import (DataType, pwd_group, user_repo_with_test_user,
-                                valid_user)
+from tests.users.domain import *
 
 
 @pytest.fixture
