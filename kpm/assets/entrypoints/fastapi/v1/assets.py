@@ -95,15 +95,16 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
         )
 
 
-@router.post(
-    "/{asset_id}/file",
-    responses={
+add_asset_file_resp = {
         status.HTTP_201_CREATED: {},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
         status.HTTP_403_FORBIDDEN: {"model": HTTPError},
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
-    },
-)
+    }
+
+
+@router.put("/{asset_id}/file", responses=add_asset_file_resp,)
+@router.post("/{asset_id}/file", responses=add_asset_file_resp, deprecated=True)
 async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
