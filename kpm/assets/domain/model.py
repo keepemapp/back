@@ -4,12 +4,20 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Union
 
-from kpm.assets.domain.commands import AssetOwnershipChanged
-from kpm.assets.domain.events import (AssetReleaseCanceled, AssetReleased,
-                                      AssetReleaseScheduled)
+from kpm.assets.domain.events import (
+    AssetOwnershipChanged,
+    AssetReleaseCanceled,
+    AssetReleased,
+    AssetReleaseScheduled,
+)
 from kpm.shared.domain import DomainId, init_id, required_field
-from kpm.shared.domain.model import (AssetId, RootAggregate, RootAggState,
-                                     UserId, ValueObject)
+from kpm.shared.domain.model import (
+    AssetId,
+    RootAggregate,
+    RootAggState,
+    UserId,
+    ValueObject,
+)
 from kpm.shared.domain.time_utils import now_utc_millis
 
 
@@ -51,6 +59,7 @@ class Asset(RootAggregate):
     id: AssetId = required_field()
     title: str = ""
     description: str = ""
+    state: RootAggState = RootAggState.PENDING_FILE
 
     @staticmethod
     def _title_is_valid(name: str) -> bool:
@@ -78,7 +87,13 @@ class Asset(RootAggregate):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
     def is_visible(self) -> bool:
-        return self.state == RootAggState.ACTIVE
+        return self.state in [RootAggState.ACTIVE, RootAggState.PENDING_FILE]
+
+    def file_is_uploaded(self) -> bool:
+        return self.state == RootAggState.PENDING_FILE
+
+    def upload_file(self, mod_ts: int):
+        self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
     def change_owner(self, mod_ts: int, transferor: UIDT, new: List[UIDT]):
         """Changes asset ownership

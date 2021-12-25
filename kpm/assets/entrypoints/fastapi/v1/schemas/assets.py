@@ -33,6 +33,7 @@ class AssetResponse(AssetBase):
     created_ts: int
     """UNIX timestamp in milliseconds"""
     modified_ts: Optional[int]
+    state: str
 
     @validator("links", always=True)
     def populate_links(cls, _, values):

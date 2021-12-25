@@ -149,25 +149,62 @@ class TestGetAssets:
 
 @pytest.mark.unit
 class TestUploadAsset:
-    def test_upload(self, client):
-        # Setup
-        uids = [ACTIVE_USER_TOKEN.subject]
-        asset = AssetCreate(
-            title=f"Asset number",
-            description=f"Description for",
-            owners_id=uids,
-            file_type=f"",
-            file_name=f"test_uploaded_file.txt",
-        )
-        response = client.post(ASSET_ROUTE, json=asset.dict())
-        upload_loc = s.API_V1.concat(response.headers["location"]).path()
-        cwd = pathlib.Path(__file__).parent.resolve()
-        with open(join(cwd, "resources", "test_uploaded_file.txt"), "rb") as f:
+    RESOURCES: str = join(pathlib.Path(__file__).parent.resolve(), "resources")
+    GOOD_ASSET: str = join(RESOURCES, "test_uploaded_file.txt")
+    BAD_ASSET: str = join(RESOURCES, "test_bad_file.txt")
+    IMAGE: str = join(RESOURCES, "test_image_file.jpg")
+
+    @pytest.fixture
+    def client_w_asset(self, client):
+        def _factory(ftype="", fname="test_uploaded_file.txt"):
+            uids = [ACTIVE_USER_TOKEN.subject]
+            asset = AssetCreate(
+                title=f"Asset number",
+                description=f"Description for",
+                owners_id=uids,
+                file_type=ftype,
+                file_name=fname,
+            )
+            response = client.post(ASSET_ROUTE, json=asset.dict())
+            upload_loc = s.API_V1.concat(response.headers["location"]).path()
+            return client, upload_loc
+
+        return _factory
+
+    def test_upload(self, client_w_asset):
+        client, upload_loc = client_w_asset()
+        print(upload_loc)
+        # Uploading a file
+        with open(self.GOOD_ASSET, "rb") as f:
             upload = client.post(upload_loc, files={"file": f})
         assert upload.status_code == 201
         assert upload.headers["location"] in upload_loc
 
+        # Test file retrieved is the same
         res = client.get(s.API_V1.concat(upload.headers["location"]).path())
         assert res.status_code == 200
-        with open(join(cwd, "resources", "test_uploaded_file.txt"), "rb") as f:
+        with open(self.GOOD_ASSET, "rb") as f:
             assert f.read() == res._content
+
+        # Test asset state was correctly updated
+        asset_id = "/".join(upload_loc.split("/")[:5])
+        updated_a = client.get(asset_id)
+        assert updated_a.status_code == 200
+        assert not updated_a.json().get("upload_path")
+        assert updated_a.json()["state"] == "active"
+
+    def test_wrong_file_name(self, client_w_asset):
+        client, upload_loc = client_w_asset()
+        # Uploading a file
+        with open(self.BAD_ASSET, "rb") as f:
+            upload = client.post(upload_loc, files={"file": f})
+        assert upload.status_code == 400
+        print(upload.text)
+
+    def test_wrong_file_type(self, client_w_asset):
+        client, upload_loc = client_w_asset(ftype="random_ftype")
+        # Uploading a file
+        with open(self.GOOD_ASSET, "rb") as f:
+            upload = client.post(upload_loc, files={"file": f})
+        assert upload.status_code == 400
+        print(upload.text)

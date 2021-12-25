@@ -3,7 +3,9 @@ from typing import Callable, Dict, List, Type
 
 import kpm.assets.domain.model as model
 from kpm.assets.adapters.memrepo.repository import (
-    MemoryPersistedAssetRepository, MemPersistedReleaseRepo)
+    MemoryPersistedAssetRepository,
+    MemPersistedReleaseRepo,
+)
 from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
 from kpm.shared.adapters.memrepo import MemoryUoW
 from kpm.shared.domain.commands import Command

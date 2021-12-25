@@ -9,10 +9,14 @@ from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.exceptions import (
-    EmailAlreadyExistsException, UsernameAlreadyExistsException)
+    EmailAlreadyExistsException,
+    UsernameAlreadyExistsException,
+)
 from kpm.users.domain.usecase.register_user import RegisterUser
-from kpm.users.infra.dependencies import (get_current_active_user,
-                                          user_repository)
+from kpm.users.infra.dependencies import (
+    get_current_active_user,
+    user_repository,
+)
 from kpm.users.infra.fastapi.v1.schemas.users import UserCreate, UserResponse
 
 router = APIRouter(

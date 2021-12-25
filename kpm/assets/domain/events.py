@@ -33,3 +33,9 @@ class AssetReleased(Event):
     owner: str = required_field()
     assets: List[str] = required_field()
     receivers: List[str] = required_field()
+
+
+@dataclass(frozen=True)
+class AssetOwnershipChanged(Event):
+    owners: List[str] = required_field()
+    eventType: str = "AssetOwnershipChanged"

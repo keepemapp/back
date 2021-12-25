@@ -1,11 +1,12 @@
 from os import path as path
 from typing import Union
 
+import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.events as events
-from kpm.assets.domain.commands import CreateAsset
 from kpm.assets.domain.model import Asset, FileData
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.time_utils import now_utc_millis
 
 
 def hide_asset(event: events.AssetReleaseScheduled, asset_uow: AssetUoW):
@@ -42,7 +43,7 @@ def _compute_location(owner_id: str, asset_id: str) -> str:
     return path.join(owner_id, asset_id + ".enc")
 
 
-def create_asset(cmd: CreateAsset, asset_uow: AssetUoW):
+def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
     """Handler to create an asset
 
     :param cmd: Command
@@ -65,3 +66,12 @@ def create_asset(cmd: CreateAsset, asset_uow: AssetUoW):
     with asset_uow:
         asset_uow.repo.create(asset)
         asset_uow.commit()
+
+
+def asset_file_upload(cmd: cmds.UploadAssetFile, asset_uow: AssetUoW):
+    with asset_uow as uow:
+        a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=False)
+        ts = now_utc_millis()
+        a.upload_file(ts)
+        uow.repo.update(a)
+        uow.commit()

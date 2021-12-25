@@ -5,8 +5,10 @@ import kpm.assets.adapters.memrepo.views_asset_release as views_releases
 from kpm.assets.adapters.memrepo import views_asset
 from kpm.assets.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1.assets import asset_to_response
-from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetResponse,
-                                                       ReleaseResponse)
+from kpm.assets.entrypoints.fastapi.v1.schemas import (
+    AssetResponse,
+    ReleaseResponse,
+)
 from kpm.settings import settings
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token

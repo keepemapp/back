@@ -88,9 +88,6 @@ logging.config.fileConfig(
     os.path.join(cwd, "logging.conf"), disable_existing_loggers=False
 )
 logger = logging.getLogger("kpm")
-logger.info("info")
-logger.warning("warning")
-logger.error("error")
 logger.error("loglevel=" + logging.getLevelName(logger.getEffectiveLevel()))
 
 app.logger = logger

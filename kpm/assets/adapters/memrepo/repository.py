@@ -3,10 +3,15 @@ import pickle
 from pathlib import Path
 from typing import Dict, List, NoReturn, Optional, Union
 
-from kpm.assets.domain.model import (Asset, AssetRelease,
-                                     DuplicatedAssetException)
-from kpm.assets.domain.repositories import (AssetReleaseRepository,
-                                            AssetRepository)
+from kpm.assets.domain.model import (
+    Asset,
+    AssetRelease,
+    DuplicatedAssetException,
+)
+from kpm.assets.domain.repositories import (
+    AssetReleaseRepository,
+    AssetRepository,
+)
 from kpm.settings import settings
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId

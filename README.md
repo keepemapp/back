@@ -178,7 +178,7 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 * [ ] Automatically add userID that makes the call to the create asset and transfers
 * [X] Erase `emo/shared/infra/memrepo/message_bus.py`
 * Improve GET responses  
-  * [ ] Limit GET responses (paging, max items...)
+  * [X] Limit GET responses (paging, max items...)
   * [ ] Allow ordering of responses (assets, releases...)
 * [X] Add Creation and modification date as API response for assets, transfers...
 * [ ] Auto-add owner to assets and releases if none is passed

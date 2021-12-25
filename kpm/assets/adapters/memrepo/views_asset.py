@@ -12,6 +12,7 @@ from kpm.shared.service_layer.message_bus import MessageBus
 def asset_to_flat_dict(a: Asset):
     d = dict(flatdict.FlatDict(asdict(a), delimiter="_"))
     d["id"] = d.pop("id_id")
+    d["state"] = d.pop("state").value
     d["owners_id"] = [oid["id"] for oid in d.pop("owners_id")]
     d["modified_ts"] = a.last_modified()
     del d["_events"]

@@ -65,6 +65,7 @@ class NoValue(Enum):
 class RootAggState(NoValue):
     ACTIVE = "active"
     PENDING_VALIDATION = "pending_validation"
+    PENDING_FILE = "pending_file"
     HIDDEN = "hidden"
     INACTIVE = "inactive"
     REMOVED = "removed"

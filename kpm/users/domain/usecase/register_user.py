@@ -9,7 +9,9 @@ from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.exceptions import (
-    EmailAlreadyExistsException, UsernameAlreadyExistsException)
+    EmailAlreadyExistsException,
+    UsernameAlreadyExistsException,
+)
 
 
 @dataclass(frozen=True)

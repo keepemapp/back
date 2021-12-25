@@ -6,20 +6,27 @@ from fastapi.responses import FileResponse, RedirectResponse
 from fastapi_pagination import Page, Params, paginate
 from jose import JWTError
 
+import kpm.assets.domain.commands as cmds
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.adapters.filestorage import AssetFileRepository
 from kpm.assets.adapters.memrepo import views_asset
-from kpm.assets.domain.commands import CreateAsset
-from kpm.assets.entrypoints.fastapi.dependencies import (asset_file_repository,
-                                                         message_bus)
-from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetCreate,
-                                                       AssetResponse,
-                                                       AssetUploadAuthData)
+from kpm.assets.entrypoints.fastapi.dependencies import (
+    asset_file_repository,
+    message_bus,
+)
+from kpm.assets.entrypoints.fastapi.v1.schemas import (
+    AssetCreate,
+    AssetResponse,
+    AssetUploadAuthData,
+)
 from kpm.settings import settings as s
+from kpm.shared.domain.model import RootAggState
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import (create_jwt_token,
-                                                             decode_token,
-                                                             get_access_token)
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
+    create_jwt_token,
+    decode_token,
+    get_access_token,
+)
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
@@ -32,7 +39,8 @@ router = APIRouter(
 def asset_to_response(asset_dict: Dict, token: AccessToken):
     resp = AssetResponse(**asset_dict)
     # TODO provide upload path only if no file was uploaded before
-    resp.upload_path = create_asset_upload_path(resp.id, token.subject)
+    if asset_dict.get("state") == RootAggState.PENDING_FILE.value:
+        resp.upload_path = create_asset_upload_path(resp.id, token.subject)
     return resp
 
 
@@ -52,6 +60,8 @@ async def add_asset(
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
+    if not new_asset.owners_id:
+        new_asset.owners_id = [token.subject]
     if token.subject not in new_asset.owners_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -62,7 +72,7 @@ async def add_asset(
     payload["owners_id"] = [
         o.replace("/users/", "") for o in new_asset.owners_id
     ]
-    cmd = CreateAsset(**payload)
+    cmd = cmds.CreateAsset(**payload)
     bus.handle(cmd)
     return RedirectResponse(
         url=create_asset_upload_path(cmd.asset_id, token.subject),
@@ -96,15 +106,20 @@ def decode_asset_upload_token(token: str) -> AssetUploadAuthData:
 
 
 add_asset_file_resp = {
-        status.HTTP_201_CREATED: {},
-        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
-        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
-        status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
-    }
+    status.HTTP_201_CREATED: {},
+    status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    status.HTTP_403_FORBIDDEN: {"model": HTTPError},
+    status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
+}
 
 
-@router.put("/{asset_id}/file", responses=add_asset_file_resp,)
-@router.post("/{asset_id}/file", responses=add_asset_file_resp, deprecated=True)
+@router.put(
+    "/{asset_id}/file",
+    responses=add_asset_file_resp,
+)
+@router.post(
+    "/{asset_id}/file", responses=add_asset_file_resp, deprecated=True
+)
 async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
@@ -142,6 +157,7 @@ async def add_asset_file(
             detail="File type does not match",
         )
     await file_repo.create(a["file_location"], file)
+    bus.handle(cmds.UploadAssetFile(asset_id))
     return RedirectResponse(
         url=router.url_path_for("get_asset_file", asset_id=asset_id),
         status_code=status.HTTP_201_CREATED,

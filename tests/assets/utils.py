@@ -2,10 +2,15 @@ from typing import Any, Dict, List, Optional, Type
 
 import pytest
 
-from kpm.assets.domain.model import (Asset, AssetRelease,
-                                     DuplicatedAssetException)
-from kpm.assets.domain.repositories import (AssetReleaseRepository,
-                                            AssetRepository)
+from kpm.assets.domain.model import (
+    Asset,
+    AssetRelease,
+    DuplicatedAssetException,
+)
+from kpm.assets.domain.repositories import (
+    AssetReleaseRepository,
+    AssetRepository,
+)
 from kpm.assets.entrypoints import bootstrap
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId

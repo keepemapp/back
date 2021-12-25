@@ -1,9 +1,8 @@
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from kpm.shared.domain import init_id, required_field
+from kpm.shared.domain import init_id
 from kpm.shared.domain.commands import Command
-from kpm.shared.domain.events import Event
 from kpm.shared.domain.model import AssetId
 
 
@@ -87,6 +86,7 @@ class TransferAssets(Command):
 
 
 @dataclass(frozen=True)
-class AssetOwnershipChanged(Event):
-    owners: List[str] = required_field()
-    eventType: str = "AssetOwnershipChanged"
+class UploadAssetFile(Command):
+    """Uploads an asset file"""
+
+    asset_id: str

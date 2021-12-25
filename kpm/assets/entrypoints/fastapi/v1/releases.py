@@ -17,6 +17,7 @@ from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
 router = APIRouter(
+    tags=s.API_RELEASE.tags,
     responses={404: {"description": "Not found"}},
 )
 
