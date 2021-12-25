@@ -3,6 +3,7 @@ from __future__ import annotations
 import dataclasses
 import re
 from dataclasses import dataclass, field
+from typing import List
 
 from kpm.shared.domain import required_field
 from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
@@ -23,6 +24,7 @@ class User(RootAggregate):
     password_hash: str = ""
     email: str = required_field()
     state: RootAggState = field(default=RootAggState.PENDING_VALIDATION)
+    roles: List[str] = field(default_factory=lambda: ["user"])
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:

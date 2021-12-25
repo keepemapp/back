@@ -11,6 +11,17 @@ USER_CREDENTIALS_ER = HTTPException(
     detail="Incorrect username or password",
 )
 
+TOKEN_ER = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Could not validate credentials",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
+AUTH_SCOPE_MISMATCH = HTTPException(
+    status_code=status.HTTP_400_BAD_REQUEST,
+    detail="Incorrect auth scope",
+)
+
 FORBIDDEN_GENERIC = HTTPException(
     status_code=status.HTTP_403_FORBIDDEN,
     detail="You do not have access this resource",

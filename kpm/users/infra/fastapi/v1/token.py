@@ -65,18 +65,28 @@ async def login_for_access_token(
 ):
     """
     With credentials, creates new access and refresh tokens
+
+    If you add scopes, it will get merged with current user
+    roles.
     """
     user = authenticate_by_email(repo, form_data.username, form_data.password)
 
+    if user.is_pending_validation():
+        raise ex.USER_PENDING_VALIDATION
     if user.is_disabled():
-        if user.is_pending_validation():
-            raise ex.USER_PENDING_VALIDATION
         raise ex.USER_INACTIVE
 
-    access_token = AccessToken(subject=user.id.id, scopes=[], fresh=True)
+    scopes = user.roles
+    if form_data.scopes:
+        for requested_scope in form_data.scopes:
+            if requested_scope not in user.roles:
+                raise ex.AUTH_SCOPE_MISMATCH
+    scopes = list(set(scopes).intersection(form_data.scopes))
+
+    access_token = AccessToken(subject=user.id.id, scopes=scopes, fresh=True)
     # TODO not create a new refresh token if one already exists
     # Check https://docs.microsoft.com/en-us/linkedin/shared/authentication/programmatic-refresh-tokens # noqa: E501
-    refresh_token = RefreshToken(subject=user.id.id, scopes=[])
+    refresh_token = RefreshToken(subject=user.id.id, scopes=scopes)
 
     return LoginResponse(
         user_id=user.id.id,

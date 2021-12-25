@@ -1,10 +1,11 @@
+import dataclasses
 from dataclasses import dataclass
 from typing import NoReturn
 
 from kpm.shared.domain import init_id
 from kpm.shared.domain.commands import CommandOld
 from kpm.shared.domain.events import Event
-from kpm.shared.domain.model import UserId
+from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
@@ -47,6 +48,14 @@ class RegisterUser(CommandOld):
         )
 
     def execute(self) -> NoReturn:
+        if self._repository.empty():
+            self._entity = dataclasses.replace(
+                self._entity, state=RootAggState.ACTIVE, roles=["admin"]
+            )
+            self._event = dataclasses.replace(
+                self._event, aggregate=self._entity
+            )
+
         e = self._entity
         if self._repository.exists_email(e.email):
             raise EmailAlreadyExistsException()

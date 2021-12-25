@@ -32,3 +32,7 @@ class UserRepository(DomainRepository):
     @abstractmethod
     def update(self, user: User):
         raise NotImplementedError
+
+    @abstractmethod
+    def empty(self) -> bool:
+        raise NotImplementedError

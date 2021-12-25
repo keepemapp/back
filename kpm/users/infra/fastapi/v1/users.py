@@ -4,6 +4,8 @@ from fastapi_pagination import Page, Params, paginate
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings
 from kpm.shared.domain.model import UserId
+from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_admin_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.users.domain.entity.user_repository import UserRepository
@@ -42,9 +44,10 @@ async def my_user(current_user: User = Depends(get_current_active_user)):
     tags=["admin"],
 )
 async def get_all_users(
-    params: Params = Depends(), repo: UserRepository = Depends(user_repository)
+    params: Params = Depends(),
+    repo: UserRepository = Depends(user_repository),
+    token: AccessToken = Depends(get_admin_token),
 ):
-    # TODO change me. Allow only admins
     return paginate(
         [to_pydantic_model(u, UserResponse) for u in repo.all()], params
     )
@@ -56,13 +59,14 @@ async def get_all_users(
     tags=["admin"],
 )
 async def activate_user(
-    user_id: str, repo: UserRepository = Depends(user_repository)
+    user_id: str,
+    repo: UserRepository = Depends(user_repository),
+    token: AccessToken = Depends(get_admin_token),
 ):
     """Endpoint to activate a user. If user is already active does nothing."""
-    # TODO change me. Allow only admins
     user = repo.get(UserId(user_id))
     if not user:
-        return ex.NOT_FOUND
+        raise ex.NOT_FOUND
     updated = user.activate()
     repo.update(updated)
     repo.commit()

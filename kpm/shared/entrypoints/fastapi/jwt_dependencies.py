@@ -7,6 +7,7 @@ from fastapi.security import OAuth2PasswordBearer
 from jose import jwt
 from starlette import status
 
+import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings
 from kpm.settings import settings as cfg
 from kpm.shared.domain.time_utils import now_utc
@@ -40,11 +41,16 @@ async def get_access_token(t: str = Depends(oauth2_scheme)) -> AccessToken:
     except Exception as e:
         logger.warning("Exception validating JWT token " + str(e))
 
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Could not validate credentials",
-        headers={"WWW-Authenticate": "Bearer"},
-    )
+    raise ex.TOKEN_ER
+
+
+async def get_admin_token(
+    t: AccessToken = Depends(get_access_token),
+) -> AccessToken:
+    if "admin" not in t.scopes:
+        raise ex.FORBIDDEN_GENERIC
+    else:
+        return t
 
 
 async def get_refresh_token(t: str = Depends(oauth2_scheme)) -> RefreshToken:

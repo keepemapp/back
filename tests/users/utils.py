@@ -31,3 +31,6 @@ class MemoryUserRepository(UserRepository):
 
     def exists_username(self, username: str) -> bool:
         return any(u.username == username for u in self.all())
+
+    def empty(self) -> bool:
+        return True if not self._users else False

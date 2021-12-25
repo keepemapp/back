@@ -9,24 +9,18 @@ import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schema
 from kpm.assets.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
-from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from tests.assets.domain.test_asset_creation import create_asset_cmd
+from tests.assets.infra.fastapi.v1.fixtures import ADMIN_TOKEN
 from tests.assets.utils import bus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
-ACTIVE_USER_TOKEN = AccessToken(subject="uid")
-
-
-def active_user_token():
-    return ACTIVE_USER_TOKEN
-
 
 ASSET_ID1 = "assetId1"
 ASSET_ID2 = "assetId2"
 ASSET_ID3 = "assetId3"
 ASSET_ID4 = "assetId4"
-OWNER1 = ACTIVE_USER_TOKEN.subject
+OWNER1 = ADMIN_TOKEN.subject
 OWNER2 = "OWNER2"
 
 
@@ -90,7 +84,7 @@ class TestReleases:
         )
         app.include_router(assets_router)
         app.dependency_overrides[message_bus] = lambda: populated_bus
-        app.dependency_overrides[get_access_token] = active_user_token
+        app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
         yield TestClient(app)
 
     def test_list_users(self, client, populated_bus):
@@ -141,7 +135,7 @@ class TestFutureSelf:
         )
         app.include_router(assets_router)
         app.dependency_overrides[message_bus] = lambda: populated_bus
-        app.dependency_overrides[get_access_token] = active_user_token
+        app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
         yield TestClient(app)
 
     def test_create(self, client):
@@ -166,7 +160,7 @@ class TestFutureSelf:
         assert len(release.get("assets")) == 1
         assert payload.assets[0] in release.get("assets")[0]
         assert len(release.get("receivers")) == 1
-        assert ACTIVE_USER_TOKEN.subject in release.get("receivers")[0]
+        assert ADMIN_TOKEN.subject in release.get("receivers")[0]
         assert release.get("release_type") == "asset_future_self"
 
     def test_multiple_owners(self, client):

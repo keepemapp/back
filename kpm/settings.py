@@ -61,7 +61,6 @@ class Settings(BaseSettings):
     API_FUTURE_SELF = ApiRoute("/to-future-self")
     API_STASH = ApiRoute("/stash")
 
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 3000  # TODO change me
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
 
     JWT_ACCESS_EXPIRE_TIME: timedelta = timedelta(minutes=15)

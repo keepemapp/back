@@ -12,7 +12,10 @@ import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.entrypoints.fastapi.dependencies import message_bus
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
+    get_access_token,
+    get_admin_token,
+)
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
@@ -72,10 +75,9 @@ def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
 )
 async def get_releases(
     params: Params = Depends(),
-    token: AccessToken = Depends(get_access_token),
+    token: AccessToken = Depends(get_admin_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    # TODO filter or allow only admins
     return paginate(
         [schemas.ReleaseResponse(**r) for r in views.all(bus=bus)], params
     )

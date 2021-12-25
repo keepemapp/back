@@ -29,7 +29,8 @@ class TestJwtTokens:
         return client
 
     def test_no_token_for_users_pending_validation(self, client):
-        user, _ = create_user(client)
+        _, _ = create_user(client, 0)  # Admin. Is activated by default
+        user, _ = create_user(client, 1)  # Normal user
         self.user_email = user.email
         self.user_pwd = user.password
         response = client.post(

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, validator
 
@@ -22,6 +22,8 @@ class UserCreate(UserBase):
 # Additional properties to return via API
 class UserResponse(UserBase):
     id: str
+    state: str
+    roles: List[str]
     links: Optional[Links]
 
     @validator("links", always=True)

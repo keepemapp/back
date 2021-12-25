@@ -1,6 +1,7 @@
 import pytest
 
 from kpm.settings import settings as s
+from kpm.shared.domain.model import RootAggState
 from kpm.users.domain.entity.users import INVALID_USERNAME
 from kpm.users.infra.fastapi.v1.schemas.users import UserCreate
 from tests.users.infra.fastapi import client
@@ -25,9 +26,9 @@ def create_user(client, user_num: int = 0):
 
 def create_active_user(client, user_num: int = 0):
     user, create_resp = create_user(client, user_num)
-    activate_route = USER_PATH.concat(create_resp.json()["id"], "/activate")
-    activ_res = client.put(activate_route.path())
-    assert activ_res.status_code == 200
+    # activate_route = USER_PATH.concat(create_resp.json()["id"], "/activate")
+    # activ_res = client.put(activate_route.path())
+    # assert activ_res.status_code == 200
     return user, create_resp
 
 
@@ -44,6 +45,27 @@ class TestRegisterUser:
         assert user_resp.get("email") == user.email
         assert user_resp.get("id")
         assert user_resp.get("id") in user_resp.get("links").get("self")
+
+    def test_first_user_is_admin(self, client):
+        _, create_resp = create_user(client)
+        assert "roles" in create_resp.json()
+        assert "admin" in create_resp.json()["roles"]
+
+    def test_first_user_is_active(self, client):
+        _, create_resp = create_user(client)
+        assert "state" in create_resp.json()
+        assert create_resp.json()["state"] == RootAggState.ACTIVE.value
+
+    def test_second_user(self, client):
+        _, create_resp = create_user(client, 1)
+        _, create_resp = create_user(client, 2)
+
+        assert "admin" not in create_resp.json()["roles"]
+        assert "user" in create_resp.json()["roles"]
+        assert (
+            create_resp.json()["state"]
+            == RootAggState.PENDING_VALIDATION.value
+        )
 
     non_allowed_usernames = [
         "",
@@ -119,8 +141,8 @@ class TestGetUsers:
         response = client.get(
             user_route + "/me", headers={"Authorization": f"Bearer asd2"}
         )
-        assert response.json() == {"detail": "Could not validate credentials"}
         assert response.status_code == 401
+        assert response.json() == {"detail": "Could not validate credentials"}
 
     def test_login(self, client):
         user, create_resp = create_active_user(client)

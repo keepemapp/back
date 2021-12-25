@@ -26,6 +26,7 @@ from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
     create_jwt_token,
     decode_token,
     get_access_token,
+    get_admin_token,
 )
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -38,7 +39,6 @@ router = APIRouter(
 
 def asset_to_response(asset_dict: Dict, token: AccessToken):
     resp = AssetResponse(**asset_dict)
-    # TODO provide upload path only if no file was uploaded before
     if asset_dict.get("state") == RootAggState.PENDING_FILE.value:
         resp.upload_path = create_asset_upload_path(resp.id, token.subject)
     return resp
@@ -175,10 +175,9 @@ async def add_asset_file(
 )
 async def get_all_assets(
     params: Params = Depends(),
-    token: AccessToken = Depends(get_access_token),
+    token: AccessToken = Depends(get_admin_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    # TODO change me. Allow only admins
     return paginate(
         [asset_to_response(a, token) for a in views_asset.all_assets(bus=bus)],
         params,

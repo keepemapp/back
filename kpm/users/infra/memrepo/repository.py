@@ -42,6 +42,9 @@ class MemoryPersistedUserRepository(UserRepository):
     def exists_username(self, username: str) -> bool:
         return any(u.username == username for u in self.all())
 
+    def empty(self) -> bool:
+        return True if not self._users else False
+
     def __write_file(self):
         with open(self.DB_FILE, "wb") as f:
             pickle.dump(self._users, f)
