@@ -7,6 +7,7 @@ from kpm.users.infra.fastapi.v1.schemas.users import UserCreate
 from tests.users.infra.fastapi import client
 
 USER_PATH = s.API_V1.concat(s.API_USER_PATH)
+me_route = s.API_V1.concat("/me").path()
 user_route: str = USER_PATH.path()
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix
 USER_PWD = "pwd"
@@ -129,7 +130,7 @@ class TestRegisterUser:
 @pytest.mark.unit
 class TestGetUsers:
     def test_me_requires_login(self, client):
-        response = client.get(user_route + "/me")
+        response = client.get(me_route)
         assert response.status_code == 401
 
     def test_token_invalid(self, client):
@@ -139,7 +140,7 @@ class TestGetUsers:
         )
 
         response = client.get(
-            user_route + "/me", headers={"Authorization": f"Bearer asd2"}
+            me_route, headers={"Authorization": f"Bearer asd2"}
         )
         assert response.status_code == 401
         assert response.json() == {"detail": "Could not validate credentials"}
@@ -188,7 +189,7 @@ class TestGetUsers:
         token = "Bearer " + str(tok_log.json().get("access_token"))
 
         response = client.get(
-            user_route + "/me",
+            me_route,
             headers={"Accept": "application/json", "Authorization": token},
         )
         assert response.status_code == 200
@@ -201,7 +202,7 @@ class TestGetUsers:
         token = "Bearer " + str(tok_log.json().get("access_token"))
 
         response = client.get(
-            user_route + "/me",
+            me_route,
             headers={"Accept": "application/json", "Authorization": token},
         )
         assert response.status_code == 200

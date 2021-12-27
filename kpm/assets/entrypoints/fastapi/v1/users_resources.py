@@ -9,24 +9,32 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetResponse,
     ReleaseResponse,
 )
-from kpm.settings import settings
+from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
 router = APIRouter(
-    responses={404: {"description": "Not found"}},
-    prefix=settings.API_USER_PATH.prefix,
+    responses={404: {"description": "Not found"},
+               status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+               },
 )
 
 
 @router.get(
-    "/me" + settings.API_ASSET_PATH.prefix,
-    tags=settings.API_ASSET_PATH.tags,
+    s.API_USER_PATH.concat("me", s.API_ASSET_PATH).path(),
+    deprecated=True,
+    tags=s.API_ASSET_PATH.tags,
     responses={
         status.HTTP_200_OK: {"model": Page[AssetResponse]},
-        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+)
+@router.get(
+    "/me" + s.API_ASSET_PATH.prefix,
+    tags=s.API_ASSET_PATH.tags,
+    responses={
+        status.HTTP_200_OK: {"model": Page[AssetResponse]},
     },
 )
 async def get_user_assets(
@@ -39,11 +47,18 @@ async def get_user_assets(
 
 
 @router.get(
-    "/me" + settings.API_RELEASE.prefix,
-    tags=settings.API_RELEASE.tags,
+    s.API_USER_PATH.concat("me", s.API_RELEASE).path(),
+    deprecated=True,
+    tags=s.API_RELEASE.tags,
     responses={
         status.HTTP_200_OK: {"model": Page[ReleaseResponse]},
-        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+)
+@router.get(
+    "/me" + s.API_RELEASE.prefix,
+    tags=s.API_RELEASE.tags,
+    responses={
+        status.HTTP_200_OK: {"model": Page[ReleaseResponse]},
     },
 )
 async def get_user_releases(

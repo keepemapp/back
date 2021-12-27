@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
-from kpm.settings import settings
+from kpm.settings import settings as s
 from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_admin_token
@@ -23,10 +23,18 @@ from kpm.users.infra.fastapi.v1.schemas.users import UserCreate, UserResponse
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
-    **settings.API_USER_PATH.dict(),
+    tags=s.API_USER_PATH.tags,
 )
 
 
+@router.get(
+    s.API_USER_PATH.concat("me").path(),
+    deprecated=True,
+    responses={
+        status.HTTP_200_OK: {"model": UserResponse},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+)
 @router.get(
     "/me",
     responses={
@@ -39,7 +47,7 @@ async def my_user(current_user: User = Depends(get_current_active_user)):
 
 
 @router.get(
-    "",
+    s.API_USER_PATH.path(),
     responses={status.HTTP_200_OK: {"model": Page[UserResponse]}},
     tags=["admin"],
 )
@@ -54,7 +62,7 @@ async def get_all_users(
 
 
 @router.put(
-    "/{user_id}/activate",
+    s.API_USER_PATH.concat("{user_id}", "activate").path(),
     responses={status.HTTP_200_OK: {}},
     tags=["admin"],
 )
@@ -70,11 +78,11 @@ async def activate_user(
     updated = user.activate()
     repo.update(updated)
     repo.commit()
-    return "OK"
+    return
 
 
 @router.post(
-    "",
+    s.API_USER_PATH.path(),
     responses={
         status.HTTP_201_CREATED: {"model": UserResponse},
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
