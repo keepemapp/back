@@ -1,7 +1,8 @@
 from __future__ import annotations
 
 import logging
-from typing import Callable, Dict, List, Type, TypeVar, Union
+from typing import (Callable, Dict, List, NoReturn, Optional, Type, TypeVar,
+                    Union)
 
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
@@ -48,7 +49,12 @@ class MessageBus:
         self.command_handlers = command_handlers
         self.queue = []
 
-    def handle(self, message: Message):
+    def handle(self, message: Message) -> Optional[NoReturn]:
+        """Handles an event or command
+
+        If the command fails, it raises the error
+        If an event fails, it does nothing
+        """
         self.queue = [message]
         while self.queue:
             message = self.queue.pop(0)
@@ -59,7 +65,7 @@ class MessageBus:
             else:
                 raise Exception(f"{message} was not an Event or Command")
 
-    def handle_event(self, event: Event):
+    def handle_event(self, event: Event) -> None:
         for handler in self.event_handlers[type(event)]:
             try:
                 logger.debug(
@@ -73,7 +79,7 @@ class MessageBus:
                 )
                 continue  # TODO not sure we have to continue here
 
-    def handle_command(self, command: Command):
+    def handle_command(self, command: Command) -> Optional[NoReturn]:
         try:
             handler = self.command_handlers[type(command)]
             logger.debug(

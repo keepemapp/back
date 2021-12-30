@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional
 
 import pytest
 
@@ -10,10 +10,9 @@ from kpm.assets.domain.repositories import (AssetReleaseRepository,
 from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
-from kpm.shared.domain.repository import DomainRepository
 from kpm.shared.entrypoints import bootstrap
 from kpm.shared.service_layer.message_bus import UoWs
-from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
+from tests.shared.utils import TestUoW
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, List[AssetId]]
@@ -116,26 +115,9 @@ class MemoryReleaseRepo(AssetReleaseRepository):
         return result
 
 
-class MemoryUoW(AbstractUnitOfWork):
-    def __init__(self, repo_cls: Type[DomainRepository], **kwargs) -> None:
-        super().__init__()
-        self.committed = False
-        self.repo = repo_cls(**kwargs)
-
-    def __enter__(self):
-        self.committed = False
-        return super().__enter__()
-
-    def _commit(self):
-        self.committed = True
-
-    def rollback(self):
-        pass
-
-
 uows = {
-    "asset_uow": MemoryUoW(MemoryAssetRepository),
-    "release_uow": MemoryUoW(MemoryReleaseRepo),
+    "asset_uow": TestUoW(MemoryAssetRepository),
+    "release_uow": TestUoW(MemoryReleaseRepo),
 }
 
 
@@ -145,8 +127,8 @@ def bus():
     return bootstrap.bootstrap(
         uows=UoWs(
             {
-                model.Asset: MemoryUoW(MemoryAssetRepository),
-                model.AssetRelease: MemoryUoW(MemoryReleaseRepo),
+                model.Asset: TestUoW(MemoryAssetRepository),
+                model.AssetRelease: TestUoW(MemoryReleaseRepo),
             }
         ),
         event_handlers=EVENT_HANDLERS,
