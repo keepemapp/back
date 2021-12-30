@@ -6,7 +6,7 @@ from fastapi.testclient import TestClient
 
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schema
-from kpm.assets.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token

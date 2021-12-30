@@ -3,7 +3,7 @@ from fastapi_pagination import Page, Params, paginate
 
 import kpm.assets.adapters.memrepo.views_asset_release as views_releases
 from kpm.assets.adapters.memrepo import views_asset
-from kpm.assets.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1.assets import asset_to_response
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetResponse,

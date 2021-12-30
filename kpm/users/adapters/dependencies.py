@@ -7,7 +7,7 @@ from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.query_user import QueryUser
-from kpm.users.infra.memrepo.repository import MemoryPersistedUserRepository
+from kpm.users.adapters.memrepo.repository import MemoryPersistedUserRepository
 
 
 def user_repository() -> UserRepository:

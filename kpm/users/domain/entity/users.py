@@ -43,11 +43,11 @@ class User(RootAggregate):
         if not self._email_is_valid(self.email):
             raise ValueError(INVALID_EMAIL)
 
-    def activate(self) -> User:
-        return dataclasses.replace(self, state=RootAggState.ACTIVE)
+    def activate(self, mod_ts: int = None):
+        self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
-    def disable(self) -> User:
-        return dataclasses.replace(self, state=RootAggState.INACTIVE)
+    def disable(self, mod_ts: int = None):
+        self._update_field(mod_ts, "state", RootAggState.INACTIVE)
 
     def is_disabled(self) -> bool:
         return self.state not in [RootAggState.ACTIVE]

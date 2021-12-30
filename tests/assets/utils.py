@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Optional, Type
 
 import pytest
 
+from kpm.assets.domain import model
 from kpm.assets.domain.model import (
     Asset,
     AssetRelease,
@@ -11,10 +12,11 @@ from kpm.assets.domain.repositories import (
     AssetReleaseRepository,
     AssetRepository,
 )
-from kpm.assets.entrypoints import bootstrap
+from kpm.shared.entrypoints import bootstrap
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.repository import DomainRepository
+from kpm.shared.service_layer.message_bus import UoWs
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
 Assets = Dict[AssetId, Asset]
@@ -144,7 +146,7 @@ uows = {
 @pytest.fixture
 def bus():
     """Init test bus for passing it to tests"""
-    return bootstrap.bootstrap(
-        asset_uow=MemoryUoW(MemoryAssetRepository),
-        release_uow=MemoryUoW(MemoryReleaseRepo),
-    )
+    return bootstrap.bootstrap(uows=UoWs({
+        model.Asset: MemoryUoW(MemoryAssetRepository),
+        model.AssetRelease: MemoryUoW(MemoryReleaseRepo),
+    }))

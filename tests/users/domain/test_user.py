@@ -44,5 +44,5 @@ class TestUser:
         def test_user_disable(self, active_user):
             u = User(**active_user)
             assert not u.is_disabled()
-            disabled_user = u.disable()
-            assert disabled_user.is_disabled()
+            u.disable()
+            assert u.is_disabled()

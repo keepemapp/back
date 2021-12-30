@@ -1,5 +1,5 @@
 from abc import abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Set
 
 from kpm.shared.domain.model import UserId
 from kpm.shared.domain.repository import DomainRepository
@@ -9,6 +9,11 @@ from kpm.users.domain.entity.users import User
 class UserRepository(DomainRepository):
     # TODO return of users should not have the password and salt
     # Those should only be returned if you cal a get_credentials() specifically
+
+    def __init__(self):
+        super(UserRepository, self).__init__()
+        self._seen: Set[User] = set()
+
     @abstractmethod
     def all(self) -> List[User]:
         raise NotImplementedError

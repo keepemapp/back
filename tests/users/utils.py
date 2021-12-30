@@ -9,6 +9,7 @@ Users = Dict[str, User]
 
 class MemoryUserRepository(UserRepository):
     def __init__(self):
+        super(UserRepository, self).__init__()
         self._users: Users = {}
 
     def all(self) -> List[User]:

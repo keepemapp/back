@@ -92,6 +92,8 @@ class RootAggregate(Entity):
         return self._events
 
     def _update_field(self, mod_ts: int, field: str, value):
+        if mod_ts is None:
+            mod_ts = now_utc_millis()
         if mod_ts >= self._modified_ts_for(field):
             setattr(self, field, value)
             self.modified_ts[field] = mod_ts

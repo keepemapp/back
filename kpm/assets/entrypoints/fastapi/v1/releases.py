@@ -9,7 +9,7 @@ import kpm.assets.adapters.memrepo.views_asset_release as views
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schemas
 import kpm.shared.entrypoints.fastapi.exceptions as ex
-from kpm.assets.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import (

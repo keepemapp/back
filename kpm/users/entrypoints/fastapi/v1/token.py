@@ -13,8 +13,8 @@ from kpm.shared.security import salt_password, verify_password
 from kpm.users.domain.entity.user_repository import UserRepository
 from kpm.users.domain.entity.users import User
 from kpm.users.domain.usecase.query_user import QueryUser
-from kpm.users.infra.dependencies import user_repository
-from kpm.users.infra.fastapi.v1.schemas.token import LoginResponse
+from kpm.users.adapters.dependencies import user_repository
+from kpm.users.entrypoints.fastapi.v1.schemas.token import LoginResponse
 
 router = APIRouter(
     responses={404: {"description": "Not found"}}, tags=["auth"]

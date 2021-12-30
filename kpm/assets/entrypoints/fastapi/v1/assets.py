@@ -12,8 +12,8 @@ from kpm.assets.adapters.filestorage import AssetFileRepository
 from kpm.assets.adapters.memrepo import views_asset
 from kpm.assets.entrypoints.fastapi.dependencies import (
     asset_file_repository,
-    message_bus,
 )
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetCreate,
     AssetResponse,
