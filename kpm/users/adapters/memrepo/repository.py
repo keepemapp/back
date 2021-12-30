@@ -19,6 +19,7 @@ class MemoryPersistedUserRepository(UserRepository):
         self,
         dbfile=os.path.join(settings.DATA_FOLDER, "usersrepo.pk"),
     ):
+        super(UserRepository, self).__init__()
         self.DB_FILE = dbfile
         self._users: Users = self.__startup_db()
 

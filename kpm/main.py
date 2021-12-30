@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
-from kpm.users.infra.fastapi.v1 import users_router
+from kpm.users.entrypoints.fastapi.v1 import users_router
 
 description = """
 Keepem API helps you managing your emotional assets and memories 💖

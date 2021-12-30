@@ -76,5 +76,10 @@ class Settings(BaseSettings):
         path.dirname(path.dirname(path.abspath(__file__))), "data"
     )
 
+    EMAIL_SENDER_ADDRESS: str = None
+    EMAIL_SENDER_PASSWORD: str = None
+    EMAIL_SMTP_SERVER: str = None
+    EMAIL_SMTP_PORT: int = 587
+    EMAIL_SMTP_SECURITY: str = 'STARTTLS'
 
 settings = Settings()

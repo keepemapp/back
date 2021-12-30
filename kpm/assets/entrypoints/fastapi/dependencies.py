@@ -1,22 +1,18 @@
-from typing import Callable
-
-from fastapi import Depends
-
 from kpm.assets.adapters.filestorage import AssetFileRepository
-from kpm.assets.domain.model import Asset
-from kpm.assets.entrypoints.bootstrap import bootstrap
-from kpm.assets.service_layer.unit_of_work import AssetUoW
-from kpm.shared.service_layer.message_bus import MessageBus
+from kpm.assets.adapters.memrepo import MemPersistedReleaseRepo, \
+    MemoryPersistedAssetRepository
+from kpm.assets.domain import model
+from kpm.shared.adapters.memrepo import MemoryUoW
+from kpm.shared.service_layer.message_bus import UoWs
 
 
-def message_bus() -> MessageBus:
-    yield bootstrap()
-
-
-def unit_of_work_class(
-    bus: Depends(message_bus),
-) -> Callable[[None], AssetUoW]:
-    yield lambda **kwargs: bus.uows.get(Asset)
+def uows() -> UoWs:
+    return UoWs(
+        {
+            model.Asset: MemoryUoW(MemoryPersistedAssetRepository),
+            model.AssetRelease: MemoryUoW(MemPersistedReleaseRepo),
+        }
+    )
 
 
 def asset_file_repository() -> AssetFileRepository:

@@ -1,7 +1,7 @@
 import pytest
 
 from kpm.users.domain.entity.users import User
-from kpm.users.infra.memrepo.repository import MemoryPersistedUserRepository
+from kpm.users.adapters.memrepo.repository import MemoryPersistedUserRepository
 from tests.users.domain import *
 
 
@@ -39,8 +39,9 @@ class TestUserRepo:
         u = User(**active_user)
         r.create(u)
 
-        disabled = u.disable()
-        r.update(disabled)
+        u.disable()
+        r.update(u)
+        r.get(u.id).is_disabled()
         assert len(r.all()) == 1
         assert r.get(u.id).is_disabled()
 

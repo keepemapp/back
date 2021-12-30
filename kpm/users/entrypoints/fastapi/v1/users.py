@@ -15,11 +15,11 @@ from kpm.users.domain.usecase.exceptions import (
     UsernameAlreadyExistsException,
 )
 from kpm.users.domain.usecase.register_user import RegisterUser
-from kpm.users.infra.dependencies import (
+from kpm.users.adapters.dependencies import (
     get_current_active_user,
     user_repository,
 )
-from kpm.users.infra.fastapi.v1.schemas.users import UserCreate, UserResponse
+from kpm.users.entrypoints.fastapi.v1.schemas.users import UserCreate, UserResponse
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -54,7 +54,7 @@ async def my_user(current_user: User = Depends(get_current_active_user)):
 async def get_all_users(
     params: Params = Depends(),
     repo: UserRepository = Depends(user_repository),
-    token: AccessToken = Depends(get_admin_token),
+    _: AccessToken = Depends(get_admin_token),
 ):
     return paginate(
         [to_pydantic_model(u, UserResponse) for u in repo.all()], params
@@ -69,14 +69,14 @@ async def get_all_users(
 async def activate_user(
     user_id: str,
     repo: UserRepository = Depends(user_repository),
-    token: AccessToken = Depends(get_admin_token),
+    _: AccessToken = Depends(get_admin_token),
 ):
     """Endpoint to activate a user. If user is already active does nothing."""
     user = repo.get(UserId(user_id))
     if not user:
         raise ex.NOT_FOUND
-    updated = user.activate()
-    repo.update(updated)
+    user.activate()
+    repo.update(user)
     repo.commit()
     return
 

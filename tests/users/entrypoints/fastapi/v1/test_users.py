@@ -3,8 +3,8 @@ import pytest
 from kpm.settings import settings as s
 from kpm.shared.domain.model import RootAggState
 from kpm.users.domain.entity.users import INVALID_USERNAME
-from kpm.users.infra.fastapi.v1.schemas.users import UserCreate
-from tests.users.infra.fastapi import client
+from kpm.users.entrypoints.fastapi.v1.schemas.users import UserCreate
+from tests.users.entrypoints.fastapi import *
 
 USER_PATH = s.API_V1.concat(s.API_USER_PATH)
 me_route = s.API_V1.concat("/me").path()

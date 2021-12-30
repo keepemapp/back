@@ -1,33 +1,29 @@
 import inspect
 from typing import Callable, Dict, List, Type
 
-import kpm.assets.domain.model as model
-from kpm.assets.adapters.memrepo.repository import (
-    MemoryPersistedAssetRepository,
-    MemPersistedReleaseRepo,
-)
 from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
-from kpm.shared.adapters.memrepo import MemoryUoW
+from kpm.shared.adapters.notifications import EmailNotifications, \
+    NoNotifications
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs
+from kpm.settings import settings as s
 
 EventHandler = Dict[Type[Event], List[Callable]]
 CommandHandler = Dict[Type[Command], Callable]
 
 
 def bootstrap(
-    asset_uow=MemoryUoW(MemoryPersistedAssetRepository),
-    release_uow=MemoryUoW(MemPersistedReleaseRepo),
+    uows: UoWs,
 ) -> MessageBus:
 
-    uows = UoWs(
-        {
-            model.Asset: asset_uow,
-            model.AssetRelease: release_uow,
-        }
-    )
-    dependencies = {**uows.as_dependencies()}
+    if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
+        email_notifications = EmailNotifications()
+    else:
+        email_notifications = NoNotifications()
+
+    dependencies = {email_notifications: email_notifications,
+                    **uows.as_dependencies()}
     return MessageBus(
         uows=uows,
         event_handlers=injected_event_handlers(dependencies, EVENT_HANDLERS),
