@@ -35,6 +35,17 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
         uow.commit()
 
 
+def activate(cmd: cmds.ActivateUser, user_uow: AbstractUnitOfWork):
+    with user_uow as uow:
+        repo: UserRepository = uow.repo
+        user: model.User = repo.get(UserId(cmd.user_id))
+        if not user:
+            raise KeyError
+        user.activate()
+        repo.update(user)
+        uow.commit()
+
+
 def send_welcome_email(
     event: events.UserRegistered, email_notifications: AbstractNotifications
 ):
