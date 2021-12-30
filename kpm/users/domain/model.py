@@ -60,3 +60,18 @@ class User(RootAggregate):
 
     def change_password_hash(self, new_password_hash):
         return dataclasses.replace(self, password_hash=new_password_hash)
+
+
+class MissmatchPasswordException(Exception):
+    def __init__(self, msg="Passwords do not match"):
+        self.msg = msg
+
+
+class EmailAlreadyExistsException(Exception):
+    def __init__(self, msg="Email already exists"):
+        self.msg = msg
+
+
+class UsernameAlreadyExistsException(Exception):
+    def __init__(self, msg="Username already exists"):
+        self.msg = msg

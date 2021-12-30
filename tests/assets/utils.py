@@ -3,19 +3,15 @@ from typing import Any, Dict, List, Optional, Type
 import pytest
 
 from kpm.assets.domain import model
-from kpm.assets.domain.model import (
-    Asset,
-    AssetRelease,
-    DuplicatedAssetException,
-)
-from kpm.assets.domain.repositories import (
-    AssetReleaseRepository,
-    AssetRepository,
-)
-from kpm.shared.entrypoints import bootstrap
+from kpm.assets.domain.model import (Asset, AssetRelease,
+                                     DuplicatedAssetException)
+from kpm.assets.domain.repositories import (AssetReleaseRepository,
+                                            AssetRepository)
+from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.repository import DomainRepository
+from kpm.shared.entrypoints import bootstrap
 from kpm.shared.service_layer.message_bus import UoWs
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
@@ -146,7 +142,13 @@ uows = {
 @pytest.fixture
 def bus():
     """Init test bus for passing it to tests"""
-    return bootstrap.bootstrap(uows=UoWs({
-        model.Asset: MemoryUoW(MemoryAssetRepository),
-        model.AssetRelease: MemoryUoW(MemoryReleaseRepo),
-    }))
+    return bootstrap.bootstrap(
+        uows=UoWs(
+            {
+                model.Asset: MemoryUoW(MemoryAssetRepository),
+                model.AssetRelease: MemoryUoW(MemoryReleaseRepo),
+            }
+        ),
+        event_handlers=EVENT_HANDLERS,
+        command_handlers=COMMAND_HANDLERS,
+    )

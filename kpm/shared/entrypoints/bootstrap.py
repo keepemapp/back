@@ -1,13 +1,13 @@
 import inspect
 from typing import Callable, Dict, List, Type
 
-from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
-from kpm.shared.adapters.notifications import EmailNotifications, \
-    NoNotifications
+from kpm.settings import settings as s
+from kpm.shared.adapters.notifications import (AbstractNotifications,
+                                               EmailNotifications,
+                                               NoNotifications)
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs
-from kpm.settings import settings as s
 
 EventHandler = Dict[Type[Event], List[Callable]]
 CommandHandler = Dict[Type[Command], Callable]
@@ -15,20 +15,26 @@ CommandHandler = Dict[Type[Command], Callable]
 
 def bootstrap(
     uows: UoWs,
+    event_handlers: EventHandler,
+    command_handlers: CommandHandler,
+    email_notifications: AbstractNotifications = None,
 ) -> MessageBus:
 
-    if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
-        email_notifications = EmailNotifications()
-    else:
-        email_notifications = NoNotifications()
+    if not email_notifications:
+        if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
+            email_notifications = EmailNotifications()
+        else:
+            email_notifications = NoNotifications()
 
-    dependencies = {email_notifications: email_notifications,
-                    **uows.as_dependencies()}
+    dependencies = {
+        email_notifications: email_notifications,
+        **uows.as_dependencies(),
+    }
     return MessageBus(
         uows=uows,
-        event_handlers=injected_event_handlers(dependencies, EVENT_HANDLERS),
+        event_handlers=injected_event_handlers(dependencies, event_handlers),
         command_handlers=injected_command_handlers(
-            dependencies, COMMAND_HANDLERS
+            dependencies, command_handlers
         ),
     )
 

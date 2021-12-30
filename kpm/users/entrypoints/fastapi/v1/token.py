@@ -10,10 +10,10 @@ from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
 from kpm.shared.security import salt_password, verify_password
-from kpm.users.domain.entity.user_repository import UserRepository
-from kpm.users.domain.entity.users import User
-from kpm.users.domain.usecase.query_user import QueryUser
 from kpm.users.adapters.dependencies import user_repository
+from kpm.users.domain.model import User
+from kpm.users.domain.repositories import UserRepository
+from kpm.users.domain.usecase.query_user import QueryUser
 from kpm.users.entrypoints.fastapi.v1.schemas.token import LoginResponse
 
 router = APIRouter(

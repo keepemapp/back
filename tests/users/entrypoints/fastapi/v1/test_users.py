@@ -2,7 +2,7 @@ import pytest
 
 from kpm.settings import settings as s
 from kpm.shared.domain.model import RootAggState
-from kpm.users.domain.entity.users import INVALID_USERNAME
+from kpm.users.domain.model import INVALID_USERNAME
 from kpm.users.entrypoints.fastapi.v1.schemas.users import UserCreate
 from tests.users.entrypoints.fastapi import *
 

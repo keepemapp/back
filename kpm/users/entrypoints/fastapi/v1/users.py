@@ -8,18 +8,14 @@ from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_admin_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
-from kpm.users.domain.entity.user_repository import UserRepository
-from kpm.users.domain.entity.users import User
-from kpm.users.domain.usecase.exceptions import (
-    EmailAlreadyExistsException,
-    UsernameAlreadyExistsException,
-)
+from kpm.users.adapters.dependencies import (get_current_active_user,
+                                             user_repository)
+from kpm.users.domain.model import (EmailAlreadyExistsException, User,
+                                    UsernameAlreadyExistsException)
+from kpm.users.domain.repositories import UserRepository
 from kpm.users.domain.usecase.register_user import RegisterUser
-from kpm.users.adapters.dependencies import (
-    get_current_active_user,
-    user_repository,
-)
-from kpm.users.entrypoints.fastapi.v1.schemas.users import UserCreate, UserResponse
+from kpm.users.entrypoints.fastapi.v1.schemas.users import (UserCreate,
+                                                            UserResponse)
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},

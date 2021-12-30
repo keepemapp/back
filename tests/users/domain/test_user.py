@@ -2,7 +2,7 @@ import pytest
 
 from kpm.shared.domain import DomainId, IdTypeException
 from kpm.shared.domain.model import UserId
-from kpm.users.domain.entity.users import User
+from kpm.users.domain.model import User
 from tests.users.domain import active_user, valid_user
 
 

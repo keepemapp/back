@@ -26,16 +26,16 @@ $(VENV): requirements.txt
 	touch $(VENV)
 
 .PHONY: format
-format: $(VENV)
+format: install-dev
 	$(BIN)/black --line-length 79 kpm tests
 	$(BIN)/isort kpm tests
 
 .PHONY: lint
-lint: $(VENV)
+lint: install-dev
 	$(BIN)/flake8 kpm
 
 .PHONY: test-only
-test-only: $(VENV)
+test-only: install-dev
 	$(BIN)/pytest
 
 .PHONY: test
@@ -48,7 +48,7 @@ precommit: format test clean
 run-dev: $(VENV) $(DATA_FOLDER)
 	$(BIN)/uvicorn kpm.main:app --reload --no-server-header
 
-run: $(VENV)
+run: install
 	$(BIN)/uvicorn kpm.main:app --no-server-header
 
 clean:
