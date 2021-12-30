@@ -77,10 +77,14 @@ class Settings(BaseSettings):
     )
 
     EMAIL_SENDER_ADDRESS: str = None
+    """Base64 encoded password"""
     EMAIL_SENDER_PASSWORD: str = None
     EMAIL_SMTP_SERVER: str = None
     EMAIL_SMTP_PORT: int = 587
     EMAIL_SMTP_SECURITY: str = "STARTTLS"
+
+    class Config:
+        env_file = ".env"
 
 
 settings = Settings()

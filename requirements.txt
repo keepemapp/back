@@ -1,5 +1,6 @@
 fastapi
 fastapi-pagination
+python-dotenv
 uvicorn
 pydantic
 pydantic[email]
