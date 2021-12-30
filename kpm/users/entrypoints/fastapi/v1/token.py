@@ -6,14 +6,13 @@ from fastapi.security import OAuth2PasswordRequestForm
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings as s
-from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
 from kpm.shared.security import salt_password, verify_password
-from kpm.users.adapters.dependencies import user_repository
+from kpm.shared.service_layer.message_bus import MessageBus
+from kpm.users.adapters.memrepo import views
 from kpm.users.domain.model import User
-from kpm.users.domain.repositories import UserRepository
-from kpm.users.domain.usecase.query_user import QueryUser
 from kpm.users.entrypoints.fastapi.v1.schemas.token import LoginResponse
 
 router = APIRouter(
@@ -40,28 +39,30 @@ def check_user(user: Optional[User], password: str):
 
 
 def authenticate_by_email(
-    repo: UserRepository, username: str, password: str
+    email: str,
+    password: str,
+    bus: MessageBus,
 ) -> Optional[User]:
-    logger.info(f"Trying to authenticate email '{username}'")
-    q = QueryUser(repository=repo)
-    user = q.fetch_by_email(username)
+    logger.info(f"Trying to authenticate email '{email}'")
+    user = views.credentials_email(email, bus)
     return check_user(user, password)
 
 
 def authenticate_by_id(
-    repo: UserRepository, user_id: str, password: str
+    user_id: str,
+    password: str,
+    bus: MessageBus,
 ) -> Optional[User]:
     logger.info(f"Trying to authenticate user id '{user_id}'")
-    q = QueryUser(repository=repo)
-    user = q.fetch_by_id(UserId(user_id))
+    user = views.credentials_id(user_id, bus)
     return check_user(user, password)
 
 
 @router.post(s.API_TOKEN.path(), deprecated=True)
 @router.post("/login", response_model=LoginResponse)
 async def login_for_access_token(
-    repo: UserRepository = Depends(user_repository),
     form_data: OAuth2PasswordRequestForm = Depends(),
+    bus: MessageBus = Depends(message_bus),
 ):
     """
     With credentials, creates new access and refresh tokens
@@ -69,7 +70,9 @@ async def login_for_access_token(
     If you add scopes, it will get merged with current user
     roles.
     """
-    user = authenticate_by_email(repo, form_data.username, form_data.password)
+    if "@" not in form_data.username:
+        raise ex.USER_CREDENTIALS_ER
+    user = authenticate_by_email(form_data.username, form_data.password, bus)
 
     if user.is_pending_validation():
         raise ex.USER_PENDING_VALIDATION
@@ -99,8 +102,8 @@ async def login_for_access_token(
 
 @router.post("/refresh")
 async def refresh_access_token(
-    repo: UserRepository = Depends(user_repository),
     token: RefreshToken = Depends(get_refresh_token),
+    bus: MessageBus = Depends(message_bus),
 ):
     """
     Refreshes token. This will generate a new access token however it will
@@ -157,10 +160,9 @@ async def refresh_access_token(
     (F)  Since the access token is invalid, the resource server returns
          an invalid token error.
     """
-    q = QueryUser(repository=repo)
-    user = q.fetch_by_id(UserId(token.subject))
+    user = views.by_id(token.subject, bus)
 
-    scopes = token.scopes  # Intersect with current user permissions
+    scopes = list(set(token.scopes).intersection(set(user.roles)))
     access_token = AccessToken(subject=user.id.id, scopes=scopes, fresh=False)
     return {
         "access_token": access_token.to_token(),

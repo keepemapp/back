@@ -73,14 +73,16 @@ class JWTToken:
     can_generate_str: bool = True
 
     def __post_init__(self):
-        if not self.exp_time:
-            self.exp_time = _get_expire_time(
-                self.not_before, self.exp_time_delta
-            )
         if not self.subject or not isinstance(self.subject, str):
             raise ValueError("Subject is needed.")
         if self.type not in ("access", "refresh"):
             raise ValueError("Token can only be of types access or refresh.")
+        if not self.exp_time:
+            self.exp_time = _get_expire_time(
+                self.not_before, self.exp_time_delta
+            )
+        # We remove duplicate values
+        self.scopes = list(set(self.scopes))
 
     def is_fresh(self) -> bool:
         return self.fresh

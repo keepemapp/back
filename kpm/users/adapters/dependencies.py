@@ -1,33 +1,30 @@
 from fastapi import Depends, HTTPException, status
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
-from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
+from kpm.shared.service_layer.message_bus import MessageBus
+from kpm.users.adapters.memrepo import views
 from kpm.users.adapters.memrepo.repository import MemoryPersistedUserRepository
 from kpm.users.domain.model import User
 from kpm.users.domain.repositories import UserRepository
-from kpm.users.domain.usecase.query_user import QueryUser
 
 
 def user_repository() -> UserRepository:
     yield MemoryPersistedUserRepository()
 
 
-def query_user(repo: UserRepository = Depends(user_repository)) -> QueryUser:
-    yield QueryUser(repository=repo)
-
-
 async def get_current_user(
     token: AccessToken = Depends(get_access_token),
-    q: QueryUser = Depends(query_user),
+    bus: MessageBus = Depends(message_bus),
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    user = q.fetch_by_id(UserId(token.subject))
+    user = views.by_id(token.subject, bus)
     if not user:
         raise credentials_exception
     return user

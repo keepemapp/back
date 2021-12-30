@@ -7,6 +7,7 @@ from kpm.shared.adapters.notifications import AbstractNotifications
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
+from kpm.users.domain.repositories import UserRepository
 
 
 def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
@@ -15,16 +16,22 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
     user = model.User(
         username=cmd.username,
         salt=salt,
+        email=cmd.email,
         password_hash=hash_password(salt_password(cmd.password, salt)),
         id=UserId(cmd.user_id),
     )
     with user_uow as uow:
-        if uow.repo.empty():
+        repo: UserRepository = uow.repo
+        if repo.empty():
             user = dataclasses.replace(
                 user, state=RootAggState.ACTIVE, roles=["admin"]
             )
-
-        uow.repo.create(user)
+        else:
+            if repo.exists_email(user.email):
+                raise model.EmailAlreadyExistsException()
+            if repo.exists_username(user.username):
+                raise model.UsernameAlreadyExistsException()
+        repo.create(user)
         uow.commit()
 
 
