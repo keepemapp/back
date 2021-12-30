@@ -3,22 +3,21 @@ from fastapi_pagination import Page, Params, paginate
 
 import kpm.assets.adapters.memrepo.views_asset_release as views_releases
 from kpm.assets.adapters.memrepo import views_asset
-from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.assets.entrypoints.fastapi.v1.assets import asset_to_response
-from kpm.assets.entrypoints.fastapi.v1.schemas import (
-    AssetResponse,
-    ReleaseResponse,
-)
+from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetResponse,
+                                                       ReleaseResponse)
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
 router = APIRouter(
-    responses={404: {"description": "Not found"},
-               status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
-               },
+    responses={
+        404: {"description": "Not found"},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
 )
 
 

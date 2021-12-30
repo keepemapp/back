@@ -1,8 +1,8 @@
 from typing import Dict, List, Optional
 
 from kpm.shared.domain.model import UserId
-from kpm.users.domain.entity.user_repository import UserRepository
-from kpm.users.domain.entity.users import User
+from kpm.users.domain.model import User
+from kpm.users.domain.repositories import UserRepository
 
 Users = Dict[str, User]
 

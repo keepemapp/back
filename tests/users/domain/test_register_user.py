@@ -3,11 +3,8 @@ from typing import Any, Dict
 import pytest
 
 from kpm.shared.domain.model import RootAggState
-from kpm.users.domain.entity.users import User
-from kpm.users.domain.usecase.exceptions import (
-    EmailAlreadyExistsException,
-    UsernameAlreadyExistsException,
-)
+from kpm.users.domain.model import (EmailAlreadyExistsException, User,
+                                    UsernameAlreadyExistsException)
 from kpm.users.domain.usecase.register_user import RegisterUser, UserRegistered
 from tests.users.utils import MemoryUserRepository
 

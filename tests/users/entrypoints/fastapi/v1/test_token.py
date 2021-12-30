@@ -5,11 +5,9 @@ import pytest
 from kpm.settings import settings as s
 from kpm.shared.domain.time_utils import now_utc_sec
 from kpm.shared.entrypoints.auth_jwt import from_token
-from tests.users.entrypoints.fastapi.v1.test_users import (
-    create_active_user,
-    create_user,
-)
 from tests.users.entrypoints.fastapi import *
+from tests.users.entrypoints.fastapi.v1.test_users import (create_active_user,
+                                                           create_user)
 
 user_route: str = s.API_V1.concat(s.API_USER_PATH).prefix
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix

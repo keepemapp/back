@@ -2,9 +2,8 @@ from typing import Any, Dict
 
 import pytest
 
-from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
-from kpm.users.domain.entity.users import User
+from kpm.users.domain.model import User
 from tests.users.utils import MemoryUserRepository
 
 DataType = Dict[str, Any]

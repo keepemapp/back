@@ -80,6 +80,7 @@ class Settings(BaseSettings):
     EMAIL_SENDER_PASSWORD: str = None
     EMAIL_SMTP_SERVER: str = None
     EMAIL_SMTP_PORT: int = 587
-    EMAIL_SMTP_SECURITY: str = 'STARTTLS'
+    EMAIL_SMTP_SECURITY: str = "STARTTLS"
+
 
 settings = Settings()

@@ -1,7 +1,7 @@
 import pytest
 
-from kpm.users.domain.entity.users import User
 from kpm.users.adapters.memrepo.repository import MemoryPersistedUserRepository
+from kpm.users.domain.model import User
 from tests.users.domain import *
 
 

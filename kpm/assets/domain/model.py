@@ -4,20 +4,12 @@ from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Union
 
-from kpm.assets.domain.events import (
-    AssetOwnershipChanged,
-    AssetReleaseCanceled,
-    AssetReleased,
-    AssetReleaseScheduled,
-)
+from kpm.assets.domain.events import (AssetOwnershipChanged,
+                                      AssetReleaseCanceled, AssetReleased,
+                                      AssetReleaseScheduled)
 from kpm.shared.domain import DomainId, init_id, required_field
-from kpm.shared.domain.model import (
-    AssetId,
-    RootAggregate,
-    RootAggState,
-    UserId,
-    ValueObject,
-)
+from kpm.shared.domain.model import (AssetId, RootAggregate, RootAggState,
+                                     UserId, ValueObject)
 from kpm.shared.domain.time_utils import now_utc_millis
 
 

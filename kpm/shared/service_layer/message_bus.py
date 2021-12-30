@@ -23,7 +23,6 @@ class UoWs(Dict[Type[RootAggregate], AbstractUnitOfWork]):
         return res
 
     def as_dependencies(self) -> Dict[str, AbstractUnitOfWork]:
-        print(self.keys())
         return {k.__name__.lower() + "_uow": v for k, v in self.items()}
 
 

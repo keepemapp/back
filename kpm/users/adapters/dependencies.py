@@ -4,10 +4,10 @@ import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
-from kpm.users.domain.entity.user_repository import UserRepository
-from kpm.users.domain.entity.users import User
-from kpm.users.domain.usecase.query_user import QueryUser
 from kpm.users.adapters.memrepo.repository import MemoryPersistedUserRepository
+from kpm.users.domain.model import User
+from kpm.users.domain.repositories import UserRepository
+from kpm.users.domain.usecase.query_user import QueryUser
 
 
 def user_repository() -> UserRepository:

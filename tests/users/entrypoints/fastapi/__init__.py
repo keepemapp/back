@@ -5,8 +5,8 @@ from fastapi.testclient import TestClient
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.users.adapters.dependencies import user_repository
 from kpm.users.entrypoints.fastapi.v1 import users_router
-from tests.users.utils import MemoryUserRepository
 from tests.users.fixtures import bus
+from tests.users.utils import MemoryUserRepository
 
 
 @pytest.fixture
@@ -27,4 +27,4 @@ def client(app) -> TestClient:
     yield TestClient(app)
 
 
-__all__ = ['app', 'client', 'bus']
+__all__ = ["app", "client", "bus"]

@@ -7,12 +7,9 @@ from kpm.shared.domain.commands import CommandOld
 from kpm.shared.domain.events import Event
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.security import generate_salt, hash_password, salt_password
-from kpm.users.domain.entity.user_repository import UserRepository
-from kpm.users.domain.entity.users import User
-from kpm.users.domain.usecase.exceptions import (
-    EmailAlreadyExistsException,
-    UsernameAlreadyExistsException,
-)
+from kpm.users.domain.model import (EmailAlreadyExistsException, User,
+                                    UsernameAlreadyExistsException)
+from kpm.users.domain.repositories import UserRepository
 
 
 @dataclass(frozen=True)
