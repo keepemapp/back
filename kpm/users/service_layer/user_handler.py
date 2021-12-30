@@ -1,5 +1,6 @@
 import dataclasses
-
+from jinja2 import Environment, FileSystemLoader
+import os
 import kpm.users.domain.commands as cmds
 import kpm.users.domain.events as events
 import kpm.users.domain.model as model
@@ -50,4 +51,13 @@ def send_welcome_email(
     event: events.UserRegistered, email_notifications: AbstractNotifications
 ):
     """Sends welcome email"""
-    raise NotImplementedError
+    env = Environment(loader=FileSystemLoader(
+        os.path.join(os.path.dirname(__file__), 'templates')))
+
+    template = env.get_template('welcome_email.html')
+    output = template.render(name=event.username)
+
+    email_notifications.send(
+        event.email,
+        f"Welcome to Keepem!",
+        "")

@@ -1,3 +1,4 @@
+import base64
 import logging
 import smtplib
 from abc import ABC, abstractmethod
@@ -24,6 +25,7 @@ class EmailNotifications(AbstractNotifications):
     ):
         self.server = smtplib.SMTP(host, port)
         self.server.noop()
+        self.__pwd = str(base64.b64decode(s.EMAIL_SENDER_PASSWORD), 'utf-8')
 
     def send(
         self, destination: Union[List[str], str], subject: str, body: str
@@ -40,7 +42,7 @@ class EmailNotifications(AbstractNotifications):
         logging.info(
             f"Sending email to '{destination}' with subject '{subject}'"
         )
-        self.server.login(s.EMAIL_SENDER_ADDRESS, s.EMAIL_SENDER_PASSWORD)
+        self.server.login(s.EMAIL_SENDER_ADDRESS, self.__pwd)
         self.server.sendmail(s.EMAIL_SENDER_ADDRESS, destination, msg_body)
 
 

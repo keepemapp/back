@@ -1,9 +1,7 @@
 import inspect
 from typing import Callable, Dict, List, Type
 
-from kpm.settings import settings as s
 from kpm.shared.adapters.notifications import (AbstractNotifications,
-                                               EmailNotifications,
                                                NoNotifications)
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
@@ -17,15 +15,8 @@ def bootstrap(
     uows: UoWs,
     event_handlers: EventHandler,
     command_handlers: CommandHandler,
-    email_notifications: AbstractNotifications = None,
+    email_notifications: AbstractNotifications = NoNotifications(),
 ) -> MessageBus:
-
-    if not email_notifications:
-        if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
-            email_notifications = EmailNotifications()
-        else:
-            email_notifications = NoNotifications()
-
     dependencies = {
         email_notifications: email_notifications,
         **uows.as_dependencies(),
