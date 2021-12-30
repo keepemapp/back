@@ -4,19 +4,16 @@ from fastapi_pagination import Page, Params, paginate
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 import kpm.users.domain.commands as cmds
 from kpm.settings import settings as s
-from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_admin_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
-from kpm.users.adapters.dependencies import (get_current_active_user,
-                                             user_repository)
+from kpm.users.adapters.dependencies import get_current_active_user
 from kpm.users.adapters.memrepo import views
 from kpm.users.domain.model import (EmailAlreadyExistsException, User,
                                     UsernameAlreadyExistsException)
-from kpm.users.domain.repositories import UserRepository
 from kpm.users.entrypoints.fastapi.v1.schemas.users import (UserCreate,
                                                             UserResponse)
 
@@ -68,16 +65,14 @@ async def get_all_users(
 )
 async def activate_user(
     user_id: str,
-    repo: UserRepository = Depends(user_repository),
+    bus: MessageBus = Depends(message_bus),
     _: AccessToken = Depends(get_admin_token),
 ):
     """Endpoint to activate a user. If user is already active does nothing."""
-    user = repo.get(UserId(user_id))
-    if not user:
+    try:
+        bus.handle(cmds.ActivateUser(user_id=user_id))
+    except KeyError:
         raise ex.NOT_FOUND
-    user.activate()
-    repo.update(user)
-    repo.commit()
     return
 
 

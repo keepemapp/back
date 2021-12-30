@@ -12,3 +12,8 @@ class RegisterUser(Command):
     password: str
     email: str
     user_id: Optional[str] = field(default_factory=lambda: init_id(UserId).id)
+
+
+@dataclass(frozen=True)
+class ActivateUser(Command):
+    user_id: str

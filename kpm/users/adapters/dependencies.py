@@ -6,13 +6,7 @@ from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.memrepo import views
-from kpm.users.adapters.memrepo.repository import MemoryPersistedUserRepository
 from kpm.users.domain.model import User
-from kpm.users.domain.repositories import UserRepository
-
-
-def user_repository() -> UserRepository:
-    yield MemoryPersistedUserRepository()
 
 
 async def get_current_user(
