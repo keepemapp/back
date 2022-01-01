@@ -1,6 +1,7 @@
 fastapi
 fastapi-pagination
 python-dotenv
+pydantic[dotenv]
 uvicorn
 pydantic
 pydantic[email]

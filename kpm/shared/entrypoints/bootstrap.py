@@ -18,7 +18,7 @@ def bootstrap(
     email_notifications: AbstractNotifications = NoNotifications(),
 ) -> MessageBus:
     dependencies = {
-        email_notifications: email_notifications,
+        "email_notifications": email_notifications,
         **uows.as_dependencies(),
     }
     return MessageBus(

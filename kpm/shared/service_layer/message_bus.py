@@ -1,15 +1,13 @@
 from __future__ import annotations
 
-import logging
 from typing import (Callable, Dict, List, NoReturn, Optional, Type, TypeVar,
                     Union)
 
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
 from kpm.shared.domain.model import RootAggregate
+from kpm.shared.logging import logger
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
-
-logger = logging.getLogger("kpm")
 
 Message = Union[Command, Event]
 
@@ -73,9 +71,9 @@ class MessageBus:
                 )
                 handler(event)
                 self.queue.extend(self.uows.collect_new_events())
-            except Exception:
+            except Exception as e:
                 logger.exception(
-                    '{"handler":"%s", "event":"%s"}', handler.__name__, event
+                    '{"level": "ERROR", "handler":"%s", "event":"%s"}', handler.__name__, event
                 )
                 continue  # TODO not sure we have to continue here
 

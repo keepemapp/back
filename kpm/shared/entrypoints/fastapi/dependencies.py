@@ -1,11 +1,9 @@
 from fastapi import Depends
 
-from kpm.settings import settings as s
 from kpm.assets.entrypoints.fastapi.dependencies import uows as a_uows
 from kpm.assets.service_layer import COMMAND_HANDLERS as a_cmds
 from kpm.assets.service_layer import EVENT_HANDLERS as a_evs
-from kpm.shared.adapters.notifications import EmailNotifications, \
-    NoNotifications
+from kpm.shared.adapters.notifications import NoNotifications
 from kpm.shared.entrypoints.bootstrap import bootstrap
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs
 from kpm.users.entrypoints.fastapi.dependencies import uows as u_uows
@@ -21,10 +19,10 @@ def message_bus(
     events = {**a_evs, **u_evs}
     commands = {**a_cmds, **u_cmds}
 
-    if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
-        email_notifications = EmailNotifications()
-    else:
-        email_notifications = NoNotifications()
+    email_notifications = NoNotifications()
+    # TODO Takes 30 sec to even init
+    #if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
+    #    email_notifications = EmailNotifications()
 
     yield bootstrap(
         uows=asset_uows, event_handlers=events, command_handlers=commands,

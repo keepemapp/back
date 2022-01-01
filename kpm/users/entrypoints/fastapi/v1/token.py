@@ -9,6 +9,7 @@ from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
+from kpm.shared.logging import logger
 from kpm.shared.security import salt_password, verify_password
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.memrepo import views
@@ -18,8 +19,6 @@ from kpm.users.entrypoints.fastapi.v1.schemas.token import LoginResponse
 router = APIRouter(
     responses={404: {"description": "Not found"}}, tags=["auth"]
 )
-
-logger = logging.getLogger("kpm")
 
 
 def check_user(user: Optional[User], password: str):

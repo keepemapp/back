@@ -7,6 +7,7 @@ from typing import List
 
 from kpm.shared.domain import required_field
 from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
+from kpm.users.domain import events
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "
@@ -42,6 +43,11 @@ class User(RootAggregate):
             raise ValueError(INVALID_USERNAME)
         if not self._email_is_valid(self.email):
             raise ValueError(INVALID_EMAIL)
+        self.events.append(events.UserRegistered(
+            aggregate_id=self.id,
+            username=self.username,
+            email=self.email,
+        ))
 
     def activate(self, mod_ts: int = None):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
@@ -61,6 +67,8 @@ class User(RootAggregate):
     def change_password_hash(self, new_password_hash):
         return dataclasses.replace(self, password_hash=new_password_hash)
 
+    def __hash__(self):
+        return hash(self.id.id)
 
 class MissmatchPasswordException(Exception):
     def __init__(self, msg="Passwords do not match"):

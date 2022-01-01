@@ -19,7 +19,7 @@ class MemoryPersistedUserRepository(UserRepository):
         self,
         dbfile=os.path.join(settings.DATA_FOLDER, "usersrepo.pk"),
     ):
-        super(UserRepository, self).__init__()
+        super().__init__()
         self.DB_FILE = dbfile
         self._users: Users = self.__startup_db()
 
@@ -31,10 +31,12 @@ class MemoryPersistedUserRepository(UserRepository):
 
     def create(self, user: User):
         self._users[user.id.id] = user
+        self._seen.add(user)
         self.__write_file()
 
     def update(self, user: User):
         self._users[user.id.id] = user
+        self._seen.add(user)
         self.__write_file()
 
     def exists_email(self, email: str) -> bool:
