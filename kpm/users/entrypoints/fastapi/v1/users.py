@@ -84,7 +84,7 @@ async def activate_user(
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
     },
 )
-async def register_user(
+def register_user(
     new_user: UserCreate, bus: MessageBus = Depends(message_bus)
 ):
     cmd = cmds.RegisterUser(

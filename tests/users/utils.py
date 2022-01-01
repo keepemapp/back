@@ -20,9 +20,11 @@ class MemoryUserRepository(UserRepository):
 
     def create(self, user: User):
         self._users[str(user.id)] = user
+        self._seen.add(user)
 
     def update(self, user: User):
         self._users[str(user.id)] = user
+        self._seen.add(user)
 
     def clean_all(self):
         self._users.clear()
