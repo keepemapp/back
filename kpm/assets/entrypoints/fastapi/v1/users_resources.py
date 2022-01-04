@@ -1,3 +1,4 @@
+import random
 from fastapi import APIRouter, Depends, status
 from fastapi_pagination import Page, Params, paginate
 
@@ -56,6 +57,24 @@ async def get_asset_statistics(
     """Returns statistics regarding user assets."""
     stats = views_asset.user_stats(token.subject, bus=bus)
     return stats
+
+
+@router.get(
+    "/me" + s.API_ASSET_PATH.concat("of-the-week").path(),
+    tags=s.API_ASSET_PATH.tags,
+)
+async def get_assets_of_the_week(
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    """Returns the user's assets of the week.
+
+    Currently every time you call the endpoint returns different assets.
+    So it's on the client to cache hem for a period of time.
+    TODO: Not return random assets.
+    TODO: cache that decision for device compatibility
+    """
+    return views_asset.assets_of_the_week(token.subject, bus=bus)
 
 
 @router.get(
