@@ -46,6 +46,19 @@ async def get_user_assets(
 
 
 @router.get(
+    "/me" + s.API_ASSET_PATH.concat("stats").path(),
+    tags=s.API_ASSET_PATH.tags,
+)
+async def get_asset_statistics(
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    """Returns statistics regarding user assets."""
+    stats = views_asset.user_stats(token.subject, bus=bus)
+    return stats
+
+
+@router.get(
     s.API_USER_PATH.concat("me", s.API_RELEASE).path(),
     deprecated=True,
     tags=s.API_RELEASE.tags,
@@ -72,3 +85,16 @@ async def get_user_releases(
         ],
         params,
     )
+
+
+@router.get(
+    "/me" + s.API_RELEASE.concat("stats").path(),
+    tags=s.API_RELEASE.tags,
+)
+async def get_releases_statistics(
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    """Returns statistics regarding releases assets."""
+    stats = views_releases.user_stats(token.subject, bus=bus)
+    return stats

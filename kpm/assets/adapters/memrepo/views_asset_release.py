@@ -61,3 +61,13 @@ def get_releases(
         else:
             releases = uow.repo.user_past_releases(UserId(user))
         return [to_flat_dict(r) for r in releases]
+
+
+def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
+    return {
+        "total": 2,
+        "in_a_bottle": 20,
+        "stash": 2,
+        "future_self": 7,
+        "time_capsule": 3,
+    }
