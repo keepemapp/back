@@ -80,3 +80,15 @@ def find_by_ownerid(
             asset_to_flat_dict(a)
             for a in uow.repo.find_by_ownerid(UserId(user_id))
         ]
+
+
+def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
+    return {
+        "total": 32,
+        "images": 20,
+        "documents": 2,
+        "videos": 7,
+        "audios": 3,
+        "others": 0,
+        "visible": 28,
+    }
