@@ -1,3 +1,4 @@
+import random
 from dataclasses import asdict
 from typing import Dict, List, Optional
 
@@ -79,6 +80,18 @@ def find_by_ownerid(
         return [
             asset_to_flat_dict(a)
             for a in uow.repo.find_by_ownerid(UserId(user_id))
+        ]
+
+
+def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
+    with bus.uows.get(Asset) as uow:
+        assets = uow.repo.find_by_ownerid(UserId(user_id))
+        if len(assets < 1):
+            return []
+        choosen: List[Asset] = random.sample(assets, 2)
+        return [
+            {"id": a.id, "title": a.title, "file_type": a.file.type}
+            for a in choosen
         ]
 
 
