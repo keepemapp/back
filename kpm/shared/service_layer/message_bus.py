@@ -71,9 +71,11 @@ class MessageBus:
                 )
                 handler(event)
                 self.queue.extend(self.uows.collect_new_events())
-            except Exception as e:
+            except Exception:
                 logger.exception(
-                    '{"level": "ERROR", "handler":"%s", "event":"%s"}', handler.__name__, event
+                    '{"level": "ERROR", "handler":"%s", "event":"%s"}',
+                    handler.__name__,
+                    event,
                 )
                 continue  # TODO not sure we have to continue here
 

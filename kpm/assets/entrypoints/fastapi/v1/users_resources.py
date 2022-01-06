@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, status
+from fastapi.params import Query
 from fastapi_pagination import Page, Params, paginate
 
 import kpm.assets.adapters.memrepo.views_asset_release as views_releases
@@ -37,12 +38,37 @@ router = APIRouter(
     },
 )
 async def get_current_user_assets(
-    params: Params = Depends(),
+    order_by: str = Query(
+        None,
+        max_length=20,
+        regex=r"^[^;\-'\"]+$",
+        description="Attribute to sort by",
+    ),
+    order: str = Query(
+        "asc",
+        max_length=4,
+        regex=r"^[^;\-'\"]+$",
+        description="Available options: 'asc', 'desc'",
+    ),
+    file_types: str = Query(
+        None,
+        max_length=50,
+        regex=r"^[^;\-'\"]+$",
+        description="Comma separated list of file types.",
+    ),
+    paginate_params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
-    assets = views_asset.find_by_ownerid(token.subject, bus=bus)
-    return paginate([asset_to_response(a, token) for a in assets], params)
+    fts = []
+    if file_types:
+        fts = file_types.split(",")
+    assets = views_asset.find_by_ownerid(
+        token.subject, bus=bus, order_by=order_by, order=order, asset_types=fts
+    )
+    return paginate(
+        [asset_to_response(a, token) for a in assets], paginate_params
+    )
 
 
 @router.get(

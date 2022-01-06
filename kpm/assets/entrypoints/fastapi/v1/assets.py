@@ -2,6 +2,7 @@ from datetime import timedelta
 from typing import Dict
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
+from fastapi.params import Query
 from fastapi.responses import FileResponse, RedirectResponse
 from fastapi_pagination import Page, Params, paginate
 from jose import JWTError
@@ -56,6 +57,7 @@ async def add_asset(
 ):
     if not new_asset.owners_id:
         new_asset.owners_id = [token.subject]
+    print("asset owners ", new_asset.owners_id)
     if token.subject not in new_asset.owners_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -63,9 +65,6 @@ async def add_asset(
         )
 
     payload = new_asset.__dict__
-    payload["owners_id"] = [
-        o.replace("/users/", "") for o in new_asset.owners_id
-    ]
     cmd = cmds.CreateAsset(**payload)
     bus.handle(cmd)
     return RedirectResponse(
@@ -168,13 +167,36 @@ async def add_asset_file(
     tags=["admin"],
 )
 async def get_all_assets(
-    params: Params = Depends(),
+    order_by: str = Query(
+        None,
+        max_length=20,
+        regex=r"^[^;\-'\"]+$",
+        description="Attribute to sort by",
+    ),
+    order: str = Query(
+        "asc",
+        max_length=4,
+        regex=r"^[^;\-'\"]+$",
+        description="Available options: 'asc', 'desc'",
+    ),
+    file_types: str = Query(
+        None,
+        max_length=50,
+        regex=r"^[^;\-'\"]+$",
+        description="Comma separated list of file types.",
+    ),
+    paginate_params: Params = Depends(),
     token: AccessToken = Depends(get_admin_token),
     bus: MessageBus = Depends(message_bus),
 ):
+    fts = []
+    if file_types:
+        fts = file_types.split(",")
+    assets = views_asset.all_assets(
+        bus=bus, order_by=order_by, order=order, asset_types=fts
+    )
     return paginate(
-        [asset_to_response(a, token) for a in views_asset.all_assets(bus=bus)],
-        params,
+        [asset_to_response(a, token) for a in assets], paginate_params
     )
 
 

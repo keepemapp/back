@@ -6,10 +6,10 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import AssetCreate
 from kpm.settings import settings as s
 from tests.assets.infra.fastapi.v1.fixtures import *
 
-ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
+ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).path()
 
 
-def create_asset(client: TestClient, num: int, uids: List[str]):
+def create_asset(client: TestClient, num: int, uids: List[str] = None):
     asset = AssetCreate(
         title=f"Asset number {num}",
         description=f"Description for {num}",
@@ -18,7 +18,18 @@ def create_asset(client: TestClient, num: int, uids: List[str]):
         file_name=f"file_of_{num}.jpg",
     )
     response = client.post(ASSET_ROUTE, json=asset.dict())
+    assert response.status_code == 201
     return asset, response
+
+
+def query_all(client, query_params=""):
+    return client.get(s.API_V1.concat(s.API_ASSET_PATH).path() + query_params)
+
+
+def query_uas(client, query_params=""):
+    return client.get(
+        s.API_V1.concat("/me", s.API_ASSET_PATH).path() + query_params
+    )
 
 
 @pytest.mark.unit
@@ -69,7 +80,7 @@ class TestGetAssets:
         aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
 
         response = user_client.get(
-            s.API_V1.concat(s.API_USER_PATH, "/me", s.API_ASSET_PATH).path()
+            s.API_V1.concat("/me", s.API_ASSET_PATH).path()
         )
         assert response.status_code == 200
         json = response.json()
@@ -81,11 +92,7 @@ class TestGetAssets:
         )
         aid2 = r2.headers["location"].split("/")[-2].split("?")[0]
 
-        response = user_client.get(
-            s.API_V1.concat(s.API_USER_PATH).prefix
-            + "/me"
-            + s.API_ASSET_PATH.prefix
-        )
+        response = query_uas(user_client)
         assert response.status_code == 200
         json = response.json()
         assert len(json["items"]) == 2
@@ -93,6 +100,44 @@ class TestGetAssets:
             aid1,
             aid2,
         ]
+
+    def test_assets_sorting(self, user_client, admin_client):
+        _, r1 = create_asset(user_client, 0)
+        aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
+        _, r2 = create_asset(user_client, 1)
+        aid2 = r2.headers["location"].split("/")[-2].split("?")[0]
+
+        # When
+        response = query_uas(user_client, "?order_by=title&order=desc")
+        print(response.text)
+        assert response.status_code == 200
+        # Then
+        items = response.json()["items"]
+        for r, aid in zip(items, [aid2, aid1]):
+            assert r["id"] == aid
+
+        # When
+        response = query_all(admin_client, "?order_by=title&order=desc")
+        assert response.status_code == 200
+        # Then
+        items = response.json()["items"]
+        for r, aid in zip(items, [aid2, aid1]):
+            assert r["id"] == aid
+
+    invalid_params = [
+        "?order_by=title;",
+        "?order_by=title--",
+        "?order_by=title'",
+        '?order_by=title"',
+    ]
+
+    @pytest.mark.parametrize("qp", invalid_params)
+    def test_asset_sorting_attacks(self, qp, user_client, admin_client):
+        r = query_uas(user_client, qp)
+        assert r.status_code == 422
+
+        r = query_all(admin_client, qp)
+        assert r.status_code == 422
 
     def test_get_individual_asset(self, user_client):
         a, r1 = create_asset(user_client, 0, [USER_TOKEN.subject])

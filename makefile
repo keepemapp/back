@@ -26,16 +26,16 @@ $(VENV): requirements.txt
 	touch $(VENV)
 
 .PHONY: format
-format: install-dev
+format:
 	$(BIN)/black --line-length 79 kpm tests
 	$(BIN)/isort kpm tests
 
 .PHONY: lint
-lint: install-dev
+lint:
 	$(BIN)/flake8 kpm
 
 .PHONY: test-only
-test-only: install-dev
+test-only:
 	$(BIN)/pytest
 
 .PHONY: test

@@ -16,7 +16,6 @@ from tests.shared.utils import TestUoW
 
 
 class TestAssetRepository(MemoryAssetRepository):
-
     def clean_all(self):
         self._repo.clear()
         self._owner_index.clear()

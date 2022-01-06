@@ -1,6 +1,7 @@
-import dataclasses
-from jinja2 import Environment, FileSystemLoader
 import os
+
+from jinja2 import Environment, FileSystemLoader
+
 import kpm.users.domain.commands as cmds
 import kpm.users.domain.events as events
 import kpm.users.domain.model as model
@@ -24,7 +25,7 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
                 password_hash=hash_password(salt_password(cmd.password, salt)),
                 id=UserId(cmd.user_id),
                 state=RootAggState.ACTIVE,
-                roles=["admin"]
+                roles=["admin"],
             )
         else:
             if repo.exists_email(cmd.email):
@@ -57,13 +58,13 @@ def send_welcome_email(
     event: events.UserRegistered, email_notifications: AbstractNotifications
 ):
     """Sends welcome email"""
-    env = Environment(loader=FileSystemLoader(
-        os.path.join(os.path.dirname(__file__), 'templates')))
+    env = Environment(
+        loader=FileSystemLoader(
+            os.path.join(os.path.dirname(__file__), "templates")
+        )
+    )
 
-    template = env.get_template('welcome_email.html')
+    template = env.get_template("welcome_email.html")
     output = template.render(name=event.username)
 
-    email_notifications.send(
-        event.email,
-        f"Welcome to Keepem!",
-        output)
+    email_notifications.send(event.email, "Welcome to Keepem!", output)

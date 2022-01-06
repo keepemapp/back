@@ -1,7 +1,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, List, NoReturn, Optional, Set, Union
+from typing import Dict, List, NoReturn, Set, Union
 
 from kpm.assets.domain.model import (Asset, AssetRelease,
                                      DuplicatedAssetException)
@@ -23,10 +23,21 @@ class MemoryAssetRepository(AssetRepository):
         self._repo: Assets = {}
         self._owner_index: OwnerIndex = {}
 
-    def _query(self, *, ids: List[AssetId] = None, owners: List[UserId] = None,
-               order_by: str = None, order_by_order: str = "asc",
-               visible_only: bool = True, asset_types: List[str] = None
-               ) -> List[Asset]:
+    def _query(
+        self,
+        *,
+        ids: List[AssetId] = None,
+        owners: List[UserId] = None,
+        order_by: str = None,
+        order: str = "asc",
+        visible_only: bool = True,
+        asset_types: List[str] = None,
+    ) -> List[Asset]:
+
+        list_params = [ids, owners, asset_types]
+        for p in list_params:
+            if p and not isinstance(list_params, list):
+                raise TypeError(f"{p} must be of type list")
 
         ids = ids if ids else []
         if owners:
@@ -59,10 +70,13 @@ class MemoryAssetRepository(AssetRepository):
 
         # Sorting by order_by attribute
         if order_by:
-            is_reverse = order_by_order == "desc"
-            results.sort(reverse=is_reverse,
-                         key=lambda a: getattr(a, order_by))
-
+            print("sorting results ")
+            is_reverse = order == "desc"
+            print("is reverse " + str(is_reverse))
+            results.sort(
+                reverse=is_reverse, key=lambda a: getattr(a, order_by)
+            )
+        print(results)
         return results
 
     def create(self, asset: Asset) -> NoReturn:
@@ -84,9 +98,9 @@ class MemoryAssetRepository(AssetRepository):
         try:
             del self._repo[asset.id]
             for oid in owners:
-                self._owner_index[oid] = set([
-                    a for a in self._owner_index[oid] if a != asset.id
-                ])
+                self._owner_index[oid] = set(
+                    [a for a in self._owner_index[oid] if a != asset.id]
+                )
         except KeyError:
             pass
 

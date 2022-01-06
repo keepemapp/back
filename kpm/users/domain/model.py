@@ -43,11 +43,13 @@ class User(RootAggregate):
             raise ValueError(INVALID_USERNAME)
         if not self._email_is_valid(self.email):
             raise ValueError(INVALID_EMAIL)
-        self.events.append(events.UserRegistered(
-            aggregate_id=self.id,
-            username=self.username,
-            email=self.email,
-        ))
+        self.events.append(
+            events.UserRegistered(
+                aggregate_id=self.id,
+                username=self.username,
+                email=self.email,
+            )
+        )
 
     def activate(self, mod_ts: int = None):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
@@ -69,6 +71,7 @@ class User(RootAggregate):
 
     def __hash__(self):
         return hash(self.id.id)
+
 
 class MissmatchPasswordException(Exception):
     def __init__(self, msg="Passwords do not match"):

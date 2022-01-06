@@ -6,6 +6,7 @@ import pytest
 from kpm.assets.adapters.memrepo import MemoryPersistedAssetRepository
 from kpm.assets.domain.model import Asset
 from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.time_utils import now_utc_millis
 from tests.assets.domain import asset, valid_asset
 
 
@@ -94,6 +95,37 @@ class TestAssetRepo:
 
         assert r.find_by_ids([a.id, AssetId("nonexsiting id")]) == [a]
         assert not r.find_by_ids([AssetId("nonexsiting id")])
+
+    def test_visible_filter(self, asset_repo, asset):
+        # Given
+        r = asset_repo
+        a = asset
+
+        # When
+        a.hide(now_utc_millis())
+        r.create(a)
+        r.commit()
+
+        # Then
+        assert len(r.all()) == 1
+        assert not r.find_by_id(a.id)
+        assert r.find_by_id(a.id, visible_only=False)
+        assert len(r.find_by_ownerid(a.owners_id[0])) == 0
+
+    def test_asset_type_filter(self, asset_repo, asset):
+        # Given
+        r = asset_repo
+        a = asset
+        r.create(a)
+        r.commit()
+        oid = a.owners_id[0]
+        # Then
+        assert len(r.find_by_ownerid(oid, asset_types=[])) == 1
+        assert len(r.find_by_ownerid(oid, asset_types=[a.file.type])) == 1
+        assert len(r.find_by_ownerid(oid, asset_types=["notype"])) == 0
+
+        with pytest.raises(TypeError):
+            r.find_by_ownerid(oid, asset_types=23)
 
     def test_by_owner_id(self, asset_repo, valid_asset):
         r = asset_repo

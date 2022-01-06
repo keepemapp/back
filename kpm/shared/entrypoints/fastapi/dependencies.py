@@ -21,10 +21,12 @@ def message_bus(
 
     email_notifications = NoNotifications()
     # TODO Takes 30 sec to even init
-    #if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
+    # if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
     #    email_notifications = EmailNotifications()
 
     yield bootstrap(
-        uows=asset_uows, event_handlers=events, command_handlers=commands,
+        uows=asset_uows,
+        event_handlers=events,
+        command_handlers=commands,
         email_notifications=email_notifications,
     )

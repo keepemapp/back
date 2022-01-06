@@ -16,19 +16,18 @@ class AssetRepository(DomainRepository):
 
     @abstractmethod
     def _query(
-            self,
-            *,
-            ids: List[AssetId] = None,
-            owners: List[UserId] = None,
-            order_by: str = None,
-            order_by_order: str = "asc",
-            visible_only: bool = True,
-            asset_types: List[str] = None,
-
+        self,
+        *,
+        ids: List[AssetId] = None,
+        owners: List[UserId] = None,
+        order_by: str = None,
+        order: str = "asc",
+        visible_only: bool = True,
+        asset_types: List[str] = None,
     ) -> List[Asset]:
         raise NotImplementedError
 
-    def all(self) -> List[Asset]:
+    def all(self, **kwargs) -> List[Asset]:
         """Returns all the assets
 
         To get all the assets all the owner has access to use
@@ -36,7 +35,9 @@ class AssetRepository(DomainRepository):
         :returns: List of all the assets
         :rtype: List[Asset]
         """
-        return self._query(visible_only=False)
+        if not kwargs.get("visible_only"):
+            kwargs["visible_only"] = False
+        return self._query(**kwargs)
 
     @abstractmethod
     def create(self, asset: Asset) -> None:
@@ -57,9 +58,7 @@ class AssetRepository(DomainRepository):
         ids = self.find_by_ids([id], **kwargs)
         return ids[0] if ids else None
 
-    def find_by_ids(
-        self, ids: List[AssetId], **kwargs
-    ) -> List[Asset]:
+    def find_by_ids(self, ids: List[AssetId], **kwargs) -> List[Asset]:
         """Finds assets in list that are in the database.
 
         If one id does not exist, it does not return it so you

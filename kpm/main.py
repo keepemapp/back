@@ -1,9 +1,7 @@
-import logging
 import os
-import pathlib
-import time
 import random
 import string
+import time
 
 import uvicorn
 from fastapi import FastAPI
@@ -58,11 +56,10 @@ app.include_router(assets_router)
 
 app.logger = logger
 
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    idem = "".join(
-        random.choices(string.ascii_uppercase + string.digits, k=6)
-    )
+    idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     logger.info(
         '{"rid":"%s", "method":"%s", "path": "%s"}',
         idem,
@@ -83,6 +80,7 @@ async def log_requests(request: Request, call_next):
     )
 
     return response
+
 
 if __name__ == "__main__":
     uvicorn.run(app, host="localhost", port=8000)

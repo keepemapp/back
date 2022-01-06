@@ -20,11 +20,13 @@ def asset_to_flat_dict(a: Asset):
     return d
 
 
-def all_assets(uow: AssetUoW = None, bus: MessageBus = None) -> List[Dict]:
+def all_assets(
+    uow: AssetUoW = None, bus: MessageBus = None, **kwargs
+) -> List[Dict]:
     if not uow:
         uow = bus.uows.get(Asset)
     with uow:
-        return [asset_to_flat_dict(a) for a in uow.repo.all()]
+        return [asset_to_flat_dict(a) for a in uow.repo.all(**kwargs)]
 
 
 def find_by_id(
@@ -72,14 +74,14 @@ def are_assets_active(
 
 
 def find_by_ownerid(
-    user_id: str, uow: AssetUoW = None, bus: MessageBus = None
+    user_id: str, uow: AssetUoW = None, bus: MessageBus = None, **kwargs
 ) -> List[Dict]:
     if not uow:
         uow = bus.uows.get(Asset)
     with uow:
         return [
             asset_to_flat_dict(a)
-            for a in uow.repo.find_by_ownerid(UserId(user_id))
+            for a in uow.repo.find_by_ownerid(UserId(user_id), **kwargs)
         ]
 
 

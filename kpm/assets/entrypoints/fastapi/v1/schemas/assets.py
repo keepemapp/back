@@ -18,11 +18,14 @@ class AssetBase(BaseModel):
 
 
 class AssetCreate(AssetBase):
-    owners_id: List[str]
+    owners_id: List[str] = None
 
     @validator("owners_id", always=True)
     def clean_owners_id(cls, v):
-        return settings.API_USER_PATH.remove_from(v)
+        if v:
+            return settings.API_USER_PATH.remove_from(v)
+        else:
+            return None
 
 
 class AssetResponse(AssetBase):
