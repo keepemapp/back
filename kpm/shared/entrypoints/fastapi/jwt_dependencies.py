@@ -12,7 +12,7 @@ from kpm.settings import settings as cfg
 from kpm.shared.domain.time_utils import now_utc
 from kpm.shared.entrypoints.auth_jwt import (AccessToken, RefreshToken,
                                              from_token)
-from kpm.shared.logging import logger
+from kpm.shared.log import logger
 
 oauth2_scheme = OAuth2PasswordBearer(
     tokenUrl=settings.API_V1.concat("/login").path()

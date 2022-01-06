@@ -1,7 +1,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, List, NoReturn, Optional, Union
+from typing import Dict, List, NoReturn, Optional, Set, Union
 
 from kpm.assets.domain.model import (Asset, AssetRelease,
                                      DuplicatedAssetException)
@@ -12,10 +12,94 @@ from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 
 Assets = Dict[AssetId, Asset]
-OwnerIndex = Dict[UserId, List[AssetId]]
+OwnerIndex = Dict[UserId, Set[AssetId]]
 
 
-class MemoryPersistedAssetRepository(AssetRepository):
+class MemoryAssetRepository(AssetRepository):
+    def __init__(
+        self,
+    ):
+        super(MemoryAssetRepository, self).__init__()
+        self._repo: Assets = {}
+        self._owner_index: OwnerIndex = {}
+
+    def _query(self, *, ids: List[AssetId] = None, owners: List[UserId] = None,
+               order_by: str = None, order_by_order: str = "asc",
+               visible_only: bool = True, asset_types: List[str] = None
+               ) -> List[Asset]:
+
+        ids = ids if ids else []
+        if owners:
+            oas = set()
+            for uid in owners:
+                oas = oas.union(set(self._owner_index.get(uid, [])))
+            if ids:
+                ids = set(ids).intersection(oas)
+            else:
+                ids = oas
+            if len(ids) < 1:
+                return []
+
+        # Filtering results from the dict
+        results = []
+        for aid, asset in self._repo.items():
+            filters = []
+            # Filters
+            if ids:
+                filters.append(aid in ids)
+            if owners:
+                filters.append(any(o in owners for o in asset.owners_id))
+            if visible_only:
+                filters.append(asset.is_visible())
+            if asset_types:
+                filters.append(asset.file.type in asset_types)
+
+            if all(filters):  # Select if all filters are true
+                results.append(asset)
+
+        # Sorting by order_by attribute
+        if order_by:
+            is_reverse = order_by_order == "desc"
+            results.sort(reverse=is_reverse,
+                         key=lambda a: getattr(a, order_by))
+
+        return results
+
+    def create(self, asset: Asset) -> NoReturn:
+        if self._repo.get(asset.id):
+            raise DuplicatedAssetException()
+        self.update(asset)
+
+    def update(self, asset: Asset) -> None:
+        for oid in asset.owners_id:
+            if oid in self._owner_index:
+                self._owner_index[oid].add(asset.id)
+            else:
+                self._owner_index[oid] = {asset.id}
+        self._repo[asset.id] = asset
+        self._seen.add(asset)
+
+    def _delete(self, asset: Asset):
+        owners = asset.owners_id
+        try:
+            del self._repo[asset.id]
+            for oid in owners:
+                self._owner_index[oid] = set([
+                    a for a in self._owner_index[oid] if a != asset.id
+                ])
+        except KeyError:
+            pass
+
+    def delete(self, id: AssetId) -> NoReturn:
+        asset = self.find_by_id(id)
+        if asset:
+            self._delete(asset)
+
+    def commit(self) -> None:
+        pass
+
+
+class MemoryPersistedAssetRepository(MemoryAssetRepository):
     def __init__(
         self,
         dbfile: Union[Path, str] = Path(
@@ -29,63 +113,6 @@ class MemoryPersistedAssetRepository(AssetRepository):
         self.INDEX_FILE = Path(str(dbfile).replace(".pk", "") + "-index.pk")
         self._repo: Assets = self.__startup_db()
         self._owner_index: OwnerIndex = self.__startup_index()
-
-    def create(self, asset: Asset) -> NoReturn:
-        if self._repo.get(asset.id):
-            raise DuplicatedAssetException()
-        self._repo[asset.id] = asset
-        for oid in asset.owners_id:
-            if oid in self._owner_index:
-                self._owner_index[oid].append(asset.id)
-            else:
-                self._owner_index[oid] = [asset.id]
-        self._seen.add(asset)
-
-    def update(self, asset: Asset) -> None:
-        self._repo[asset.id] = asset
-        self._seen.add(asset)
-
-    def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
-        ids = self.find_by_ids([id], visible_only)
-        return ids[0] if ids else None
-
-    def find_by_ids(
-        self, ids: List[AssetId], visible_only=True
-    ) -> List[Asset]:
-        return [
-            v
-            for k, v in self._repo.items()
-            if k in ids and (not visible_only or v.is_visible())
-        ]
-
-    def delete(self, asset: Asset):
-        owners = asset.owners_id
-        try:
-            del self._repo[asset.id]
-            for oid in owners:
-                self._owner_index[oid] = [
-                    a for a in self._owner_index[oid] if a != asset.id
-                ]
-        except KeyError:
-            pass
-
-    def delete_by_id(self, id: AssetId) -> NoReturn:
-        asset = self.find_by_id(id)
-        if asset:
-            self.delete(asset)
-
-    def find_by_ownerid(self, uid: UserId) -> List[Asset]:
-        asset_ids = self._owner_index.get(uid, [])
-        return self.find_by_ids(asset_ids)
-
-    def find_by_id_and_ownerid(
-        self, aid: AssetId, uid: UserId
-    ) -> Optional[Asset]:
-        owner_assets = self._owner_index.get(uid, [])
-        return self.find_by_id(aid) if aid in owner_assets else None
-
-    def all(self) -> List[Asset]:
-        return list(self._repo.values())
 
     def commit(self) -> None:
         with open(self.DB_FILE, "wb") as f:

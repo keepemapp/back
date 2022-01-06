@@ -119,7 +119,7 @@ class TestAssetRepo:
         r.create(a)
         assert len(r.all()) == 1
 
-        r.delete(a)
+        r.delete(a.id)
         assert not r.all()
 
     def test_delete_non_existing_asset(self, asset_repo, valid_asset):
@@ -131,17 +131,8 @@ class TestAssetRepo:
         valid_asset["id"] = AssetId("asset2id")
         a2 = Asset(**valid_asset)
 
-        r.delete(a2)
+        r.delete(a2.id)
         assert len(r.all()) == 1
-
-    def test_delete_by_id(self, asset_repo, valid_asset):
-        r = asset_repo
-        a = Asset(**valid_asset)
-        r.create(a)
-        assert len(r.all()) == 1
-
-        r.delete_by_id(a.id)
-        assert not r.all()
 
     def test_delete_by_id_non_existing(self, asset_repo, valid_asset):
         r = asset_repo
@@ -149,5 +140,5 @@ class TestAssetRepo:
         r.create(a)
         assert len(r.all()) == 1
 
-        r.delete_by_id(AssetId("Asset not existing"))
+        r.delete(AssetId("Asset not existing"))
         assert len(r.all()) == 1

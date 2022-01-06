@@ -7,6 +7,7 @@ EVENT_HANDLERS = {
     events.AssetReleaseScheduled: [ah.hide_asset],
     events.AssetReleaseCanceled: [ah.make_asset_visible],
     events.AssetReleased: [ah.change_asset_owner, ah.make_asset_visible],
+    events.AssetOwnershipChanged: []
 }
 COMMAND_HANDLERS = {
     cmds.CreateAsset: ah.create_asset,

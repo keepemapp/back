@@ -7,7 +7,7 @@ from email.mime.text import MIMEText
 from typing import List, Union
 
 from kpm.settings import settings as s
-from kpm.shared.logging import logger
+from kpm.shared.log import logger
 
 
 class AbstractNotifications(ABC):

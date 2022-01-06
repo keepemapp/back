@@ -69,9 +69,7 @@ class TestGetAssets:
         aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
 
         response = user_client.get(
-            s.API_V1.concat(s.API_USER_PATH).prefix
-            + "/me"
-            + s.API_ASSET_PATH.prefix
+            s.API_V1.concat(s.API_USER_PATH, "/me", s.API_ASSET_PATH).path()
         )
         assert response.status_code == 200
         json = response.json()

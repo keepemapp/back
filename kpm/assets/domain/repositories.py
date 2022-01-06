@@ -15,6 +15,19 @@ class AssetRepository(DomainRepository):
         self._seen: Set[Asset] = set()
 
     @abstractmethod
+    def _query(
+            self,
+            *,
+            ids: List[AssetId] = None,
+            owners: List[UserId] = None,
+            order_by: str = None,
+            order_by_order: str = "asc",
+            visible_only: bool = True,
+            asset_types: List[str] = None,
+
+    ) -> List[Asset]:
+        raise NotImplementedError
+
     def all(self) -> List[Asset]:
         """Returns all the assets
 
@@ -23,7 +36,7 @@ class AssetRepository(DomainRepository):
         :returns: List of all the assets
         :rtype: List[Asset]
         """
-        raise NotImplementedError
+        return self._query(visible_only=False)
 
     @abstractmethod
     def create(self, asset: Asset) -> None:
@@ -35,18 +48,17 @@ class AssetRepository(DomainRepository):
         """Updates an asset"""
         raise NotImplementedError
 
-    @abstractmethod
-    def find_by_id(self, id: AssetId, visible_only=True) -> Optional[Asset]:
+    def find_by_id(self, id: AssetId, **kwargs) -> Optional[Asset]:
         """Find asset by asset id
 
         :return: Asset matching id
         :rtype: Asset, None
         """
-        raise NotImplementedError
+        ids = self.find_by_ids([id], **kwargs)
+        return ids[0] if ids else None
 
-    @abstractmethod
     def find_by_ids(
-        self, ids: List[AssetId], visible_only=True
+        self, ids: List[AssetId], **kwargs
     ) -> List[Asset]:
         """Finds assets in list that are in the database.
 
@@ -58,10 +70,9 @@ class AssetRepository(DomainRepository):
         :returns: List of matching assets
         :rtype: List[Asset]
         """
-        raise NotImplementedError
+        return self._query(ids=ids, **kwargs)
 
-    @abstractmethod
-    def find_by_ownerid(self, uid: UserId) -> List[Asset]:
+    def find_by_ownerid(self, uid: UserId, **kwargs) -> List[Asset]:
         """Finds all the assets the user is owner of.
 
         :parameter uid: user ID
@@ -70,11 +81,11 @@ class AssetRepository(DomainRepository):
         :returns: List of matching assets
         :rtype: List[Asset]
         """
-        raise NotImplementedError
 
-    @abstractmethod
+        return self._query(owners=[uid], **kwargs)
+
     def find_by_id_and_ownerid(
-        self, aid: AssetId, uid: UserId
+        self, aid: AssetId, uid: UserId, **kwargs
     ) -> Optional[Asset]:
         """Finds all the assets the user is owner of.
 
@@ -86,10 +97,11 @@ class AssetRepository(DomainRepository):
         :returns: List of matching assets
         :rtype: List[Asset]
         """
-        raise NotImplementedError
+        ids = self._query(owners=[uid], ids=[aid], **kwargs)
+        return ids[0] if ids else None
 
     @abstractmethod
-    def delete_by_id(self, id: AssetId) -> None:
+    def delete(self, id: AssetId) -> None:
         """Deletes asset matching the ID.
 
         ATTENTION: if ID does not exist, it does not raise anything.

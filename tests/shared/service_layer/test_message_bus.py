@@ -48,6 +48,7 @@ class AggUoW(AbstractUnitOfWork):
         return super().__enter__()
 
     def _commit(self):
+        self.repo.commit()
         self.committed = True
         self.times_committed += 1
 

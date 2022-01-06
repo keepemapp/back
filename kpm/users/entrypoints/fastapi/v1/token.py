@@ -9,7 +9,7 @@ from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
-from kpm.shared.logging import logger
+from kpm.shared.log import logger
 from kpm.shared.security import salt_password, verify_password
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.memrepo import views

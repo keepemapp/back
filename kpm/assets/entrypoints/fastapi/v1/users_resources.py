@@ -1,4 +1,3 @@
-import random
 from fastapi import APIRouter, Depends, status
 from fastapi_pagination import Page, Params, paginate
 
@@ -37,7 +36,7 @@ router = APIRouter(
         status.HTTP_200_OK: {"model": Page[AssetResponse]},
     },
 )
-async def get_user_assets(
+async def get_current_user_assets(
     params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
@@ -92,7 +91,7 @@ async def get_assets_of_the_week(
         status.HTTP_200_OK: {"model": Page[ReleaseResponse]},
     },
 )
-async def get_user_releases(
+async def get_current_user_releases(
     params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),

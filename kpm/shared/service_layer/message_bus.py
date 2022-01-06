@@ -6,7 +6,7 @@ from typing import (Callable, Dict, List, NoReturn, Optional, Type, TypeVar,
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
 from kpm.shared.domain.model import RootAggregate
-from kpm.shared.logging import logger
+from kpm.shared.log import logger
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
 Message = Union[Command, Event]
