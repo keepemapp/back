@@ -9,6 +9,8 @@ from kpm.users.domain.repositories import KeepRepository
 def new_keep(cmd: cmds.RequestKeep, keep_uow: AbstractUnitOfWork):
     with keep_uow as uow:
         repo: KeepRepository = uow.repo
+        if repo.exists(UserId(cmd.requester), UserId(cmd.requested)):
+            raise model.DuplicatedKeepException()
         k = model.Keep(
             created_ts=cmd.timestamp,
             name_by_requester=cmd.name_by_requester,
@@ -23,6 +25,8 @@ def accept_keep(cmd: cmds.AcceptKeep, keep_uow: AbstractUnitOfWork):
     with keep_uow as uow:
         repo: KeepRepository = uow.repo
         k = repo.get(kid=DomainId(cmd.keep_id))
+        if cmd.by != k.requested.id:
+            raise model.KeepActionError()
         k.accept(cmd.name_by_requested, cmd.timestamp)
         uow.commit()
 

@@ -64,8 +64,7 @@ class NoValue(Enum):
 @unique
 class RootAggState(NoValue):
     ACTIVE = "active"
-    PENDING_VALIDATION = "pending_validation"
-    PENDING_FILE = "pending_file"
+    PENDING = "pending"
     HIDDEN = "hidden"
     INACTIVE = "inactive"
     REMOVED = "removed"

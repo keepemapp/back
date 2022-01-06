@@ -22,19 +22,21 @@ class ActivateUser(Command):
 @dataclass(frozen=True)
 class RequestKeep(Command):
     requester: str = required_field()
-    name_by_requester: str = required_field()
+    name_by_requester: str = None
     requested: str = required_field()
 
 
 @dataclass(frozen=True)
 class AcceptKeep(Command):
+    """User ID of the user who accepts the keep"""
+    by: str = required_field()
     keep_id: str = required_field()
-    name_by_requested: str = required_field()
+    name_by_requested: str = None
 
 
 @dataclass(frozen=True)
 class DeclineKeep(Command):
-    keep_id: str = required_field()
     """User ID of the user who declines the keep"""
     by: str = required_field()
+    keep_id: str = required_field()
     reason: Optional[str] = field(default="")

@@ -62,3 +62,11 @@ class TestKeepRepository(KeepRepository):
 
     def put(self, k: Keep):
         self._keeps.append(k)
+
+    def exists(self, user1: UserId, user2: UserId) -> bool:
+        for k in self._keeps:
+            cond1 = k.requester in (user1, user2)
+            cond2 = k.requested in (user1, user2)
+            if cond1 and cond2:
+                return True
+        return False

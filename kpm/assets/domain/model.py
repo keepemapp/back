@@ -51,7 +51,7 @@ class Asset(RootAggregate):
     id: AssetId = required_field()
     title: str = ""
     description: str = ""
-    state: RootAggState = RootAggState.PENDING_FILE
+    state: RootAggState = RootAggState.PENDING
 
     @staticmethod
     def _title_is_valid(name: str) -> bool:
@@ -79,10 +79,10 @@ class Asset(RootAggregate):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
     def is_visible(self) -> bool:
-        return self.state in [RootAggState.ACTIVE, RootAggState.PENDING_FILE]
+        return self.state in [RootAggState.ACTIVE, RootAggState.PENDING]
 
     def file_is_uploaded(self) -> bool:
-        return self.state == RootAggState.PENDING_FILE
+        return self.state == RootAggState.PENDING
 
     def upload_file(self, mod_ts: int):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)

@@ -34,7 +34,7 @@ router = APIRouter(
 
 def asset_to_response(asset_dict: Dict, token: AccessToken):
     resp = AssetResponse(**asset_dict)
-    if asset_dict.get("state") == RootAggState.PENDING_FILE.value:
+    if asset_dict.get("state") == RootAggState.PENDING.value:
         resp.upload_path = create_asset_upload_path(resp.id, token.subject)
     return resp
 
@@ -150,7 +150,7 @@ async def add_asset_file(
             detail="File type does not match",
         )
     await file_repo.create(a["file_location"], file)
-    bus.handle(cmds.UploadAssetFile(asset_id))
+    bus.handle(cmds.UploadAssetFile(asset_id=asset_id))
     return RedirectResponse(
         url=router.url_path_for("get_asset_file", asset_id=asset_id),
         status_code=status.HTTP_201_CREATED,

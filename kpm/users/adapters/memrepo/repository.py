@@ -3,9 +3,10 @@ import pickle
 from typing import Dict, List, Optional
 
 from kpm.settings import settings
+from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
-from kpm.users.domain.model import User
-from kpm.users.domain.repositories import UserRepository
+from kpm.users.domain.model import Keep, User
+from kpm.users.domain.repositories import KeepRepository, UserRepository
 
 Users = Dict[str, User]
 
@@ -58,3 +59,45 @@ class MemoryPersistedUserRepository(UserRepository):
                 r = pickle.load(f)
             return r
         return {}
+
+
+class KeepMemoryRepository(KeepRepository):
+    def __init__(self,
+                 dbfile=os.path.join(settings.DATA_FOLDER, "keepsrepo.pk"),
+    ):
+        super().__init__()
+        self.DB_FILE = dbfile
+        self._keeps: List[Keep] = self.__startup_db()
+
+    def all(self, user: UserId = None) -> List[Keep]:
+        if user:
+            return list(filter(
+                lambda k: user in (k.requester, k.requested),
+                self._keeps
+            ))
+        else:
+            return self._keeps
+
+    def get(self, kid: DomainId) -> Keep:
+        return next(filter(
+            lambda k: k.id == kid,
+            self._keeps
+        ), None)
+
+    def put(self, k: Keep):
+        self._keeps.append(k)
+
+    def __startup_db(self) -> List[Keep]:
+        if os.path.exists(self.DB_FILE):
+            with open(self.DB_FILE, "rb") as f:
+                r = pickle.load(f)
+            return r
+        return []
+
+    def exists(self, user1: UserId, user2: UserId) -> bool:
+        for k in self._keeps:
+            cond1 = k.requester in (user1, user2)
+            cond2 = k.requested in (user1, user2)
+            if cond1 and cond2:
+                return True
+        return False

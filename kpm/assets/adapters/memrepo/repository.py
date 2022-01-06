@@ -70,13 +70,10 @@ class MemoryAssetRepository(AssetRepository):
 
         # Sorting by order_by attribute
         if order_by:
-            print("sorting results ")
             is_reverse = order == "desc"
-            print("is reverse " + str(is_reverse))
             results.sort(
                 reverse=is_reverse, key=lambda a: getattr(a, order_by)
             )
-        print(results)
         return results
 
     def create(self, asset: Asset) -> NoReturn:

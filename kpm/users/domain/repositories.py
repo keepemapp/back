@@ -60,3 +60,7 @@ class KeepRepository(DomainRepository):
     @abstractmethod
     def get(self, kid: DomainId) -> Keep:
         raise NotImplementedError
+
+    @abstractmethod
+    def exists(self, user1: UserId, user2: UserId) -> bool:
+        raise NotImplementedError

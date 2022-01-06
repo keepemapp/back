@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     API_TOKEN: ApiRoute = ApiRoute(prefix="/token", tags=["authentication"])
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
+    API_KEEP_PATH: ApiRoute = ApiRoute(prefix="/me/keeps", tags=["users"])
 
     API_RELEASE: ApiRoute = ApiRoute(prefix="/releases", tags=["releases"])
     API_ASSET_BOTTLE: ApiRoute = ApiRoute("/in-a-bottle")

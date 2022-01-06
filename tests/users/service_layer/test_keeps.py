@@ -24,19 +24,41 @@ class TestKeepHandlers:
         for msg in history:
             bus.handle(msg)
 
-        cmd = cmds.RequestKeep(requester=uid1, requested=uid2,
-                               name_by_requester="MyFriend")
+        cmd = cmds.RequestKeep(requester=uid1, requested=uid2)
         bus.handle(cmd)
 
         # Then
         with bus.uows.get(model.Keep) as uow:
             repo: KeepRepository = uow.repo
             assert len(repo.all()) == 1
-            assert repo.all()[0].state == RootAggState.PENDING_VALIDATION
+            assert repo.all()[0].state == RootAggState.PENDING
 
     def test_can_only_accept_existing(self, bus):
         with pytest.raises(AttributeError):
-            cmd = cmds.AcceptKeep(keep_id="notexists", name_by_requested="")
+            cmd = cmds.AcceptKeep(keep_id="notexists", by="")
+            bus.handle(cmd)
+
+    def test_only_requested_can_accept(self, bus):
+        uid1 = "uid1"
+        uid2 = "uid2"
+        history = [
+            create_user_cmd(uid1),
+            create_user_cmd(uid2),
+            cmds.RequestKeep(requester=uid1, requested=uid2)
+        ]
+        for msg in history:
+            bus.handle(msg)
+        with bus.uows.get(model.Keep) as uow:
+            kid = uow.repo.all()[0].id.id
+
+        # When
+        with pytest.raises(model.KeepActionError):
+            cmd = cmds.AcceptKeep(keep_id=kid, by="another user")
+            bus.handle(cmd)
+
+        # When
+        with pytest.raises(model.KeepActionError):
+            cmd = cmds.AcceptKeep(keep_id=kid, by=uid1)
             bus.handle(cmd)
 
     def test_accepting_keep(self, bus):
@@ -45,8 +67,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2,
-                             name_by_requester="MyFriend")
+            cmds.RequestKeep(requester=uid1, requested=uid2)
         ]
         for msg in history:
             bus.handle(msg)
@@ -54,7 +75,7 @@ class TestKeepHandlers:
             kid = uow.repo.all()[0].id.id
 
         # When
-        cmd = cmds.AcceptKeep(keep_id=kid, name_by_requested="")
+        cmd = cmds.AcceptKeep(keep_id=kid, by=uid2)
         bus.handle(cmd)
 
         # Then
@@ -63,14 +84,36 @@ class TestKeepHandlers:
             assert len(repo.all()) == 1
             assert repo.all()[0].state == RootAggState.ACTIVE
 
+    def test_not_duplicating_requests(self, bus):
+        uid1 = "uid1"
+        uid2 = "uid2"
+        history = [
+            create_user_cmd(uid1),
+            create_user_cmd(uid2),
+            cmds.RequestKeep(requester=uid1, requested=uid2)
+        ]
+        for msg in history:
+            bus.handle(msg)
+        with bus.uows.get(model.Keep) as uow:
+            kid = uow.repo.all()[0].id.id
+
+        # When
+        cmd = cmds.RequestKeep(requester=uid1, requested=uid2)
+        with pytest.raises(model.DuplicatedKeepException):
+            bus.handle(cmd)
+
+        # Then
+        with bus.uows.get(model.Keep) as uow:
+            repo: KeepRepository = uow.repo
+            assert len(repo.all()) == 1
+
     def test_declining_keep(self, bus):
         uid1 = "uid1"
         uid2 = "uid2"
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2,
-                             name_by_requester="MyFriend")
+            cmds.RequestKeep(requester=uid1, requested=uid2)
         ]
         for msg in history:
             bus.handle(msg)
@@ -95,8 +138,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2,
-                             name_by_requester="MyFriend")
+            cmds.RequestKeep(requester=uid1, requested=uid2)
         ]
         for msg in history:
             bus.handle(msg)
@@ -106,7 +148,7 @@ class TestKeepHandlers:
 
         # When
         with pytest.raises(model.KeepAlreadyDeclined):
-            bus.handle(cmds.AcceptKeep(keep_id=kid, name_by_requested=""))
+            bus.handle(cmds.AcceptKeep(keep_id=kid, by=uid2))
 
         # Then
         with bus.uows.get(model.Keep) as uow:

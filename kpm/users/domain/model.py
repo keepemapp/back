@@ -24,7 +24,7 @@ class User(RootAggregate):
     salt: str = field(default="", repr=False)
     password_hash: str = field(default="", repr=False)
     email: str = required_field()
-    state: RootAggState = field(default=RootAggState.PENDING_VALIDATION)
+    state: RootAggState = field(default=RootAggState.PENDING)
     roles: List[str] = field(default_factory=lambda: ["user"])
 
     @staticmethod
@@ -65,7 +65,7 @@ class User(RootAggregate):
         return self.state not in [RootAggState.ACTIVE]
 
     def is_pending_validation(self):
-        return self.state in [RootAggState.PENDING_VALIDATION]
+        return self.state in [RootAggState.PENDING]
 
     def erase_sensitive_data(self) -> User:
         return dataclasses.replace(self, salt="", password_hash="")
@@ -100,10 +100,10 @@ class Keep(RootAggregate):
     name_by_requested: Optional[str] = None
     declined_by: Optional[str] = None
     declined_reason: Optional[str] = None
-    state: RootAggState = field(default=RootAggState.PENDING_VALIDATION)
+    state: RootAggState = field(default=RootAggState.PENDING)
 
     def __post_init__(self):
-        if self.state == RootAggState.PENDING_VALIDATION:
+        if self.state == RootAggState.PENDING:
             self.events.append(
                 events.KeepRequested(
                     aggregate_id=self.id.id,
@@ -113,7 +113,7 @@ class Keep(RootAggregate):
             )
 
     def accept(self, name_by_requested: str, mod_ts: int = None):
-        if self.state != RootAggState.PENDING_VALIDATION:
+        if self.state != RootAggState.PENDING:
             if self.state == RootAggState.ACTIVE:
                 return
             else:
@@ -153,6 +153,16 @@ class Keep(RootAggregate):
             )
 
 
+class DuplicatedKeepException(Exception):
+    def __init__(self, msg="This keep was already created"):
+        self.msg = msg
+
+
 class KeepAlreadyDeclined(Exception):
     def __init__(self, msg="This keep was already declined"):
+        self.msg = msg
+
+
+class KeepActionError(Exception):
+    def __init__(self, msg="Error acting on a keep"):
         self.msg = msg
