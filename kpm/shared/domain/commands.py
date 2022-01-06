@@ -1,13 +1,14 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import NoReturn
 
 from kpm.shared.domain.repository import DomainRepository
+from kpm.shared.domain.time_utils import now_utc_millis
 
 
 @dataclass(frozen=True)
 class Command:
-    pass
+    timestamp: int = field(default_factory=now_utc_millis)
 
 
 class UseCase(ABC):

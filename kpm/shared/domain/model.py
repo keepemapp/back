@@ -26,7 +26,7 @@ class TransferId(DomainId):
 
 @dataclass
 class Entity:
-    id: DomainId = init_id(DomainId)
+    id: DomainId = field(default_factory= lambda: init_id(DomainId), hash=True)
 
     def _id_type_is_valid(self, t: Type[DomainId], field: DomainId = None):
         """Raises Error if types do not match
@@ -71,6 +71,13 @@ class RootAggState(NoValue):
     REMOVED = "removed"
 
 
+NOT_VISIBLE_STATES = [
+    RootAggState.HIDDEN,
+    RootAggState.INACTIVE,
+    RootAggState.REMOVED
+]
+
+
 @dataclass
 class RootAggregate(Entity):
     """Base class with parameters that will need to be overwritten"""
@@ -91,12 +98,20 @@ class RootAggregate(Entity):
         """
         return self._events
 
-    def _update_field(self, mod_ts: int, field: str, value):
+    def _update_field(self, mod_ts: int, field: str, value) -> bool:
+        """Updates a field and returns true if updated successfully
+
+        It does not update it if mod_ts is older than the latest update for
+        that field.
+        """
         if mod_ts is None:
             mod_ts = now_utc_millis()
-        if mod_ts >= self._modified_ts_for(field):
+        is_newer = mod_ts >= self._modified_ts_for(field)
+        if is_newer:
             setattr(self, field, value)
             self.modified_ts[field] = mod_ts
+            return True
+        return False
 
     def _modified_ts_for(self, field: str):
         return self.modified_ts.get(field, self.created_ts)
@@ -107,6 +122,9 @@ class RootAggregate(Entity):
             return max(self.modified_ts.values())
         else:
             return None
+
+    def is_visible(self):
+        return self.state not in NOT_VISIBLE_STATES
 
 
 @dataclass(frozen=True, eq=True)

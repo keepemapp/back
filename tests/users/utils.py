@@ -1,8 +1,9 @@
 from typing import Dict, List, Optional
 
+from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
-from kpm.users.domain.model import User
-from kpm.users.domain.repositories import UserRepository
+from kpm.users.domain.model import Keep, User
+from kpm.users.domain.repositories import KeepRepository, UserRepository
 
 Users = Dict[str, User]
 
@@ -37,3 +38,27 @@ class MemoryUserRepository(UserRepository):
 
     def empty(self) -> bool:
         return True if not self._users else False
+
+
+class TestKeepRepository(KeepRepository):
+    def __init__(self):
+        super().__init__()
+        self._keeps: List[Keep] = []
+
+    def all(self, user: UserId = None) -> List[Keep]:
+        if user:
+            return list(filter(
+                lambda k: user in (k.requester, k.requested),
+                self._keeps
+            ))
+        else:
+            return self._keeps
+
+    def get(self, kid: DomainId) -> Keep:
+        return next(filter(
+            lambda k: k.id == kid,
+            self._keeps
+        ), None)
+
+    def put(self, k: Keep):
+        self._keeps.append(k)

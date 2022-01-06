@@ -3,7 +3,7 @@ from __future__ import annotations
 import dataclasses
 import re
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 
 from kpm.shared.domain import required_field
 from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
@@ -21,8 +21,8 @@ INVALID_EMAIL = "Email is not valid"
 class User(RootAggregate):
     id: UserId = required_field()
     username: str = required_field()
-    salt: str = ""
-    password_hash: str = ""
+    salt: str = field(default="", repr=False)
+    password_hash: str = field(default="", repr=False)
     email: str = required_field()
     state: RootAggState = field(default=RootAggState.PENDING_VALIDATION)
     roles: List[str] = field(default_factory=lambda: ["user"])
@@ -45,14 +45,18 @@ class User(RootAggregate):
             raise ValueError(INVALID_EMAIL)
         self.events.append(
             events.UserRegistered(
-                aggregate_id=self.id,
+                aggregate_id=self.id.id,
                 username=self.username,
                 email=self.email,
             )
         )
 
     def activate(self, mod_ts: int = None):
-        self._update_field(mod_ts, "state", RootAggState.ACTIVE)
+        is_updated = self._update_field(mod_ts, "state", RootAggState.ACTIVE)
+        if is_updated:
+            self.events.append(
+                events.UserActivated(aggregate_id=self.id.id)
+            )
 
     def disable(self, mod_ts: int = None):
         self._update_field(mod_ts, "state", RootAggState.INACTIVE)
@@ -64,7 +68,7 @@ class User(RootAggregate):
         return self.state in [RootAggState.PENDING_VALIDATION]
 
     def erase_sensitive_data(self) -> User:
-        return dataclasses.replace(self, salt=None, password_hash=None)
+        return dataclasses.replace(self, salt="", password_hash="")
 
     def change_password_hash(self, new_password_hash):
         return dataclasses.replace(self, password_hash=new_password_hash)
@@ -85,4 +89,70 @@ class EmailAlreadyExistsException(Exception):
 
 class UsernameAlreadyExistsException(Exception):
     def __init__(self, msg="Username already exists"):
+        self.msg = msg
+
+
+@dataclass
+class Keep(RootAggregate):
+    requester: UserId = required_field()
+    requested: UserId = required_field()
+    name_by_requester: str = required_field()
+    name_by_requested: Optional[str] = None
+    declined_by: Optional[str] = None
+    declined_reason: Optional[str] = None
+    state: RootAggState = field(default=RootAggState.PENDING_VALIDATION)
+
+    def __post_init__(self):
+        if self.state == RootAggState.PENDING_VALIDATION:
+            self.events.append(
+                events.KeepRequested(
+                    aggregate_id=self.id.id,
+                    requester=self.requester.id,
+                    requested=self.requested.id,
+                )
+            )
+
+    def accept(self, name_by_requested: str, mod_ts: int = None):
+        if self.state != RootAggState.PENDING_VALIDATION:
+            if self.state == RootAggState.ACTIVE:
+                return
+            else:
+                raise KeepAlreadyDeclined()
+
+        self._update_field(mod_ts, "name_by_requested", name_by_requested)
+        is_updated = self._update_field(mod_ts, "state", RootAggState.ACTIVE)
+        if is_updated:
+            self.events.append(
+                events.KeepAccepted(
+                    aggregate_id=self.id.id,
+                    requester=self.requester.id,
+                    requested=self.requested.id,
+                )
+            )
+
+    def decline(self, by_id: UserId, reason: str = "", mod_ts: int = None):
+        if by_id == self.requester:
+            declined_by_value = "requester"
+        elif by_id == self.requested:
+            declined_by_value = "requested"
+        else:
+            raise ValueError("User declining it is not part of this keep.")
+
+        was_accepted = self.state == RootAggState.ACTIVE
+        is_updated = self._update_field(mod_ts, "state", RootAggState.REMOVED)
+        if is_updated:
+            self._update_field(mod_ts, "declined_by", declined_by_value)
+            self._update_field(mod_ts, "declined_reason", reason)
+            self.events.append(
+                events.KeepDeclined(
+                    aggregate_id=self.id.id,
+                    was_accepted=was_accepted,
+                    requester=self.requester.id,
+                    requested=self.requested.id,
+                )
+            )
+
+
+class KeepAlreadyDeclined(Exception):
+    def __init__(self, msg="This keep was already declined"):
         self.msg = msg
