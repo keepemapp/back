@@ -8,7 +8,7 @@ from kpm.shared.service_layer import message_bus as mb
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
 
-class TestEvent(Event):
+class DummyEvent(Event):
     pass
 
 
@@ -17,7 +17,7 @@ class Agg1(RootAggregate):
         return hash(self.id)
 
     def trigger_event(self):
-        self._events.append(TestEvent())
+        self._events.append(DummyEvent())
 
 
 class Agg2(RootAggregate):
@@ -82,7 +82,7 @@ class TestUoWs:
         assert len(uows.collect_new_events()) == 0
 
 
-class TestCommand(Command):
+class DummyCommand(Command):
     pass
 
 
@@ -100,31 +100,31 @@ class TestMessageBus:
     def test_events(self):
         uow = AggUoW()
         uows = mb.UoWs({Agg1: uow})
-        EVENT_HANDLERS = {TestEvent: [lambda event: handler(event, uow)]}
+        EVENT_HANDLERS = {DummyEvent: [lambda event: handler(event, uow)]}
         COMMAND_HANDLERS = {}
         bus = mb.MessageBus(uows, EVENT_HANDLERS, COMMAND_HANDLERS)
 
-        bus.handle(TestEvent())
+        bus.handle(DummyEvent())
         assert uow.times_committed == 1
 
     def test_commands(self):
         uow = AggUoW()
         uows = mb.UoWs({Agg1: uow})
         EVENT_HANDLERS = {}
-        COMMAND_HANDLERS = {TestCommand: lambda event: handler(event, uow)}
+        COMMAND_HANDLERS = {DummyCommand: lambda event: handler(event, uow)}
         bus = mb.MessageBus(uows, EVENT_HANDLERS, COMMAND_HANDLERS)
 
-        bus.handle(TestCommand())
+        bus.handle(DummyCommand())
         assert uow.times_committed == 1
 
     def test_reacts_to_generated_events(self):
         uow = AggUoW()
         uows = mb.UoWs({Agg1: uow})
-        EVENT_HANDLERS = {TestEvent: [lambda event: handler(event, uow)]}
+        EVENT_HANDLERS = {DummyEvent: [lambda event: handler(event, uow)]}
         COMMAND_HANDLERS = {
-            TestCommand: lambda event: handler(event, uow, True)
+            DummyCommand: lambda event: handler(event, uow, True)
         }
         bus = mb.MessageBus(uows, EVENT_HANDLERS, COMMAND_HANDLERS)
 
-        bus.handle(TestCommand())
+        bus.handle(DummyCommand())
         assert uow.times_committed == 2

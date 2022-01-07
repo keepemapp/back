@@ -121,7 +121,7 @@ class TestKeepHandlers:
             kid = uow.repo.all()[0].id.id
 
         # When
-        with pytest.raises(ValueError):
+        with pytest.raises(model.KeepActionError):
             bus.handle(cmds.DeclineKeep(keep_id=kid, by="otherUs", reason=""))
 
         # When

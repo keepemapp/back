@@ -35,4 +35,6 @@ def decline_keep(cmd: cmds.DeclineKeep, keep_uow: AbstractUnitOfWork):
     with keep_uow as uow:
         repo: KeepRepository = uow.repo
         k = repo.get(kid=DomainId(cmd.keep_id))
+        if cmd.by not in (k.requested.id, k.requester.id):
+            raise model.KeepActionError()
         k.decline(UserId(cmd.by), cmd.reason, cmd.timestamp)

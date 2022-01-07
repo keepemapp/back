@@ -40,6 +40,8 @@ def credentials_id(user_id: str, bus: MessageBus) -> User:
 def keep_to_flat_dict(k: Keep):
     d = dict(flatdict.FlatDict(asdict(k), delimiter="_"))
     d["id"] = d.pop("id_id")
+    d["requested"] = d.pop("requested_id")
+    d["requester"] = d.pop("requester_id")
     d["state"] = d.pop("state").value
     d["modified_ts"] = k.last_modified()
     del d["_events"]
@@ -50,10 +52,12 @@ def user_keeps(bus: MessageBus, user_id: str = None,
                order_by: str = None, order: str = "asc", state: str = None):
     with bus.uows.get(Keep) as uow:
         repo: KeepRepository = uow.repo
-        keeps = repo.all(user_id)
+        keeps = repo.all(UserId(user_id))
+    if state:
+        keeps = [k for k in keeps if k.state.value == state.lower()]
     if order_by:
         is_reverse = order == "desc"
         keeps.sort(
             reverse=is_reverse, key=lambda a: getattr(a, order_by)
         )
-        return [keep_to_flat_dict(k) for k in keeps]
+    return [keep_to_flat_dict(k) for k in keeps]

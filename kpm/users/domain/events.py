@@ -18,7 +18,7 @@ class UserActivated(Event):
 
 @dataclass(frozen=True)
 class KeepRequested(Event):
-    eventType: str = "keep_registered"
+    eventType: str = "keep_requested"
     requester: str = required_field()
     requested: str = required_field()
 

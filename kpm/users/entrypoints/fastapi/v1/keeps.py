@@ -34,7 +34,7 @@ async def list_keeps(
     bus: MessageBus = Depends(message_bus),
 ):
     keeps = views.user_keeps(bus, token.subject, order_by, order, state)
-    return paginate(keeps, paginate_params)
+    return paginate([schemas.KeepResponse(**k) for k in keeps], paginate_params)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -61,6 +61,7 @@ async def accept_keep(
     bus: MessageBus = Depends(message_bus),
 ):
     """Accepts the keep request"""
+    print("calling accept with token " + str(token))
     cmd = cmds.AcceptKeep(by=token.subject, keep_id=request.keep_id)
     try:
         bus.handle(cmd)

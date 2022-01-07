@@ -23,12 +23,19 @@ def app(bus) -> FastAPI:
 
 
 @pytest.fixture
-def admin_client(app) -> TestClient:
+def admin_client(bus) -> TestClient:
+    app = FastAPI(title="Admin client")
+    app.include_router(assets_router)
+    app.dependency_overrides[message_bus] = lambda: bus
     app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
     yield TestClient(app)
 
 
 @pytest.fixture
-def user_client(app) -> TestClient:
+def user_client(bus) -> TestClient:
+    app = FastAPI(title="User client")
+    app.include_router(assets_router)
+    app.dependency_overrides[message_bus] = lambda: bus
     app.dependency_overrides[get_access_token] = lambda: USER_TOKEN
     yield TestClient(app)
+
