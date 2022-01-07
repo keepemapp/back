@@ -47,18 +47,16 @@ class TestKeepRepository(KeepRepository):
 
     def all(self, user: UserId = None) -> List[Keep]:
         if user:
-            return list(filter(
-                lambda k: user in (k.requester, k.requested),
-                self._keeps
-            ))
+            return list(
+                filter(
+                    lambda k: user in (k.requester, k.requested), self._keeps
+                )
+            )
         else:
             return self._keeps
 
     def get(self, kid: DomainId) -> Keep:
-        return next(filter(
-            lambda k: k.id == kid,
-            self._keeps
-        ), None)
+        return next(filter(lambda k: k.id == kid, self._keeps), None)
 
     def put(self, k: Keep):
         self._keeps.append(k)

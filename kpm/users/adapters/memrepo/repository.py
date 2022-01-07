@@ -62,8 +62,9 @@ class MemoryPersistedUserRepository(UserRepository):
 
 
 class KeepMemoryRepository(KeepRepository):
-    def __init__(self,
-                 dbfile=os.path.join(settings.DATA_FOLDER, "keepsrepo.pk"),
+    def __init__(
+        self,
+        dbfile=os.path.join(settings.DATA_FOLDER, "keepsrepo.pk"),
     ):
         super().__init__()
         self.DB_FILE = dbfile
@@ -71,18 +72,16 @@ class KeepMemoryRepository(KeepRepository):
 
     def all(self, user: UserId = None) -> List[Keep]:
         if user:
-            return list(filter(
-                lambda k: user in (k.requester, k.requested),
-                self._keeps
-            ))
+            return list(
+                filter(
+                    lambda k: user in (k.requester, k.requested), self._keeps
+                )
+            )
         else:
             return self._keeps
 
     def get(self, kid: DomainId) -> Keep:
-        return next(filter(
-            lambda k: k.id == kid,
-            self._keeps
-        ), None)
+        return next(filter(lambda k: k.id == kid, self._keeps), None)
 
     def put(self, k: Keep):
         self._keeps.append(k)

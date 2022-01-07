@@ -26,7 +26,7 @@ class TransferId(DomainId):
 
 @dataclass
 class Entity:
-    id: DomainId = field(default_factory= lambda: init_id(DomainId), hash=True)
+    id: DomainId = field(default_factory=lambda: init_id(DomainId), hash=True)
 
     def _id_type_is_valid(self, t: Type[DomainId], field: DomainId = None):
         """Raises Error if types do not match
@@ -73,7 +73,7 @@ class RootAggState(NoValue):
 NOT_VISIBLE_STATES = [
     RootAggState.HIDDEN,
     RootAggState.INACTIVE,
-    RootAggState.REMOVED
+    RootAggState.REMOVED,
 ]
 
 

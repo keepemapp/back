@@ -63,10 +63,7 @@ class TestRegisterUser:
 
         assert "admin" not in create_resp.json()["roles"]
         assert "user" in create_resp.json()["roles"]
-        assert (
-            create_resp.json()["state"]
-            == RootAggState.PENDING.value
-        )
+        assert create_resp.json()["state"] == RootAggState.PENDING.value
 
     non_allowed_usernames = [
         "",

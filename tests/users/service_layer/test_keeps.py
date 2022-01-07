@@ -1,15 +1,16 @@
 import pytest
 
+import kpm.users.domain.model as model
 from kpm.shared.domain.model import RootAggState
 from kpm.users.domain import commands as cmds
-import kpm.users.domain.model as model
 from kpm.users.domain.repositories import KeepRepository
 from tests.users.fixtures import bus
 
 
 def create_user_cmd(uid: str = "1"):
-    return cmds.RegisterUser(username=uid, password=uid,
-                             email=f"{uid}@emailtest.com", user_id=uid)
+    return cmds.RegisterUser(
+        username=uid, password=uid, email=f"{uid}@emailtest.com", user_id=uid
+    )
 
 
 @pytest.mark.unit
@@ -44,7 +45,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2)
+            cmds.RequestKeep(requester=uid1, requested=uid2),
         ]
         for msg in history:
             bus.handle(msg)
@@ -67,7 +68,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2)
+            cmds.RequestKeep(requester=uid1, requested=uid2),
         ]
         for msg in history:
             bus.handle(msg)
@@ -90,7 +91,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2)
+            cmds.RequestKeep(requester=uid1, requested=uid2),
         ]
         for msg in history:
             bus.handle(msg)
@@ -113,7 +114,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2)
+            cmds.RequestKeep(requester=uid1, requested=uid2),
         ]
         for msg in history:
             bus.handle(msg)
@@ -138,7 +139,7 @@ class TestKeepHandlers:
         history = [
             create_user_cmd(uid1),
             create_user_cmd(uid2),
-            cmds.RequestKeep(requester=uid1, requested=uid2)
+            cmds.RequestKeep(requester=uid1, requested=uid2),
         ]
         for msg in history:
             bus.handle(msg)

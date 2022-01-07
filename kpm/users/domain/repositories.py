@@ -4,7 +4,7 @@ from typing import List, Optional, Set
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
 from kpm.shared.domain.repository import DomainRepository
-from kpm.users.domain.model import User, Keep
+from kpm.users.domain.model import Keep, User
 
 
 class UserRepository(DomainRepository):

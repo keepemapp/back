@@ -1,7 +1,7 @@
 from kpm.users.domain import commands as cmds
 from kpm.users.domain import events as events
-from kpm.users.service_layer import user_handler as uh
 from kpm.users.service_layer import keep_handler as kh
+from kpm.users.service_layer import user_handler as uh
 
 EVENT_HANDLERS = {
     events.UserRegistered: [uh.send_welcome_email],

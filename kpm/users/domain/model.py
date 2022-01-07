@@ -54,9 +54,7 @@ class User(RootAggregate):
     def activate(self, mod_ts: int = None):
         is_updated = self._update_field(mod_ts, "state", RootAggState.ACTIVE)
         if is_updated:
-            self.events.append(
-                events.UserActivated(aggregate_id=self.id.id)
-            )
+            self.events.append(events.UserActivated(aggregate_id=self.id.id))
 
     def disable(self, mod_ts: int = None):
         self._update_field(mod_ts, "state", RootAggState.INACTIVE)

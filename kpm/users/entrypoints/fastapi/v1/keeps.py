@@ -2,15 +2,15 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
 from kpm.settings import settings as s
-from kpm.shared.entrypoints.fastapi import query_params
 from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi import query_params
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.exceptions import FORBIDDEN_GENERIC
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
-from kpm.users.domain import commands as cmds
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.memrepo import views
+from kpm.users.domain import commands as cmds
 from kpm.users.domain.model import KeepActionError, KeepAlreadyDeclined
 from kpm.users.entrypoints.fastapi.v1.schemas import keeps as schemas
 
@@ -18,13 +18,16 @@ router = APIRouter(
     responses={
         status.HTTP_404_NOT_FOUND: {"description": "Not found"},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
-        status.HTTP_403_FORBIDDEN: {"model": HTTPError}
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
     **s.API_KEEP_PATH.dict(),
 )
 
 
-@router.get("")
+@router.get(
+    "",
+    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
+)
 async def list_keeps(
     order_by: str = query_params.order_by,
     order: str = query_params.order,
@@ -34,7 +37,9 @@ async def list_keeps(
     bus: MessageBus = Depends(message_bus),
 ):
     keeps = views.user_keeps(bus, token.subject, order_by, order, state)
-    return paginate([schemas.KeepResponse(**k) for k in keeps], paginate_params)
+    return paginate(
+        [schemas.KeepResponse(**k) for k in keeps], paginate_params
+    )
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)
@@ -78,8 +83,9 @@ async def decline_keep(
     bus: MessageBus = Depends(message_bus),
 ):
     """Decline a keep. Can be a pending request or one already accepted."""
-    cmd = cmds.DeclineKeep(by=token.subject, keep_id=request.keep_id,
-                           reason=request.reason)
+    cmd = cmds.DeclineKeep(
+        by=token.subject, keep_id=request.keep_id, reason=request.reason
+    )
     try:
         bus.handle(cmd)
     except KeepActionError:

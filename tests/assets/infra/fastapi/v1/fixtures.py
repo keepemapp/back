@@ -38,4 +38,3 @@ def user_client(bus) -> TestClient:
     app.dependency_overrides[message_bus] = lambda: bus
     app.dependency_overrides[get_access_token] = lambda: USER_TOKEN
     yield TestClient(app)
-

@@ -8,7 +8,6 @@ from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.entrypoints.fastapi.v1 import users_router
 from tests.users.fixtures import bus
 
-
 ADMIN_TOKEN = AccessToken(subject="admin", scopes=["user", "admin"])
 USER_TOKEN = AccessToken(subject="user", scopes=["user"])
 ATTACKER_TOKEN = AccessToken(subject="attacker", scopes=["user", "admin"])
@@ -56,5 +55,14 @@ def attacker_client(bus) -> TestClient:
     yield TestClient(app)
 
 
-__all__ = ["app", "client", "bus", "admin_client", "user_client",
-           "attacker_client", "ADMIN_TOKEN", "USER_TOKEN", "ATTACKER_TOKEN"]
+__all__ = [
+    "app",
+    "client",
+    "bus",
+    "admin_client",
+    "user_client",
+    "attacker_client",
+    "ADMIN_TOKEN",
+    "USER_TOKEN",
+    "ATTACKER_TOKEN",
+]

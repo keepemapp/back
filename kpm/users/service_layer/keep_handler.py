@@ -15,7 +15,7 @@ def new_keep(cmd: cmds.RequestKeep, keep_uow: AbstractUnitOfWork):
             created_ts=cmd.timestamp,
             name_by_requester=cmd.name_by_requester,
             requester=UserId(cmd.requester),
-            requested=UserId(cmd.requested)
+            requested=UserId(cmd.requested),
         )
         repo.put(k)
         uow.commit()
