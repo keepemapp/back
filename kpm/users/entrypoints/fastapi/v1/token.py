@@ -82,7 +82,7 @@ async def login_for_access_token(
         for requested_scope in form_data.scopes:
             if requested_scope not in user.roles:
                 raise ex.AUTH_SCOPE_MISMATCH
-    scopes = list(set(scopes).intersection(form_data.scopes))
+        scopes = list(set(scopes).intersection(form_data.scopes))
 
     access_token = AccessToken(subject=user.id.id, scopes=scopes, fresh=True)
     # TODO not create a new refresh token if one already exists

@@ -117,7 +117,8 @@ class TestKeepsApi:
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
-        # Finally, accept it
+        get_resp = attacker_client.get(KEEP_ROUTE.path()).json()
+        assert get_resp['total'] == 0
         resp = attacker_client.put(
             KEEP_ROUTE.concat("decline").path(),
             json=DeclineKeep(keep_id=keep_id, reason="323").dict(),

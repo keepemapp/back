@@ -18,7 +18,7 @@ order = Query(
 
 state = Query(
     None,
-    max_length=6,
+    max_length=10,
     regex=rf"^({RootAggState.PENDING.value}|{RootAggState.ACTIVE.value})$",
     description="Available options: 'pending' or 'active'",
 )

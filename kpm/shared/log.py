@@ -4,7 +4,7 @@ import pathlib
 
 cwd = pathlib.Path(__file__).parent.parent.resolve()
 logging.config.fileConfig(
-    os.path.join(cwd, "logging.conf"), disable_existing_loggers=False
+    os.path.join(cwd, "logging.conf"), disable_existing_loggers=True
 )
 logger = logging.getLogger("kpm")
-logger.error("loglevel=" + logging.getLevelName(logger.getEffectiveLevel()))
+logger.info("loglevel=" + logging.getLevelName(logger.getEffectiveLevel()))

@@ -1,10 +1,12 @@
 import os
+from os.path import dirname, join
 import random
 import string
 import time
 
 import uvicorn
 from fastapi import FastAPI
+from pyinstrument import Profiler
 from starlette.requests import Request
 
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
@@ -61,13 +63,16 @@ app.logger = logger
 async def log_requests(request: Request, call_next):
     idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     logger.info(
-        '{"rid":"%s", "method":"%s", "path": "%s"}',
+        '{"rid":"%s", "from": "%s", "method":"%s", "path": "%s"}',
         idem,
+        f"{request.client.host}:{request.client.port}",
         request.method,
         request.url.path,
     )
     start_time = time.time()
-
+    # if "profile" in request.query_params:
+    profiler = Profiler()
+    profiler.start()
     response = await call_next(request)
 
     process_time = (time.time() - start_time) * 1000
@@ -78,6 +83,14 @@ async def log_requests(request: Request, call_next):
         formatted_process_time,
         response.status_code,
     )
+
+    # if "profile" in request.query_params:
+    # TODO remove me for production
+    profiler.stop()
+    fname = join(dirname(dirname(__file__)), "profile.html")
+    logger.debug(f"Writing profile to {fname}")
+    with open(fname, "w") as f:
+        f.write(profiler.output_html())
 
     return response
 

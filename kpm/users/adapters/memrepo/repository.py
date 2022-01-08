@@ -33,11 +33,12 @@ class MemoryPersistedUserRepository(UserRepository):
     def create(self, user: User):
         self._users[user.id.id] = user
         self._seen.add(user)
-        self.__write_file()
 
     def update(self, user: User):
         self._users[user.id.id] = user
         self._seen.add(user)
+
+    def commit(self):
         self.__write_file()
 
     def exists_email(self, email: str) -> bool:
@@ -86,6 +87,9 @@ class KeepMemoryRepository(KeepRepository):
     def put(self, k: Keep):
         self._keeps.append(k)
 
+    def commit(self):
+        self.__write_file()
+
     def __startup_db(self) -> List[Keep]:
         if os.path.exists(self.DB_FILE):
             with open(self.DB_FILE, "rb") as f:
@@ -100,3 +104,7 @@ class KeepMemoryRepository(KeepRepository):
             if cond1 and cond2:
                 return True
         return False
+
+    def __write_file(self):
+        with open(self.DB_FILE, "wb") as f:
+            pickle.dump(self._keeps, f)
