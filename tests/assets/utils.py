@@ -39,7 +39,7 @@ class TestReleaseRepo(AssetReleaseRepository):
         self._repo[release.id] = release
         self._seen.add(release)
 
-    def get(self, release_id: DomainId) -> AssetRelease:
+    def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         return self._repo.get(release_id)
 
     def all(self) -> List[AssetRelease]:

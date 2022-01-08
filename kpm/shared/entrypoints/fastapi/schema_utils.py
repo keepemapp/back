@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, List, Type, TypeVar
+from typing import Any, List, Optional, Type, TypeVar
 
 from pydantic import BaseModel
 
@@ -25,7 +25,7 @@ def to_base_type(value: Any):
         return value
 
 
-def to_pydantic_model(entity: Entity, model: Type[T]) -> T:
+def to_pydantic_model(entity: Entity, model: Type[T]) -> Optional[T]:
     # TODO possibility to use inspect.signature(model).parameters
     if not entity:
         return None

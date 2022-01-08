@@ -34,6 +34,10 @@ format:
 lint:
 	$(BIN)/flake8 kpm
 
+.PHONY: typecheck
+typecheck:
+	$(BIN)/mypy kpm
+
 .PHONY: test-only
 test-only:
 	$(BIN)/pytest

@@ -7,7 +7,7 @@ from kpm.shared.domain.time_utils import now_utc_millis
 
 @dataclass(frozen=True)
 class Event:
-    eventType: str = required_field()
-    aggregate_id: IDT = required_field()
+    eventType: str = required_field()  # type: ignore
+    aggregate_id: IDT = required_field()  # type: ignore
     timestamp: int = field(default_factory=now_utc_millis)
     application: str = settings.APPLICATION_TECHNICAL_NAME

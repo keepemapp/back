@@ -7,3 +7,5 @@ isort
 autoflake
 requests
 pytest-pycharm
+mypy
+pyinstrument

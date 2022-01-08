@@ -8,10 +8,10 @@ from kpm.shared.domain.model import AssetId
 
 @dataclass(frozen=True)
 class CreateAsset(Command):
-    title: str = required_field()
-    owners_id: List[str] = required_field()
-    file_type: str = required_field()
-    file_name: str = required_field()
+    title: str = required_field()  # type: ignore
+    owners_id: List[str] = required_field()  # type: ignore
+    file_type: str = required_field()  # type: ignore
+    file_name: str = required_field()  # type: ignore
     description: Optional[str] = None
     tags: Optional[Set[str]] = None
     people: Optional[Set[str]] = None
@@ -31,7 +31,7 @@ class UpdateAssetFields(Command):
     form Asset._get_updatable_fields() ?
     """
 
-    asset_id: str = required_field()
+    asset_id: str = required_field()  # type: ignore
     title: Optional[str] = None
     description: Optional[str] = None
     tags: Optional[Set[str]] = None
@@ -56,56 +56,57 @@ class UpdateAssetFields(Command):
 
 @dataclass(frozen=True)
 class CreateAssetInABottle(Command):
-    assets: List[str] = required_field()
+    assets: List[str] = required_field()  # type: ignore
     """UNIX timestamp in milliseconds"""
-    scheduled_date: int = required_field()
-    name: str = required_field()
-    receivers: List[str] = required_field()
-    owner: str = required_field()
+    scheduled_date: int = required_field()  # type: ignore
+    name: str = required_field()  # type: ignore
+    receivers: List[str] = required_field()  # type: ignore
+    owner: str = required_field()  # type: ignore
     description: str = None
     aggregate_id: str = field(default_factory=init_id().id)
 
 
 @dataclass(frozen=True)
 class CreateAssetToFutureSelf(Command):
-    assets: List[str] = required_field()
-    owner: str = required_field()
+    assets: List[str] = required_field()  # type: ignore
+    owner: str = required_field()  # type: ignore
     """UNIX timestamp in milliseconds"""
-    scheduled_date: int = required_field()
-    name: str = required_field()
+    scheduled_date: int = required_field()  # type: ignore
+    name: str = required_field()  # type: ignore
     description: str = None
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
 @dataclass(frozen=True)
 class TriggerRelease(Command):
-    aggregate_id: str = required_field()
+    aggregate_id: str = required_field()  # type: ignore
 
 
 @dataclass(frozen=True)
 class CancelRelease(Command):
-    aggregate_id: str = required_field()
+    aggregate_id: str = required_field()  # type: ignore
 
 
 @dataclass(frozen=True)
 class Stash(Command):
     """ """
 
-    asset_ids: List[str] = required_field()
-    location: Dict = required_field()  # TODO have a good location class
-    name: str = required_field()
-    description: str = required_field()
-    owner: str = required_field()
-    receivers: List[str] = required_field()
+    asset_ids: List[str] = required_field()  # type: ignore
+    # TODO have a good location class
+    location: Dict = required_field()  # type: ignore
+    name: str = required_field()  # type: ignore
+    description: str = required_field()  # type: ignore
+    owner: str = required_field()  # type: ignore
+    receivers: List[str] = required_field()  # type: ignore
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
 @dataclass(frozen=True)
 class CreateTimeCapsule(Command):
-    asset_ids: List[str] = required_field()
-    name: str = required_field()
-    description: str = required_field()
-    owners_id: List[str] = required_field()
+    asset_ids: List[str] = required_field()  # type: ignore
+    name: str = required_field()  # type: ignore
+    description: str = required_field()  # type: ignore
+    owners_id: List[str] = required_field()  # type: ignore
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
@@ -113,11 +114,11 @@ class CreateTimeCapsule(Command):
 class TransferAssets(Command):
     """"""
 
-    asset_ids: List[str] = required_field()
-    name: str = required_field()
-    owner: str = required_field()
-    receivers: List[str] = required_field()
-    description: str = None
+    asset_ids: List[str] = required_field()  # type: ignore
+    name: str = required_field()  # type: ignore
+    owner: str = required_field()  # type: ignore
+    receivers: List[str] = required_field()  # type: ignore
+    description: Optional[str] = None
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 
@@ -125,4 +126,4 @@ class TransferAssets(Command):
 class UploadAssetFile(Command):
     """Uploads an asset file"""
 
-    asset_id: str = required_field()
+    asset_id: str = required_field()  # type: ignore

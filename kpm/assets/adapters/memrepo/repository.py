@@ -1,7 +1,7 @@
 import os
 import pickle
 from pathlib import Path
-from typing import Dict, List, NoReturn, Set, Union
+from typing import Dict, List, NoReturn, Optional, Set, Union
 
 from kpm.assets.domain.model import (Asset, AssetRelease,
                                      DuplicatedAssetException)
@@ -173,7 +173,7 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
         self._seen.add(release)
         self.commit()
 
-    def get(self, release_id: DomainId) -> AssetRelease:
+    def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         return self._repo.get(release_id)
 
     def all(self) -> List[AssetRelease]:
@@ -181,7 +181,7 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
 
     def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
         result = []
-        for rid in self._owner_index.get(user_id):
+        for rid in self._owner_index.get(user_id, []):
             r = self.get(rid)
             if r.is_active():
                 result.append(r)
@@ -189,7 +189,7 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
 
     def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
         result = []
-        for rid in self._owner_index.get(user_id):
+        for rid in self._owner_index.get(user_id, []):
             r = self.get(rid)
             if r.is_past():
                 result.append(r)

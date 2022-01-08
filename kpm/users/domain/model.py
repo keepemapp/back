@@ -19,11 +19,11 @@ INVALID_EMAIL = "Email is not valid"
 
 @dataclass
 class User(RootAggregate):
-    id: UserId = required_field()
-    username: str = required_field()
+    id: UserId = required_field()  # type: ignore
+    username: str = required_field()  # type: ignore
     salt: str = field(default="", repr=False)
     password_hash: str = field(default="", repr=False)
-    email: str = required_field()
+    email: str = required_field()  # type: ignore
     state: RootAggState = field(default=RootAggState.PENDING)
     roles: List[str] = field(default_factory=lambda: ["user"])
 
@@ -92,9 +92,9 @@ class UsernameAlreadyExistsException(Exception):
 
 @dataclass
 class Keep(RootAggregate):
-    requester: UserId = required_field()
-    requested: UserId = required_field()
-    name_by_requester: str = required_field()
+    requester: UserId = required_field()  # type: ignore
+    requested: UserId = required_field()  # type: ignore
+    name_by_requester: str = required_field()  # type: ignore
     name_by_requested: Optional[str] = None
     declined_by: Optional[str] = None
     declined_reason: Optional[str] = None

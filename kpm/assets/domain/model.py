@@ -46,20 +46,21 @@ UIDT = Union[UserId, str]
 class Asset(RootAggregate):
     """ """
 
-    owners_id: List[UserId] = required_field()
-    file: FileData = required_field()
-    id: AssetId = required_field()
-    title: str = updatable_field(default="")
-    description: str = updatable_field(default="")
+    owners_id: List[UserId] = required_field()  # type: ignore
+    file: FileData = required_field()  # type: ignore
+    id: AssetId = required_field()  # type: ignore
+    title: str = updatable_field(default="")  # type: ignore
+    description: str = updatable_field(default="")  # type: ignore
     state: RootAggState = field(default=RootAggState.PENDING)
-    tags: Set[str] = updatable_field(default_factory=set)
-    people: Set[str] = updatable_field(default_factory=set)
+    tags: Set[str] = updatable_field(default_factory=set)  # type: ignore
+    people: Set[str] = updatable_field(default_factory=set)  # type: ignore
     """Optional String indicating the place where this asset happened"""
-    location: Optional[str] = updatable_field(default=None)
+    location: Optional[str] = updatable_field(default=None)  # type: ignore
     """Optional string to indicate the date where this asset happened"""
-    created_date: Optional[str] = updatable_field(default=None)
-    extra_private: bool = updatable_field(default=False)  # TODO change me
-    bookmarked: bool = updatable_field(default=False)
+    created_date: Optional[str] = updatable_field(default=None)  # type: ignore
+    # TODO change me
+    extra_private: bool = updatable_field(default=False)    # type: ignore
+    bookmarked: bool = updatable_field(default=False)  # type: ignore
 
     @staticmethod
     def _title_is_valid(name: str) -> bool:
@@ -162,13 +163,13 @@ class AssetRelease(RootAggregate):
     Only the owner of this event can act on it.
     """
 
-    name: str = required_field()
-    description: str = required_field()
-    owner: UserId = required_field()
-    receivers: List[UserId] = required_field()
-    assets: List[AssetId] = required_field()
-    conditions: List[ReleaseCondition] = required_field()
-    release_type: str = required_field()
+    name: str = required_field()  # type: ignore
+    description: str = required_field()  # type: ignore
+    owner: UserId = required_field()  # type: ignore
+    receivers: List[UserId] = required_field()  # type: ignore
+    assets: List[AssetId] = required_field()  # type: ignore
+    conditions: List[ReleaseCondition] = required_field()  # type: ignore
+    release_type: str = required_field()  # type: ignore
     id: DomainId = init_id(DomainId)
 
     def __post_init__(self):
