@@ -29,7 +29,9 @@ class EmailNotifications(AbstractNotifications):
         start = timer()
         self.server = smtplib.SMTP(host, port)
         self.server.noop()
-        print("smtp setup took (%.2f seconds passed)" % (timer() - start,))
+        logger.debug(
+            "smtp setup took (%.2f seconds passed)" % (timer() - start,)
+        )
         self.__pwd = str(
             base64.b64decode(s.EMAIL_SENDER_PASSWORD), "utf-8"
         ).replace("\n", "")
@@ -47,15 +49,15 @@ class EmailNotifications(AbstractNotifications):
         msg_body = message.as_string()
 
         self.server.starttls()
-        print(
+        logger.debug(
             "starttls started took (%.2f seconds passed)" % (timer() - start,)
         )
 
         self.server.login(s.EMAIL_SENDER_ADDRESS, self.__pwd)
 
-        print("login took (%.2f seconds passed)" % (timer() - start,))
+        logger.debug("login took (%.2f seconds passed)" % (timer() - start,))
         self.server.sendmail(s.EMAIL_SENDER_ADDRESS, destination, msg_body)
-        print("sending took (%.2f seconds passed)" % (timer() - start,))
+        logger.debug("sending took (%.2f seconds passed)" % (timer() - start,))
 
         logger.info(f"Email sent to '{destination}' with subject '{subject}'")
 

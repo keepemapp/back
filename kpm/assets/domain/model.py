@@ -1,13 +1,13 @@
-import dataclasses
 import re
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import List, Union
+from dataclasses import asdict, dataclass, field
+from typing import List, Optional, Set, Union
 
 from kpm.assets.domain.events import (AssetOwnershipChanged,
                                       AssetReleaseCanceled, AssetReleased,
                                       AssetReleaseScheduled)
-from kpm.shared.domain import DomainId, init_id, required_field
+from kpm.shared.domain import (DomainId, init_id, required_field,
+                               updatable_field)
 from kpm.shared.domain.model import (AssetId, RootAggregate, RootAggState,
                                      UserId, ValueObject)
 from kpm.shared.domain.time_utils import now_utc_millis
@@ -49,9 +49,17 @@ class Asset(RootAggregate):
     owners_id: List[UserId] = required_field()
     file: FileData = required_field()
     id: AssetId = required_field()
-    title: str = ""
-    description: str = ""
-    state: RootAggState = RootAggState.PENDING
+    title: str = updatable_field(default="")
+    description: str = updatable_field(default="")
+    state: RootAggState = field(default=RootAggState.PENDING)
+    tags: Set[str] = updatable_field(default_factory=set)
+    people: Set[str] = updatable_field(default_factory=set)
+    """Optional String indicating the place where this asset happened"""
+    location: Optional[str] = updatable_field(default=None)
+    """Optional string to indicate the date where this asset happened"""
+    created_date: Optional[str] = updatable_field(default=None)
+    extra_private: bool = updatable_field(default=False)  # TODO change me
+    bookmarked: bool = updatable_field(default=False)
 
     @staticmethod
     def _title_is_valid(name: str) -> bool:
@@ -80,9 +88,6 @@ class Asset(RootAggregate):
 
     def is_visible(self) -> bool:
         return self.state in [RootAggState.ACTIVE, RootAggState.PENDING]
-
-    def file_is_uploaded(self) -> bool:
-        return self.state == RootAggState.PENDING
 
     def upload_file(self, mod_ts: int):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
@@ -186,7 +191,7 @@ class AssetRelease(RootAggregate):
     def _conditons_dict(self):
         dict = {}
         for c in self.conditions:
-            dict.update(dataclasses.asdict(c))
+            dict.update(asdict(c))
         return dict
 
     def is_active(self) -> bool:

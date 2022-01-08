@@ -1,5 +1,5 @@
 from dataclasses import dataclass, field
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Set
 
 from kpm.shared.domain import init_id, required_field
 from kpm.shared.domain.commands import Command
@@ -13,9 +13,45 @@ class CreateAsset(Command):
     file_type: str = required_field()
     file_name: str = required_field()
     description: Optional[str] = None
+    tags: Optional[Set[str]] = None
+    people: Optional[Set[str]] = None
+    location: Optional[str] = None
+    created_date: Optional[str] = None
     asset_id: Optional[str] = field(
         default_factory=lambda: init_id(AssetId).id
     )
+    extra_private: Optional[bool] = None
+    bookmarked: Optional[bool] = None
+
+
+@dataclass(frozen=True)
+class UpdateAssetFields(Command):
+    """User updatable fields of Asset
+    TODO how to dynamically generate the fields of this class
+    form Asset._get_updatable_fields() ?
+    """
+
+    asset_id: str = required_field()
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[Set[str]] = None
+    people: Optional[Set[str]] = None
+    location: Optional[str] = None
+    created_date: Optional[str] = None
+    extra_private: Optional[bool] = None
+    bookmarked: Optional[bool] = None
+
+    def update_dict(self):
+        return {
+            "title": self.title,
+            "description": self.description,
+            "tags": self.tags,
+            "people": self.people,
+            "location": self.location,
+            "created_date": self.created_date,
+            "extra_private": self.extra_private,
+            "bookmarked": self.bookmarked,
+        }
 
 
 @dataclass(frozen=True)

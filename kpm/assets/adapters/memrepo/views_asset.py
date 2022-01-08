@@ -51,6 +51,16 @@ def find_by_id_and_owner(
         return asset_to_flat_dict(asset) if asset else None
 
 
+def owned_by(asset_id: str, user_id: str, bus: MessageBus = None) -> bool:
+    with bus.uows.get(Asset) as uow:
+        asset = uow.repo.find_by_id_and_ownerid(
+            AssetId(asset_id), UserId(user_id)
+        )
+        if asset:
+            return True
+    return False
+
+
 def are_assets_active(
     assets: List[str],
     uow: AssetUoW = None,
@@ -88,11 +98,11 @@ def find_by_ownerid(
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
     with bus.uows.get(Asset) as uow:
         assets = uow.repo.find_by_ownerid(UserId(user_id))
-        if len(assets < 1):
+        if len(assets) < 1:
             return []
         choosen: List[Asset] = random.sample(assets, 2)
         return [
-            {"id": a.id, "title": a.title, "file_type": a.file.type}
+            {"id": a.id.id, "title": a.title, "file_type": a.file.type}
             for a in choosen
         ]
 

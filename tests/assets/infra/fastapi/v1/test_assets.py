@@ -2,7 +2,8 @@ import pathlib
 from os.path import join
 from typing import List
 
-from kpm.assets.entrypoints.fastapi.v1.schemas import AssetCreate
+from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetCreate,
+                                                       AssetUpdatableFields)
 from kpm.settings import settings as s
 from tests.assets.infra.fastapi.v1.fixtures import *
 
@@ -109,7 +110,6 @@ class TestGetAssets:
 
         # When
         response = query_uas(user_client, "?order_by=title&order=desc")
-        print(response.text)
         assert response.status_code == 200
         # Then
         items = response.json()["items"]
@@ -152,6 +152,8 @@ class TestGetAssets:
         for owner in a.owners_id:
             assert True in (owner in oid for oid in resp["owners_id"])
         assert resp["title"] == a.title
+        assert not resp["bookmarked"]
+        assert not resp["extra_private"]
 
     def test_non_existing_asset_gives_unauthorized(self, user_client):
         response = user_client.get(ASSET_ROUTE + "/random-asset-id")
@@ -163,6 +165,66 @@ class TestGetAssets:
         aid1 = r1.headers["location"].split("/")[-2]
         response = user_client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
+
+
+@pytest.mark.unit
+class TestUpdateAsset:
+    @pytest.mark.parametrize(
+        "updates",
+        [
+            {"title": "newtitle"},
+            {"description": "newdescription"},
+            {"tags": ["tag1", "tag2"]},
+            {"people": ["user1", "sdewe"]},
+            {"extra_private": True},
+            {"extra_private": False},
+            {"bookmarked": True},
+            {"location": "some time", "created_date": "some place"},
+        ],
+    )
+    def test_update_title(self, user_client, updates):
+        _, r1 = create_asset(user_client, 0, [USER_TOKEN.subject])
+        aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
+
+        # When
+        update = AssetUpdatableFields(**updates)
+        user_client.patch(ASSET_ROUTE + "/" + aid1, json=update.dict())
+
+        # Then
+        final_asset = user_client.get(ASSET_ROUTE + "/" + aid1).json()
+        for field, value in updates.items():
+            if isinstance(value, list):
+                assert set(final_asset[field]) == set(value)
+            else:
+                assert final_asset[field] == value
+
+    def test_remove_tags(self, user_client):
+        _, r1 = create_asset(user_client, 0, [USER_TOKEN.subject])
+        aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
+        update = AssetUpdatableFields(tags=["tag1", "tag2"])
+        user_client.patch(ASSET_ROUTE + "/" + aid1, json=update.dict())
+
+        # When
+        update = AssetUpdatableFields(tags=[])
+        user_client.patch(ASSET_ROUTE + "/" + aid1, json=update.dict())
+
+        # Then
+        final_asset = user_client.get(ASSET_ROUTE + "/" + aid1).json()
+        assert set(final_asset["tags"]) == set([])
+
+    def test_remove_description(self, user_client):
+        _, r1 = create_asset(user_client, 0, [USER_TOKEN.subject])
+        aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
+        some_descr = AssetUpdatableFields(description="some_description")
+        user_client.patch(ASSET_ROUTE + "/" + aid1, json=some_descr.dict())
+
+        # When
+        no_descr = AssetUpdatableFields(description="")
+        user_client.patch(ASSET_ROUTE + "/" + aid1, json=no_descr.dict())
+
+        # Then
+        final_asset = user_client.get(ASSET_ROUTE + "/" + aid1).json()
+        assert final_asset["description"] == ""
 
 
 @pytest.mark.unit

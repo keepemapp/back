@@ -8,7 +8,22 @@ from kpm.settings import settings
 from kpm.shared.entrypoints.fastapi.schemas import Links
 
 
-class AssetBase(BaseModel):
+class AssetUpdatableFields(BaseModel):
+    """Updatable fields of Asset"""
+
+    title: Optional[str] = None
+    description: Optional[str] = None
+    tags: Optional[List[str]] = None
+    people: Optional[List[str]] = None
+    location: Optional[str] = None
+    created_date: Optional[str] = None
+    """Default value at creation: False"""
+    extra_private: Optional[bool] = None
+    """Default value at creation: False"""
+    bookmarked: Optional[bool] = None
+
+
+class AssetBase(AssetUpdatableFields):
     title: str
     description: str
     """Optional. If no owners are specified, the calling user is added"""

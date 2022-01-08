@@ -99,10 +99,6 @@ class TestKeepsApi:
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
-        print(user_client)
-        print(admin_client)
-        print(user_client.get(s.API_V1.concat("me").path()).json())
-        print(admin_client.get(s.API_V1.concat("me").path()).json())
         # Finally, accept it
         admin_r = admin_client.put(
             KEEP_ROUTE.concat("accept").path(),

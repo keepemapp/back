@@ -25,8 +25,7 @@ router = APIRouter(
 
 
 @router.get(
-    "",
-    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
+    "", responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
 )
 async def list_keeps(
     order_by: str = query_params.order_by,
@@ -66,7 +65,6 @@ async def accept_keep(
     bus: MessageBus = Depends(message_bus),
 ):
     """Accepts the keep request"""
-    print("calling accept with token " + str(token))
     cmd = cmds.AcceptKeep(by=token.subject, keep_id=request.keep_id)
     try:
         bus.handle(cmd)

@@ -26,16 +26,12 @@ router = APIRouter(
     s.API_USER_PATH.concat("me", s.API_ASSET_PATH).path(),
     deprecated=True,
     tags=s.API_ASSET_PATH.tags,
-    responses={
-        status.HTTP_200_OK: {"model": Page[AssetResponse]},
-    },
+    responses={status.HTTP_200_OK: {"model": Page[AssetResponse]}},
 )
 @router.get(
     "/me" + s.API_ASSET_PATH.prefix,
     tags=s.API_ASSET_PATH.tags,
-    responses={
-        status.HTTP_200_OK: {"model": Page[AssetResponse]},
-    },
+    responses={status.HTTP_200_OK: {"model": Page[AssetResponse]}},
 )
 async def get_current_user_assets(
     order_by: str = Query(
@@ -106,16 +102,12 @@ async def get_assets_of_the_week(
     s.API_USER_PATH.concat("me", s.API_RELEASE).path(),
     deprecated=True,
     tags=s.API_RELEASE.tags,
-    responses={
-        status.HTTP_200_OK: {"model": Page[ReleaseResponse]},
-    },
+    responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
 )
 @router.get(
     "/me" + s.API_RELEASE.prefix,
     tags=s.API_RELEASE.tags,
-    responses={
-        status.HTTP_200_OK: {"model": Page[ReleaseResponse]},
-    },
+    responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
 )
 async def get_current_user_releases(
     params: Params = Depends(),

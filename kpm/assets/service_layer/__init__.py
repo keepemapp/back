@@ -11,6 +11,7 @@ EVENT_HANDLERS = {
 }
 COMMAND_HANDLERS = {
     cmds.CreateAsset: ah.create_asset,
+    cmds.UpdateAssetFields: ah.update_asset_fields,
     cmds.UploadAssetFile: ah.asset_file_upload,
     cmds.CreateAssetToFutureSelf: th.create_asset_future_self,
     cmds.CreateTimeCapsule: th.create_time_capsule,

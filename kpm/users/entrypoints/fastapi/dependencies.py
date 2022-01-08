@@ -5,8 +5,4 @@ from kpm.users.domain.model import User
 
 
 def uows() -> UoWs:
-    return UoWs(
-        {
-            User: MemoryUoW(MemoryPersistedUserRepository),
-        }
-    )
+    return UoWs({User: MemoryUoW(MemoryPersistedUserRepository)})

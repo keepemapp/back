@@ -14,6 +14,7 @@ from kpm.assets.adapters.memrepo import views_asset
 from kpm.assets.entrypoints.fastapi.dependencies import asset_file_repository
 from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetCreate,
                                                        AssetResponse,
+                                                       AssetUpdatableFields,
                                                        AssetUploadAuthData)
 from kpm.settings import settings as s
 from kpm.shared.domain.model import RootAggState
@@ -57,7 +58,6 @@ async def add_asset(
 ):
     if not new_asset.owners_id:
         new_asset.owners_id = [token.subject]
-    print("asset owners ", new_asset.owners_id)
     if token.subject not in new_asset.owners_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -216,6 +216,38 @@ async def get_asset(
     a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
     if a:
         return asset_to_response(a, token)
+    else:
+        raise ex.FORBIDDEN_GENERIC
+
+
+@router.patch(
+    "/{asset_id}",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
+    },
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def update_asset_fields(
+    updates: AssetUpdatableFields,
+    asset_id: str,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    """
+    Idempotent update of asset fields
+    """
+    if views_asset.owned_by(asset_id, token.subject, bus=bus):
+        payload = updates.__dict__
+        payload = {k: v for k, v in payload.items() if v is not None}
+        if "tags" in payload.keys():
+            payload["tags"] = set(payload.get("tags") or [])
+        if "people" in payload.keys():
+            payload["people"] = set(payload.get("people") or [])
+        payload["asset_id"] = asset_id
+        cmd = cmds.UpdateAssetFields(**payload)
+
+        bus.handle(cmd)
     else:
         raise ex.FORBIDDEN_GENERIC
 

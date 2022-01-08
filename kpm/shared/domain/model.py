@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from enum import Enum, unique
-from typing import Dict, List, Optional, Type
+from typing import Any, Dict, List, Optional, Type
 
 from kpm.shared.domain import DomainId, IdTypeException, init_id
 from kpm.shared.domain.events import Event
@@ -79,7 +79,20 @@ NOT_VISIBLE_STATES = [
 
 @dataclass
 class RootAggregate(Entity):
-    """Base class with parameters that will need to be overwritten"""
+    """Base class with parameters that will need to be overwritten
+
+    Extend it as adding fields with values.
+
+    You can mark user updatable attributes adding the following content at
+    field definitions:
+
+    ```
+    field(..., metadata={'user_updatable': True})
+
+    from kpm.shared.domain import updatable_field
+    updatable_field(...)
+    ```
+    """
 
     _events: List[Event] = field(default_factory=list)
     created_ts: int = now_utc_millis()
@@ -96,6 +109,45 @@ class RootAggregate(Entity):
         :rtype: List[Event]
         """
         return self._events
+
+    def update_fields(self, mod_ts: int, updates: Dict[str, Any]):
+        """
+        Updates internal fields that can be directly changed by the user
+        :param mod_ts: when the change happens
+        :param updates: dict with field_name, new_value
+        """
+        updated_pairs = [kv for kv in updates.items() if kv[1] is not None]
+
+        for f, value in updated_pairs:
+            if f not in self._updatable_fields():
+                raise AttributeError(f"Attribute '{f}' is not user updatable.")
+            if not self.__isinstance(f, value):
+                raise TypeError(f"Attribute '{f}' updated with wrong type. ")
+        for f, value in updated_pairs:
+
+            self._update_field(mod_ts, f, value)
+
+    def __isinstance(self, field: str, value: Any) -> bool:
+        """Support for generic types in isinstance"""
+        target_type = self.__annotations__.get(field)
+        if "Set" in str(target_type):
+            target_type = set
+        elif "List" in str(target_type):
+            target_type = list
+        elif "Optional" in str(target_type):
+            target_type = target_type.__args__[0]
+        return isinstance(value, target_type)
+
+    def _updatable_fields(self):
+        """Returns the list of user updatable fields.
+
+        Those are the ones with the metadata `{'user_updatable': True}`
+        """
+        return [
+            f.name
+            for f in fields(self)
+            if f.metadata.get("user_updatable", False)
+        ]
 
     def _update_field(self, mod_ts: int, field: str, value) -> bool:
         """Updates a field and returns true if updated successfully

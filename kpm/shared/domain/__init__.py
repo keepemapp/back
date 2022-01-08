@@ -12,6 +12,21 @@ def required_field() -> Field:
     return field(default_factory=lambda: raise_err)
 
 
+def required_updatable_field() -> Field:
+    def raise_err():
+        raise TypeError()
+
+    return updatable_field(default_factory=lambda: raise_err)
+
+
+def updatable_field(**kwargs) -> Field:
+    if kwargs.get("metadata"):
+        kwargs["metadata"].update({"user_updatable": True})
+    else:
+        kwargs["metadata"] = {"user_updatable": True}
+    return field(**kwargs)
+
+
 @dataclass(frozen=True)
 class DomainId:
     id: str

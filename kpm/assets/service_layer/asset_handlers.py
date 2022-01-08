@@ -68,6 +68,14 @@ def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
         asset_uow.commit()
 
 
+def update_asset_fields(cmd: cmds.UpdateAssetFields, asset_uow: AssetUoW):
+    with asset_uow as uow:
+        a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=False)
+        a.update_fields(mod_ts=cmd.timestamp, updates=cmd.update_dict())
+        uow.repo.update(a)
+        uow.commit()
+
+
 def asset_file_upload(cmd: cmds.UploadAssetFile, asset_uow: AssetUoW):
     with asset_uow as uow:
         a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=False)
