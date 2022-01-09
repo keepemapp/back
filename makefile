@@ -27,8 +27,8 @@ $(VENV): requirements.txt
 
 .PHONY: format
 format:
+	$(BIN)/isort kpm tests --profile black
 	$(BIN)/black --line-length 79 kpm tests
-	$(BIN)/isort kpm tests
 
 .PHONY: lint
 lint:

@@ -12,10 +12,13 @@ from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.dependencies import get_current_active_user
 from kpm.users.adapters.memrepo import views
-from kpm.users.domain.model import (EmailAlreadyExistsException, User,
-                                    UsernameAlreadyExistsException)
-from kpm.users.entrypoints.fastapi.v1.schemas.users import (UserCreate,
-                                                            UserResponse)
+from kpm.users.domain.model import (
+    EmailAlreadyExistsException,
+    User,
+    UsernameAlreadyExistsException,
+    UserNotFound,
+)
+from kpm.users.entrypoints.fastapi.v1.schemas import users as schemas
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -27,24 +30,24 @@ router = APIRouter(
     s.API_USER_PATH.concat("me").path(),
     deprecated=True,
     responses={
-        status.HTTP_200_OK: {"model": UserResponse},
+        status.HTTP_200_OK: {"model": schemas.UserResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
 @router.get(
     "/me",
     responses={
-        status.HTTP_200_OK: {"model": UserResponse},
+        status.HTTP_200_OK: {"model": schemas.UserResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
     },
 )
 async def my_user(current_user: User = Depends(get_current_active_user)):
-    return to_pydantic_model(current_user, UserResponse)
+    return to_pydantic_model(current_user, schemas.UserResponse)
 
 
 @router.get(
     s.API_USER_PATH.path(),
-    responses={status.HTTP_200_OK: {"model": Page[UserResponse]}},
+    responses={status.HTTP_200_OK: {"model": Page[schemas.UserResponse]}},
     tags=["admin"],
 )
 async def get_all_users(
@@ -53,7 +56,10 @@ async def get_all_users(
     _: AccessToken = Depends(get_admin_token),
 ):
     return paginate(
-        [to_pydantic_model(u, UserResponse) for u in views.all_users(bus)],
+        [
+            to_pydantic_model(u, schemas.UserResponse)
+            for u in views.all_users(bus)
+        ],
         params,
     )
 
@@ -71,7 +77,7 @@ async def activate_user(
     """Endpoint to activate a user. If user is already active does nothing."""
     try:
         bus.handle(cmds.ActivateUser(user_id=user_id))
-    except KeyError:
+    except UserNotFound:
         raise ex.NOT_FOUND
     return
 
@@ -79,13 +85,13 @@ async def activate_user(
 @router.post(
     s.API_USER_PATH.path(),
     responses={
-        status.HTTP_201_CREATED: {"model": UserResponse},
+        status.HTTP_201_CREATED: {"model": schemas.UserResponse},
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
     },
 )
 def register_user(
-    new_user: UserCreate, bus: MessageBus = Depends(message_bus)
+    new_user: schemas.UserCreate, bus: MessageBus = Depends(message_bus)
 ):
     cmd = cmds.RegisterUser(
         username=new_user.username,
@@ -107,4 +113,50 @@ def register_user(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=str(e),
         )
-    return to_pydantic_model(views.by_id(cmd.user_id, bus), UserResponse)
+    return to_pydantic_model(
+        views.by_id(cmd.user_id, bus), schemas.UserResponse
+    )
+
+
+@router.patch(
+    "/me/change-password",
+    responses={
+        status.HTTP_200_OK: {},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+)
+async def change_password(
+    pwd_change: schemas.PasswordUpdate,
+    bus: MessageBus = Depends(message_bus),
+    token: AccessToken = Depends(get_admin_token),
+):
+    """Endpoint to activate a user. If user is already active does nothing."""
+
+    try:
+        bus.handle(
+            cmds.UpdateUserPassword(user_id=token.subject, **pwd_change.dict())
+        )
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return
+
+
+@router.patch(
+    "/me",
+    responses={
+        status.HTTP_200_OK: {},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+)
+async def update_user_attributes(
+    updates: schemas.UserUpdate,
+    bus: MessageBus = Depends(message_bus),
+    token: AccessToken = Depends(get_admin_token),
+):
+    """Endpoint to activate a user. If user is already active does nothing."""
+
+    try:
+        bus.handle(cmds.UpdateUser(user_id=token.subject, **updates.dict()))
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return

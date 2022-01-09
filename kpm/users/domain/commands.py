@@ -12,11 +12,28 @@ class RegisterUser(Command):
     password: str = required_field()  # type: ignore
     email: str = required_field()  # type: ignore
     user_id: Optional[str] = field(default_factory=lambda: init_id(UserId).id)
+    public_name: Optional[str] = None
 
 
 @dataclass(frozen=True)
 class ActivateUser(Command):
     user_id: str = required_field()  # type: ignore
+
+
+@dataclass(frozen=True)
+class UpdateUser(Command):
+    user_id: str = required_field()  # type: ignore
+    public_name: Optional[str] = None
+
+    def update_dict(self):
+        return {"public_name": self.public_name}
+
+
+@dataclass(frozen=True)
+class UpdateUserPassword(Command):
+    user_id: str = required_field()  # type: ignore
+    old_password: str = required_field()  # type: ignore
+    new_password: str = required_field()  # type: ignore
 
 
 @dataclass(frozen=True)

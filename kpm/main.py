@@ -1,8 +1,8 @@
 import os
-from os.path import dirname, join
 import random
 import string
 import time
+from os.path import dirname, join
 
 import uvicorn
 from fastapi import FastAPI

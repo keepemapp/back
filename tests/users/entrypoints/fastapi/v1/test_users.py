@@ -3,34 +3,39 @@ import pytest
 from kpm.settings import settings as s
 from kpm.shared.domain.model import RootAggState
 from kpm.users.domain.model import INVALID_USERNAME
-from kpm.users.entrypoints.fastapi.v1.schemas.users import UserCreate
+from kpm.users.entrypoints.fastapi.v1.schemas.users import (
+    PasswordUpdate,
+    UserCreate,
+    UserUpdate,
+)
 from tests.users.entrypoints.fastapi import *
 
 USER_PATH = s.API_V1.concat(s.API_USER_PATH)
-me_route = s.API_V1.concat("/me").path()
+ME_PATH = s.API_V1.concat("/me")
+me_route = ME_PATH.path()
 user_route: str = USER_PATH.path()
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix
 USER_PWD = "pwd"
 
 
-def create_user(client, user_num: int = 0):
-    user = UserCreate(
-        username=f"user{user_num}",
-        email=f"valid{user_num}@email.com",
-        password=USER_PWD,
-    )
+def create_direct_user(client, username, email):
+    user = UserCreate(username=username, email=email, password=USER_PWD)
     response = client.post(user_route, json=user.dict())
     assert response.status_code == 200
-
     return user, response
 
 
+def create_user(client, user_num: int = 0):
+    return create_direct_user(
+        client, f"user{user_num}", f"valid{user_num}@email.com"
+    )
+
+
 def create_active_user(client, user_num: int = 0):
-    user, create_resp = create_user(client, user_num)
     # activate_route = USER_PATH.concat(create_resp.json()["id"], "/activate")
     # activ_res = client.put(activate_route.path())
     # assert activ_res.status_code == 200
-    return user, create_resp
+    return create_user(client, user_num)
 
 
 @pytest.mark.unit
@@ -102,16 +107,43 @@ class TestRegisterUser:
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
 
-    def test_existing_email(self, client):
+    EQUIVALENT_EMAILS = [
+        ("valid@gmail.com", "valid@gmail.com"),
+        ("valid@gmail.com", "va.lid@gmail.com"),
+        ("v.alid@gmail.com", "valid@gmail.com"),
+        ("v.alid@gmail.com", "vali.d@gmail.com"),
+        ("v.alid@gmail.com", "vali.d@gmail.com"),
+    ]
+
+    @pytest.mark.parametrize("email_pairs", EQUIVALENT_EMAILS)
+    def test_existing_email(self, client, email_pairs):
         user = UserCreate(
-            username="user", email="valid@email.com", password="pwd"
+            username="user", email=email_pairs[0], password="pwd"
         )
         client.post(user_route, json=user.dict())
         user2 = UserCreate(
-            username="user2", email="valid@email.com", password="pwd"
+            username="user2", email=email_pairs[1], password="pwd"
         )
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
+
+    DIFFERENT_EMAILS = [
+        ("valid@hotmail.com", "va.lid@hotmail.com"),
+        ("valid@gmail.com", "valid@hotmail.com"),
+        ("valid@gmail.com", "val.id@hotmail.com"),
+    ]
+
+    @pytest.mark.parametrize("email_pairs", DIFFERENT_EMAILS)
+    def test_different_email(self, client, email_pairs):
+        user = UserCreate(
+            username="user", email=email_pairs[0], password="pwd"
+        )
+        client.post(user_route, json=user.dict())
+        user2 = UserCreate(
+            username="user2", email=email_pairs[1], password="pwd"
+        )
+        response = client.post(user_route, json=user2.dict())
+        assert response.status_code == 200
 
     def test_create_multiple(self, client):
         for i in range(10):
@@ -151,6 +183,51 @@ class TestGetUsers:
         assert response.json().get("user_id") == create_resp.json().get("id")
         assert "refresh_token" in response.json()
         assert "access_token" in response.json()
+
+    EQUIVALENT_EMAILS = [
+        ("valid@gmail.com", "valid@gmail.com"),
+        ("valid@gmail.com", "va.lid@gmail.com"),
+        ("v.alid@gmail.com", "valid@gmail.com"),
+        ("v.alid@gmail.com", "vali.d@gmail.com"),
+        ("v.alid@gmail.com", "vali.d@gmail.com"),
+    ]
+
+    @pytest.mark.parametrize("email_pairs", EQUIVALENT_EMAILS)
+    def test_login_dot_gmail_same_user(self, client, email_pairs):
+        create_direct_user(client, "userid", email_pairs[0])
+
+        response = client.post(
+            login_route,
+            data={"username": email_pairs[0], "password": USER_PWD},
+        )
+        assert response.status_code == 200
+
+        response = client.post(
+            login_route,
+            data={"username": email_pairs[1], "password": USER_PWD},
+        )
+        assert response.status_code == 200
+
+    DIFFERENT_EMAILS = [
+        ("valid@hotmail.com", "va.lid@hotmail.com"),
+        ("valid@gmail.com", "valid@hotmail.com"),
+        ("valid@gmail.com", "val.id@hotmail.com"),
+    ]
+
+    @pytest.mark.parametrize("email_pairs", DIFFERENT_EMAILS)
+    def test_login_dot_mail_different_users(self, client, email_pairs):
+        create_direct_user(client, "userid", email_pairs[0])
+        response = client.post(
+            login_route,
+            data={"username": email_pairs[0], "password": USER_PWD},
+        )
+        assert response.status_code == 200
+
+        response = client.post(
+            login_route,
+            data={"username": email_pairs[1], "password": USER_PWD},
+        )
+        assert response.status_code == 401
 
     def test_successful_login_returns_user_id(self, client):
         user, resp1 = create_active_user(client)
@@ -205,3 +282,65 @@ class TestGetUsers:
         assert response.status_code == 200
         user_resp = response.json()
         assert user_resp == create_resp.json()
+
+
+@pytest.mark.unit
+class TestUserUpdates:
+    ATTR_UPDATES = [{"public_name": "new_public_name"}]
+
+    @pytest.mark.parametrize("updates", ATTR_UPDATES)
+    def test_update(self, client, updates):
+        user, create_resp = create_active_user(client, 343)
+        tok_log = client.post(
+            login_route, data={"username": user.email, "password": USER_PWD}
+        )
+        token = "Bearer " + str(tok_log.json().get("access_token"))
+
+        response = client.patch(
+            ME_PATH.path(),
+            json=UserUpdate(**updates).dict(),
+            headers={"Accept": "application/json", "Authorization": token},
+        )
+        assert response.status_code == 200
+
+        me = client.get(
+            me_route,
+            headers={"Accept": "application/json", "Authorization": token},
+        ).json()
+
+        for f, v in updates.items():
+            assert me[f] == v
+
+    OLD_NEW_PASSWORDS = [
+        (USER_PWD, "kasdjkns92mls-klñasd"),
+    ]
+
+    @pytest.mark.parametrize("passwords", OLD_NEW_PASSWORDS)
+    def test_update_password(self, client, passwords):
+        user, create_resp = create_active_user(client, 343)
+        tok_log = client.post(
+            login_route,
+            data={"username": user.email, "password": passwords[0]},
+        )
+        token = "Bearer " + str(tok_log.json().get("access_token"))
+
+        response = client.patch(
+            ME_PATH.concat("change-password").path(),
+            json=PasswordUpdate(
+                old_password=passwords[0], new_password=passwords[1]
+            ).dict(),
+            headers={"Accept": "application/json", "Authorization": token},
+        )
+        assert response.status_code == 200
+
+        login_old = client.post(
+            login_route,
+            data={"username": user.email, "password": passwords[0]},
+        )
+        assert login_old.status_code == 401
+
+        login_new = client.post(
+            login_route,
+            data={"username": user.email, "password": passwords[1]},
+        )
+        assert login_new.status_code == 200

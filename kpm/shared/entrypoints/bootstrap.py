@@ -1,8 +1,10 @@
 import inspect
 from typing import Callable, Dict, List, Type
 
-from kpm.shared.adapters.notifications import (AbstractNotifications,
-                                               NoNotifications)
+from kpm.shared.adapters.notifications import (
+    AbstractNotifications,
+    NoNotifications,
+)
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs

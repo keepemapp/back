@@ -1,7 +1,15 @@
 from __future__ import annotations
 
-from typing import (Callable, Dict, List, NoReturn, Optional, Type, TypeVar,
-                    Union)
+from typing import (
+    Callable,
+    Dict,
+    List,
+    NoReturn,
+    Optional,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event

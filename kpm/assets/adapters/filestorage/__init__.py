@@ -1,2 +1,3 @@
-from kpm.assets.adapters.filestorage.local_filesystem import \
-    AssetFileRepository
+from kpm.assets.adapters.filestorage.local_filesystem import (
+    AssetFileRepository,
+)

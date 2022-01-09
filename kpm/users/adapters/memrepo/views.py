@@ -5,7 +5,7 @@ import flatdict
 
 from kpm.shared.domain.model import UserId
 from kpm.shared.service_layer.message_bus import MessageBus
-from kpm.users.domain.model import Keep, User
+from kpm.users.domain.model import Keep, User, UserNotFound
 from kpm.users.domain.repositories import KeepRepository
 
 
@@ -23,18 +23,34 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
         return None
 
 
-def credentials_email(email: str, bus: MessageBus) -> User:
+def credentials_email(email: str, password: str, bus: MessageBus) -> User:
+    def is_email_equals(email1: str, email2: str):
+        if "@gmail" in email1:
+            return (
+                email1.replace(".", "").lower()
+                == email2.replace(".", "").lower()
+            )
+        else:
+            return email1.lower() == email2.lower()
+
     with bus.uows.get(User) as uow:
-        user = next(
-            (u for u in uow.repo.all() if u.email.lower() == email.lower()),
+        user: User = next(
+            (u for u in uow.repo.all() if is_email_equals(u.email, email)),
             None,
         )
+    if not user:
+        raise UserNotFound()
+    user.validate_password(password)
     return user
 
 
-def credentials_id(user_id: str, bus: MessageBus) -> User:
+def credentials_id(user_id: str, password: str, bus: MessageBus) -> User:
     with bus.uows.get(User) as uow:
-        return uow.repo.get(UserId(user_id))
+        user = uow.repo.get(UserId(user_id))
+    if not user:
+        raise UserNotFound()
+    user.validate_password(password)
+    return user
 
 
 def keep_to_flat_dict(k: Keep):

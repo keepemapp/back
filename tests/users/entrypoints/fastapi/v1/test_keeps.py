@@ -4,9 +4,11 @@ from kpm.settings import settings as s
 from kpm.shared.domain.model import UserId
 from kpm.users.domain.model import User
 from kpm.users.domain.repositories import UserRepository
-from kpm.users.entrypoints.fastapi.v1.schemas.keeps import (AcceptKeep,
-                                                            DeclineKeep,
-                                                            RequestKeep)
+from kpm.users.entrypoints.fastapi.v1.schemas.keeps import (
+    AcceptKeep,
+    DeclineKeep,
+    RequestKeep,
+)
 from tests.users.domain import active_user, valid_user
 from tests.users.entrypoints.fastapi import *
 
@@ -118,7 +120,7 @@ class TestKeepsApi:
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
         get_resp = attacker_client.get(KEEP_ROUTE.path()).json()
-        assert get_resp['total'] == 0
+        assert get_resp["total"] == 0
         resp = attacker_client.put(
             KEEP_ROUTE.concat("decline").path(),
             json=DeclineKeep(keep_id=keep_id, reason="323").dict(),

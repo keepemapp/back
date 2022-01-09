@@ -2,8 +2,10 @@ import pathlib
 from os.path import join
 from typing import List
 
-from kpm.assets.entrypoints.fastapi.v1.schemas import (AssetCreate,
-                                                       AssetUpdatableFields)
+from kpm.assets.entrypoints.fastapi.v1.schemas import (
+    AssetCreate,
+    AssetUpdatableFields,
+)
 from kpm.settings import settings as s
 from tests.assets.infra.fastapi.v1.fixtures import *
 

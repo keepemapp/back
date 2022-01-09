@@ -17,6 +17,7 @@ class TestUserRepo:
         r = MemoryPersistedUserRepository(dbfile=str(f))
         u = User(**active_user)
         r.create(u)
+        r.commit()
         assert len(r.all()) == 1
         assert f.exists()
 
@@ -38,9 +39,11 @@ class TestUserRepo:
         r = MemoryPersistedUserRepository(dbfile=str(f))
         u = User(**active_user)
         r.create(u)
+        r.commit()
 
         u.disable()
         r.update(u)
+        r.commit()
         r.get(u.id).is_disabled()
         assert len(r.all()) == 1
         assert r.get(u.id).is_disabled()

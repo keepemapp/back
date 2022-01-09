@@ -116,6 +116,7 @@ class RootAggregate(Entity):
         :param mod_ts: when the change happens
         :param updates: dict with field_name, new_value
         """
+        print("updating ", updates)
         updated_pairs = [kv for kv in updates.items() if kv[1] is not None]
 
         for f, value in updated_pairs:
@@ -128,15 +129,21 @@ class RootAggregate(Entity):
             self._update_field(mod_ts, f, value)
 
     def __isinstance(self, field: str, value: Any) -> bool:
-        """Support for generic types in isinstance"""
-        target_type = self.__annotations__.get(field)
-        if "Set" in str(target_type):
-            target_type = set
-        elif "List" in str(target_type):
-            target_type = list
-        elif "Optional" in str(target_type):
-            target_type = target_type.__args__[0]
-        return isinstance(value, target_type)
+        """Support for generic types in isinstance
+
+        TODO for now we deactivate it. There is a problem with annotations
+        https://stackoverflow.com/questions/66006087/how-to-use-typing-get-type-hints-with-pep585-in-python3-8  # noqa: E501
+        Let's go back when we support only python 3.9 or 3.10
+        """
+        # target_type = get_type_hints(self).get(field)
+        # if "Set" in str(target_type):
+        #     target_type = set
+        # elif "List" in str(target_type):
+        #     target_type = list
+        # elif "Optional" in str(target_type):
+        #     target_type = target_type.__args__[0]
+        # return isinstance(value, target_type)
+        return True
 
     def _updatable_fields(self):
         """Returns the list of user updatable fields.

@@ -5,8 +5,11 @@ import re
 from dataclasses import dataclass, field
 from typing import List, Optional
 
-from kpm.shared.domain import required_field
+import kpm.users.domain.commands as cmds
+from kpm.shared.domain import required_field, updatable_field
 from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
+from kpm.shared.log import logger
+from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain import events
 
 INVALID_USERNAME = (
@@ -21,6 +24,8 @@ INVALID_EMAIL = "Email is not valid"
 class User(RootAggregate):
     id: UserId = required_field()  # type: ignore
     username: str = required_field()  # type: ignore
+    """Name to be shown to other users"""
+    public_name: Optional[str] = updatable_field(default=None)  # type: ignore
     salt: str = field(default="", repr=False)
     password_hash: str = field(default="", repr=False)
     email: str = required_field()  # type: ignore
@@ -68,8 +73,22 @@ class User(RootAggregate):
     def erase_sensitive_data(self) -> User:
         return dataclasses.replace(self, salt="", password_hash="")
 
-    def change_password_hash(self, new_password_hash):
-        return dataclasses.replace(self, password_hash=new_password_hash)
+    def change_password_hash(self, cmd: cmds.UpdateUserPassword):
+        self.validate_password(cmd.old_password)
+
+        new_pwd = hash_password(salt_password(cmd.new_password, self.salt))
+        logger.info(f"Password updated for user '{self.id.id}'")
+        self._update_field(
+            mod_ts=cmd.timestamp, field="password_hash", value=new_pwd
+        )
+
+    def validate_password(self, password: str):
+        salted_pwd = salt_password(password, self.salt)
+        pwd_valid = verify_password(salted_pwd, self.password_hash)
+        if not pwd_valid:
+            logger.info(f"Password auth failure for user '{self.id.id}'")
+            raise MissmatchPasswordException()
+        logger.info(f"Password auth success for user '{self.id.id}'")
 
     def __hash__(self):
         return hash(self.id.id)
@@ -82,6 +101,11 @@ class MissmatchPasswordException(Exception):
 
 class EmailAlreadyExistsException(Exception):
     def __init__(self, msg="Email already exists"):
+        self.msg = msg
+
+
+class UserNotFound(KeyError):
+    def __init__(self, msg="User not found"):
         self.msg = msg
 
 

@@ -31,7 +31,16 @@ class MemoryUserRepository(UserRepository):
         self._users.clear()
 
     def exists_email(self, email: str) -> bool:
-        return any(u.email == email for u in self.all())
+        def is_email_equals(email1: str, email2: str):
+            if "@gmail" in email1:
+                return (
+                    email1.replace(".", "").lower()
+                    == email2.replace(".", "").lower()
+                )
+            else:
+                return email1.lower() == email2.lower()
+
+        return any(is_email_equals(u.email, email) for u in self.all())
 
     def exists_username(self, username: str) -> bool:
         return any(u.username == username for u in self.all())

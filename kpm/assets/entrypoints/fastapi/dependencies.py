@@ -1,6 +1,8 @@
 from kpm.assets.adapters.filestorage import AssetFileRepository
-from kpm.assets.adapters.memrepo import (MemoryPersistedAssetRepository,
-                                         MemPersistedReleaseRepo)
+from kpm.assets.adapters.memrepo import (
+    MemoryPersistedAssetRepository,
+    MemPersistedReleaseRepo,
+)
 from kpm.assets.domain import model
 from kpm.shared.adapters.memrepo import MemoryUoW
 from kpm.shared.service_layer.message_bus import UoWs

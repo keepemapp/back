@@ -1,15 +1,29 @@
+from __future__ import annotations
+
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, dataclass, field
 from typing import List, Optional, Set, Union
 
-from kpm.assets.domain.events import (AssetOwnershipChanged,
-                                      AssetReleaseCanceled, AssetReleased,
-                                      AssetReleaseScheduled)
-from kpm.shared.domain import (DomainId, init_id, required_field,
-                               updatable_field)
-from kpm.shared.domain.model import (AssetId, RootAggregate, RootAggState,
-                                     UserId, ValueObject)
+from kpm.assets.domain.events import (
+    AssetOwnershipChanged,
+    AssetReleaseCanceled,
+    AssetReleased,
+    AssetReleaseScheduled,
+)
+from kpm.shared.domain import (
+    DomainId,
+    init_id,
+    required_field,
+    updatable_field,
+)
+from kpm.shared.domain.model import (
+    AssetId,
+    RootAggregate,
+    RootAggState,
+    UserId,
+    ValueObject,
+)
 from kpm.shared.domain.time_utils import now_utc_millis
 
 
@@ -59,7 +73,7 @@ class Asset(RootAggregate):
     """Optional string to indicate the date where this asset happened"""
     created_date: Optional[str] = updatable_field(default=None)  # type: ignore
     # TODO change me
-    extra_private: bool = updatable_field(default=False)    # type: ignore
+    extra_private: bool = updatable_field(default=False)  # type: ignore
     bookmarked: bool = updatable_field(default=False)  # type: ignore
 
     @staticmethod

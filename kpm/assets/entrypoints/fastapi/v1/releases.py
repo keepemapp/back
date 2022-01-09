@@ -12,8 +12,10 @@ import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import (get_access_token,
-                                                             get_admin_token)
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
+    get_access_token,
+    get_admin_token,
+)
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 

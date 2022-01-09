@@ -9,31 +9,14 @@ from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
 from kpm.shared.log import logger
-from kpm.shared.security import salt_password, verify_password
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.memrepo import views
-from kpm.users.domain.model import User
+from kpm.users.domain.model import MissmatchPasswordException, User
 from kpm.users.entrypoints.fastapi.v1.schemas.token import LoginResponse
 
 router = APIRouter(
     responses={404: {"description": "Not found"}}, tags=["auth"]
 )
-
-
-def check_user(user: Optional[User], password: str):
-    """Validates user and its password"""
-    if not user:
-        raise ex.USER_CREDENTIALS_ER
-
-    salted_pwd = salt_password(password, user.salt)
-    password_is_valid = verify_password(salted_pwd, user.password_hash)
-
-    if password_is_valid:
-        logger.info(f"Auth success for user '{user.id.id}'")
-        return user
-    else:
-        logger.info(f"Auth failure for user '{user.id.id}'")
-        raise ex.USER_CREDENTIALS_ER
 
 
 def authenticate_by_email(
@@ -42,8 +25,12 @@ def authenticate_by_email(
     bus: MessageBus,
 ) -> Optional[User]:
     logger.info(f"Trying to authenticate email '{email}'")
-    user = views.credentials_email(email, bus)
-    return check_user(user, password)
+    try:
+        user = views.credentials_email(email, password, bus)
+    except (KeyError, MissmatchPasswordException):
+        raise ex.USER_CREDENTIALS_ER
+
+    return user
 
 
 def authenticate_by_id(
@@ -52,8 +39,12 @@ def authenticate_by_id(
     bus: MessageBus,
 ) -> Optional[User]:
     logger.info(f"Trying to authenticate user id '{user_id}'")
-    user = views.credentials_id(user_id, bus)
-    return check_user(user, password)
+    try:
+        user = views.credentials_id(user_id, password, bus)
+    except (KeyError, MissmatchPasswordException):
+        raise ex.USER_CREDENTIALS_ER
+
+    return user
 
 
 @router.post(s.API_TOKEN.path(), deprecated=True)
