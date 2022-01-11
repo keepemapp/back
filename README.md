@@ -20,13 +20,13 @@ Backend in python
 
 We divide the packages in:
 * Bounded context
-  * Domain
-     * entity
-     * use case (including domain events)
-  * Infrastructure (it has implementations with the frameworks)
-    * fastAPI
+  * Adapters (Contains databases, views, publishers, notifications code...)
     * memoryDatabase
-    * ...
+  * Domain
+  * entrypoints (it has implementations with the frameworks)
+    * fastAPI
+  * service_layer (command and event handlers)
+
 
 ````
 emo
@@ -58,28 +58,11 @@ emo
 │   └── service_layer
 │       ├── message_bus.py
 │       └── unit_of_work.py
-└── users # Still old structure. To be changes
+└── users
+    ├── adapters
     ├── domain
-    │   ├── entity
-    │   │   ├── user_repository.py
-    │   │   └── users.py
-    │   └── usecase
-    │       ├── change_user_password.py
-    │       ├── exceptions.py
-    │       ├── query_user.py
-    │       └── register_user.py
-    └── infra
-        ├── dependencies.py
-        ├── fastapi
-        │   └── v1
-        │       ├── schemas
-        │       │   ├── token.py
-        │       │   └── users.py
-        │       ├── token.py
-        │       └── users.py
-        └── memory
-            ├── message_bus.py
-            └── repository.py
+    ├── entrypoints
+    └── service_layer
 ````
 
 ## Testing and code cleaning
@@ -156,7 +139,7 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 |:warning: ALERT|
 |:--------------|
 |`POST` and `PUT` endpoints should never return data. If needed, just redirect to the `GET` endpoint with the corresponding HTTP code (201, 202, 203...). This is to respect Command Query Segregation principle (command ONLY modifies state and Query ONLY answers questions)|
-|EXCEPTION: login to obtain token|
+|**EXCEPTION**: login to obtain token|
 
 
 
@@ -164,7 +147,7 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 
 # TODOs
 
-* [ ] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
+* [X] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
   Either give them the publish_url or the view URL for the file when they do a `get` on the asset
 * [X] Test asset file upload and retrieval
 * Implement command responsibility segregation for POST APIs (do not return result and just redirect. See https://stackoverflow.com/questions/62119138/how-to-do-a-post-redirect-get-prg-in-fastapi)
@@ -174,14 +157,14 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
   * [ ] change database to a persistent one
   * [ ] Schema evolution in database and dataclasses. How to do it?
 * [ ] Clean DomainID mess. Pass it to UUID or string and use type class
-* [ ] Change folder structure to a one more DDD like (domain, services, infra)
-* [ ] Automatically add userID that makes the call to the create asset and transfers
+* [X] Change folder structure to a one more DDD like (domain, services, infra)
 * [X] Erase `emo/shared/infra/memrepo/message_bus.py`
 * Improve GET responses  
   * [X] Limit GET responses (paging, max items...)
-  * [ ] Allow ordering of responses (assets, releases...)
+  * [X] Allow ordering of responses (assets, releases...)
 * [X] Add Creation and modification date as API response for assets, transfers...
-* [ ] Auto-add owner to assets and releases if none is passed
+* [X] Automatically add userID that makes the call to the create asset and transfers
+* [X] Auto-add owner to assets and releases if none is passed
 * [ ] Add error messageID to the ones returned by the API (for translations)
 
 
