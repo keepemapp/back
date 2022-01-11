@@ -1,0 +1,51 @@
+= Motomo analytics
+
+Matomo is an open source privacy respecting analytics software
+
+
+== Local installation
+
+Pre-requisites:
+
+* Docker
+
+
+First let's create a mariadb container:
+
+[source, bash]
+----
+sudo docker run --detach --name matomo-db \
+-p 3306:3306 \
+--env MARIADB_USER=analiticskpm \
+--env MARIADB_DATABASE=matomo \
+--env MARIADB_PASSWORD="password" \
+--env MARIADB_ROOT_PASSWORD="root"  \
+mariadb:latest
+
+sudo docker run -d --name matomo \
+-p 7999:80 \
+--env MATOMO_DATABASE_HOST=db \
+--env MATOMO_DATABASE_TABLES_PREFIX=matomo_ \
+--env MATOMO_DATABASE_USERNAME=analiticskpm \
+--env MATOMO_DATABASE_PASSWORD=password \
+--env MATOMO_DATABASE_DBNAME=matomo \
+-v $HOME/matomo:/var/www/html \
+--link matomo-db:db matomo
+
+----
+
+NOTE: When configuring matomo use `db` as the database IP
+(since it's the alias for the container link).
+
+
+To import some example data, just run:
+[source, bash]
+----
+USER=""
+PW=""
+sudo docker run --rm --volumes-from="matomo" \
+--link matomo python:3.8-alpine \
+python /var/www/html/misc/log-analytics/import_logs.py \
+--url=matomo --login=$USER --password=$PW \
+--idsite=1 --recorders=4 /var/www/html/logs/access.log
+----
