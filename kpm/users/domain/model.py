@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import dataclasses
 import re
 from dataclasses import dataclass, field
@@ -70,7 +68,7 @@ class User(RootAggregate):
     def is_pending_validation(self):
         return self.state in [RootAggState.PENDING]
 
-    def erase_sensitive_data(self) -> User:
+    def erase_sensitive_data(self) -> 'User':
         return dataclasses.replace(self, salt="", password_hash="")
 
     def change_password_hash(self, cmd: cmds.UpdateUserPassword):

@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from dataclasses import dataclass, field, fields
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Type
@@ -40,7 +38,7 @@ class Entity:
         if not isinstance(field, t):
             raise IdTypeException()
 
-    def erase_sensitive_data(self) -> Entity:
+    def erase_sensitive_data(self) -> 'Entity':
         """
         Returns the entity with the sensitive data erased.
         Classes using it MUST implement it
