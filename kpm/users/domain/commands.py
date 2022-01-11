@@ -9,10 +9,10 @@ from kpm.shared.domain.model import UserId
 @dataclass(frozen=True)
 class RegisterUser(Command):
     username: str = required_field()  # type: ignore
-    password: str = required_field()  # type: ignore
-    email: str = required_field()  # type: ignore
+    password: str = required_field(repr=False)  # type: ignore
+    email: str = required_field(repr=False)  # type: ignore
     user_id: Optional[str] = field(default_factory=lambda: init_id(UserId).id)
-    public_name: Optional[str] = None
+    public_name: Optional[str] = field(default=None, repr=False)
 
 
 @dataclass(frozen=True)
@@ -32,8 +32,8 @@ class UpdateUser(Command):
 @dataclass(frozen=True)
 class UpdateUserPassword(Command):
     user_id: str = required_field()  # type: ignore
-    old_password: str = required_field()  # type: ignore
-    new_password: str = required_field()  # type: ignore
+    old_password: str = required_field(repr=False)  # type: ignore
+    new_password: str = required_field(repr=False)  # type: ignore
 
 
 @dataclass(frozen=True)

@@ -5,18 +5,18 @@ from typing import Callable, TypeVar
 from uuid import uuid4
 
 
-def required_field() -> Field:
+def required_field(**kwargs) -> Field:
     def raise_err():
         raise TypeError()
 
-    return field(default_factory=lambda: raise_err)
+    return field(default_factory=lambda: raise_err, **kwargs)
 
 
-def required_updatable_field() -> Field:
+def required_updatable_field(**kwargs) -> Field:
     def raise_err():
         raise TypeError()
 
-    return updatable_field(default_factory=lambda: raise_err)
+    return updatable_field(default_factory=lambda: raise_err, **kwargs)
 
 
 def updatable_field(**kwargs) -> Field:
