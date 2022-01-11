@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Set
 from kpm.shared.domain import init_id, required_field
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.model import AssetId
+from kpm.shared.domain.time_utils import from_now_ms
 
 
 @dataclass(frozen=True)
@@ -58,12 +59,18 @@ class UpdateAssetFields(Command):
 class CreateAssetInABottle(Command):
     assets: List[str] = required_field()  # type: ignore
     """UNIX timestamp in milliseconds"""
-    scheduled_date: int = required_field()  # type: ignore
+    min_date: int = field(default_factory=lambda: from_now_ms(months=1))
+    """UNIX timestamp in milliseconds"""
+    max_date: int = field(default_factory=lambda: from_now_ms(years=5))
     name: str = required_field()  # type: ignore
     receivers: List[str] = required_field()  # type: ignore
     owner: str = required_field()  # type: ignore
     description: str = None
-    aggregate_id: str = field(default_factory=init_id().id)
+    aggregate_id: str = field(default_factory=lambda: init_id().id)
+
+    def __post_init__(self):
+        if self.max_date < self.min_date:
+            raise ValueError("Mix and Max dates are swapped")
 
 
 @dataclass(frozen=True)

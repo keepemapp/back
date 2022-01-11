@@ -119,7 +119,7 @@ async def add_asset_future_self(
     if error:
         raise error
 
-    payload = create.__dict__
+    payload = {k: v for k, v in create.__dict__.items() if v}
     cmd = cmds.CreateAssetToFutureSelf(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
@@ -138,9 +138,9 @@ async def add_asset_bottle(
 ):
     error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
     if error:
-        return error
+        raise error
 
-    payload = create.__dict__
+    payload = {k: v for k, v in create.__dict__.items() if v}
     cmd = cmds.CreateAssetInABottle(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
@@ -159,9 +159,9 @@ async def add_stash(
 ):
     error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
     if error:
-        return error
+        raise error
 
-    payload = create.__dict__
+    payload = {k: v for k, v in create.__dict__.items() if v}
     cmd = cmds.Stash(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)

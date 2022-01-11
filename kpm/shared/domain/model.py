@@ -114,7 +114,6 @@ class RootAggregate(Entity):
         :param mod_ts: when the change happens
         :param updates: dict with field_name, new_value
         """
-        print("updating ", updates)
         updated_pairs = [kv for kv in updates.items() if kv[1] is not None]
 
         for f, value in updated_pairs:

@@ -1,3 +1,5 @@
+import random
+
 import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.model as model
 from kpm.assets.domain.model import Asset
@@ -31,7 +33,20 @@ def create_asset_in_a_bottle(
     :param uow:
     :return:
     """
-    raise NotImplementedError
+    with assetrelease_uow as uow:
+        scheduled_date = random.randint(cmd.min_date, cmd.max_date)
+        rel = model.AssetRelease(
+            id=DomainId(cmd.aggregate_id),
+            name=cmd.name,
+            description=cmd.description,
+            owner=UserId(cmd.owner),
+            receivers=[UserId(u) for u in cmd.receivers],
+            assets=[AssetId(a) for a in cmd.assets],
+            release_type="asset_future_self",
+            conditions=[model.TimeCondition(scheduled_date)],
+        )
+        uow.repo.put(rel)
+        uow.commit()
 
 
 def create_asset_future_self(
@@ -46,10 +61,6 @@ def create_asset_future_self(
         QUESTION: Must uniquely own them?
     2. Receiver must be the same as transferor
     3. scheduled date must be in the future
-
-    TODO Return event that will be picked up by another
-        handler to actually act on the files themselves if needed.
-        here we act only on the assets metadata
 
     What happens:
     1. Check asset owner is the one sending the command
@@ -99,7 +110,7 @@ def trigger_release(
 
 
 def cancel_release(
-    cmd: cmds.TriggerRelease, assetrelease_uow: AbstractUnitOfWork
+    cmd: cmds.CancelRelease, assetrelease_uow: AbstractUnitOfWork
 ):
     """
 

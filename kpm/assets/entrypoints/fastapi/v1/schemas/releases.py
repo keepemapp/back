@@ -28,15 +28,30 @@ class TransferAssets(TransferBase):
 
 class CreateAssetToFutureSelf(TransferBase):
     """UNIX timestamp in milliseconds"""
-
     scheduled_date: int
 
 
 class CreateAssetInABottle(TransferAssets):
-    """UNIX timestamp in milliseconds"""
-
-    scheduled_date: int
     receivers: List[str]
+    """UNIX timestamp in milliseconds. If none, a random will be chosen."""
+    min_date: Optional[int] = None
+    """UNIX timestamp in milliseconds. If none, a random will be chosen."""
+    max_date: Optional[int] = None
+
+    @validator("receivers", always=True)
+    def clean_users(cls, v):
+        return settings.API_USER_PATH.remove_from(v)
+
+    @validator("max_date", always=True)
+    def validate_min_max(cls, field_value, values):
+        if not field_value and values['min_date']:
+            raise ValueError("Both min_date and max_date must be set")
+        if field_value:
+            if not values['min_date']:
+                raise ValueError("Both min_date and max_date must be set")
+            if field_value < values['min_date']:
+                raise ValueError("Mix and Max dates are swapped")
+        return field_value
 
 
 class ReleaseConditions(BaseModel):
@@ -53,7 +68,7 @@ class ReleaseBase(BaseModel):
     name: str
     receivers: List[str]
     assets: List[str]
-    conditions: ReleaseConditions
+    #conditions: ReleaseConditions
     """UNIX timestamp in milliseconds"""
     created_ts: int
     """UNIX timestamp in milliseconds"""

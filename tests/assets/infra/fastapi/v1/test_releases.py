@@ -105,7 +105,7 @@ class TestReleases:
 
 
 @pytest.mark.unit
-class TestFutureSelf:
+class TestAssetReleasesTypes:
     @staticmethod
     @pytest.fixture
     def populated_bus(bus, create_asset_cmd):
@@ -138,7 +138,7 @@ class TestFutureSelf:
         app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
         yield TestClient(app)
 
-    def test_create(self, client):
+    def test_future_self(self, client):
         payload = schema.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
             name="Future self",
@@ -184,3 +184,80 @@ class TestFutureSelf:
             s.API_V1.concat(s.API_FUTURE_SELF).prefix, json=payload.dict()
         )
         assert response.status_code == 403
+
+    def test_bottle_no_date(self, client):
+        payload = schema.CreateAssetInABottle(
+            assets=[ASSET_ID1],
+            name="Bottle",
+            receivers=["/users/user1", "/users/user2"]
+        )
+        # When
+        response = client.post(
+            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload.dict()
+        )
+        # Then
+        assert response.status_code == 201
+
+        my_releases = client.get(
+            s.API_V1.concat(response.headers["location"]).path()
+        )
+        release = my_releases.json()
+        assert release.get("release_type") == "asset_future_self"
+        assert my_releases.status_code == 200
+        assert release.get("name") == payload.name
+        assert len(release.get("assets")) == 1
+        assert payload.assets[0] in release.get("assets")[0]
+        assert len(release.get("receivers")) == 2
+        assert "/users/user2" in release.get("receivers")
+        assert "/users/user1" in release.get("receivers")
+
+    def test_bottle_between_date(self, client):
+        payload = schema.CreateAssetInABottle(
+            assets=[ASSET_ID1],
+            name="Bottle",
+            receivers=["/users/user1", "/users/user2"],
+            min_date=10,
+            max_date=20,
+        )
+        # When
+        response = client.post(
+            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload.dict()
+        )
+        # Then
+        my_releases = client.get(
+            s.API_V1.concat(response.headers["location"]).path()
+        )
+        assert my_releases.status_code == 200
+
+    def test_bottle_swapped_dates(self, client):
+        payload = {
+            "assets": [ASSET_ID1],
+            "name": "Bottle",
+            "receivers": ["/users/user1", "/users/user2"],
+            "min_date": 232,
+            "max_date": 20,
+        }
+        print(payload)
+        # When
+        response = client.post(
+            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload
+        )
+        # Then
+        assert response.status_code == 422
+
+    def test_bottle_not_returns_conditions(self, client):
+        payload = schema.CreateAssetInABottle(
+            assets=[ASSET_ID1],
+            name="Bottle",
+            receivers=["/users/user1", "/users/user2"]
+        )
+        # When
+        response = client.post(
+            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload.dict()
+        )
+        # Then
+        my_releases = client.get(
+            s.API_V1.concat(response.headers["location"]).path()
+        )
+        release = my_releases.json()
+        assert "conditions" not in release.keys()

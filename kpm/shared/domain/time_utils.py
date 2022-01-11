@@ -1,4 +1,4 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 
 def to_millis(dt: datetime) -> int:
@@ -27,3 +27,11 @@ def now_utc_millis() -> int:
 
 def utc_from_timestamp(timestamp: int) -> datetime:
     return datetime.fromtimestamp(timestamp / 1000.0, timezone.utc)
+
+
+def from_now_ms(hours: int = 0, days: int = 0, months: int = 0,
+                years: int = 0):
+    """Returns the future milliseconds after adding the time delta"""
+    total_hours = hours + 24 * (days + 30 * (months + 12 * years))
+    delta_ms = timedelta(hours=total_hours).total_seconds() * 1000
+    return now_utc_millis() + delta_ms
