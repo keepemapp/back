@@ -1,5 +1,7 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Optional
+
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import init_id, required_field
 from kpm.shared.domain.commands import Command
@@ -39,7 +41,7 @@ class UpdateUserPassword(Command):
 @dataclass(frozen=True)
 class RequestKeep(Command):
     requester: str = required_field()  # type: ignore
-    name_by_requester: str = None
+    name_by_requester: Optional[str] = None
     requested: str = required_field()  # type: ignore
 
 
@@ -49,7 +51,7 @@ class AcceptKeep(Command):
 
     by: str = required_field()  # type: ignore
     keep_id: str = required_field()  # type: ignore
-    name_by_requested: str = None
+    name_by_requested: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -58,4 +60,4 @@ class DeclineKeep(Command):
 
     by: str = required_field()  # type: ignore
     keep_id: str = required_field()  # type: ignore
-    reason: Optional[str] = field(default="")
+    reason: Optional[str] = field(default=None)

@@ -1,4 +1,5 @@
 import pytest
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.events import Event
@@ -8,18 +9,21 @@ from kpm.shared.service_layer import message_bus as mb
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
 
+@dataclass(frozen=True)
 class DummyEvent(Event):
-    pass
+    eventType: str = "dummy"
 
 
+@dataclass
 class Agg1(RootAggregate):
     def __hash__(self):
         return hash(self.id)
 
     def trigger_event(self):
-        self._events.append(DummyEvent())
+        self.events.append(DummyEvent(aggregate_id=self.id))
 
 
+@dataclass
 class Agg2(RootAggregate):
     def __hash__(self):
         return hash(self.id)
@@ -104,7 +108,7 @@ class TestMessageBus:
         COMMAND_HANDLERS = {}
         bus = mb.MessageBus(uows, EVENT_HANDLERS, COMMAND_HANDLERS)
 
-        bus.handle(DummyEvent())
+        bus.handle(DummyEvent(aggregate_id="sds"))
         assert uow.times_committed == 1
 
     def test_commands(self):

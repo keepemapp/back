@@ -1,6 +1,8 @@
-from dataclasses import dataclass, field, fields
+from dataclasses import field, fields
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Type
+
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import DomainId, IdTypeException, init_id
 from kpm.shared.domain.events import Event
@@ -38,7 +40,7 @@ class Entity:
         if not isinstance(field, t):
             raise IdTypeException()
 
-    def erase_sensitive_data(self) -> 'Entity':
+    def erase_sensitive_data(self) -> "Entity":
         """
         Returns the entity with the sensitive data erased.
         Classes using it MUST implement it
@@ -92,21 +94,13 @@ class RootAggregate(Entity):
     ```
     """
 
-    _events: List[Event] = field(default_factory=list)
+    events: List[Event] = field(default_factory=list)
     created_ts: int = now_utc_millis()
     modified_ts: Dict[str, int] = field(default_factory=dict)
     state: RootAggState = RootAggState.ACTIVE
 
-    @property
-    def events(self) -> List[Event]:
-        """Property returning events.
-
-        Do not access it directly if you are
-
-        :return: List of events
-        :rtype: List[Event]
-        """
-        return self._events
+    class Config:
+        underscore_attrs_are_private = True
 
     def update_fields(self, mod_ts: int, updates: Dict[str, Any]):
         """

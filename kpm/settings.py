@@ -1,11 +1,12 @@
 from __future__ import annotations
 
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, field
 from datetime import timedelta
 from os import path
 from typing import Dict, List, Union
 
 from pydantic import BaseSettings
+from pydantic.dataclasses import dataclass
 
 
 @dataclass

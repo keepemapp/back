@@ -79,6 +79,7 @@ class TestAssetReleaseVisibility:
         history = [
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner]),
             events.AssetReleaseScheduled(
+                aggregate_id="none",
                 re_conditions={},
                 re_type="",
                 owner=owner,

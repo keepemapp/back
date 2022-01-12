@@ -1,6 +1,8 @@
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import NoReturn
+
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain.repository import DomainRepository
 from kpm.shared.domain.time_utils import now_utc_millis

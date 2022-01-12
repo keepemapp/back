@@ -1,8 +1,9 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import List
 
 import pytest
 from pydantic import BaseModel, ValidationError
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import Entity

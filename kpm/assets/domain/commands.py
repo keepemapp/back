@@ -1,5 +1,7 @@
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import Dict, List, Optional, Set
+
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import init_id, required_field
 from kpm.shared.domain.commands import Command
@@ -80,7 +82,7 @@ class CreateAssetToFutureSelf(Command):
     """UNIX timestamp in milliseconds"""
     scheduled_date: int = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
-    description: str = None
+    description: Optional[str] = None
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 

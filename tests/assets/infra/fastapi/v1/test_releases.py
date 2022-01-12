@@ -189,7 +189,7 @@ class TestAssetReleasesTypes:
         payload = schema.CreateAssetInABottle(
             assets=[ASSET_ID1],
             name="Bottle",
-            receivers=["/users/user1", "/users/user2"]
+            receivers=["/users/user1", "/users/user2"],
         )
         # When
         response = client.post(
@@ -249,7 +249,7 @@ class TestAssetReleasesTypes:
         payload = schema.CreateAssetInABottle(
             assets=[ASSET_ID1],
             name="Bottle",
-            receivers=["/users/user1", "/users/user2"]
+            receivers=["/users/user1", "/users/user2"],
         )
         # When
         response = client.post(

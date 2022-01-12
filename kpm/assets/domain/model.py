@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import re
 from abc import ABC, abstractmethod
-from dataclasses import asdict, dataclass, field
+from dataclasses import asdict, field
 from typing import List, Optional, Set, Union
+
+from pydantic.dataclasses import dataclass
 
 from kpm.assets.domain.events import (
     AssetOwnershipChanged,
@@ -64,10 +66,10 @@ class Asset(RootAggregate):
     file: FileData = required_field()  # type: ignore
     id: AssetId = required_field()  # type: ignore
     title: str = updatable_field(default="")  # type: ignore
-    description: str = updatable_field(default="")  # type: ignore
+    description: Optional[str] = updatable_field(default="")  # type: ignore
     state: RootAggState = field(default=RootAggState.PENDING)
-    tags: Set[str] = updatable_field(default_factory=set)  # type: ignore
-    people: Set[str] = updatable_field(default_factory=set)  # type: ignore
+    tags: Optional[Set[str]] = updatable_field(default_factory=set)  # type: ignore  # noqa:E501
+    people: Optional[Set[str]] = updatable_field(default_factory=set)  # type: ignore  # noqa:E501
     """Optional String indicating the place where this asset happened"""
     location: Optional[str] = updatable_field(default=None)  # type: ignore
     """Optional string to indicate the date where this asset happened"""
@@ -128,7 +130,7 @@ class Asset(RootAggregate):
         news = [o for o in self.owners_id if o != transferor]
         news.extend(self._to_uids(new))
         self._update_field(mod_ts, "owners_id", news)
-        self._events.append(
+        self.events.append(
             AssetOwnershipChanged(
                 aggregate_id=self.id.id,
                 timestamp=mod_ts,
@@ -178,7 +180,7 @@ class AssetRelease(RootAggregate):
     """
 
     name: str = required_field()  # type: ignore
-    description: str = required_field()  # type: ignore
+    description: Optional[str] = field(default=None)  # type: ignore
     owner: UserId = required_field()  # type: ignore
     receivers: List[UserId] = required_field()  # type: ignore
     assets: List[AssetId] = required_field()  # type: ignore
@@ -188,7 +190,7 @@ class AssetRelease(RootAggregate):
 
     def __post_init__(self):
         self._assert_conditions_compatibility()
-        self._events.append(
+        self.events.append(
             AssetReleaseScheduled(
                 aggregate_id=self.id.id,
                 re_conditions=self._conditons_dict(),
@@ -224,7 +226,7 @@ class AssetRelease(RootAggregate):
             raise Exception(f"Release {self.id} not ready to be released.")
         ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.INACTIVE)
-        self._events.append(
+        self.events.append(
             AssetReleased(
                 aggregate_id=self.id.id,
                 timestamp=ts,
@@ -239,7 +241,7 @@ class AssetRelease(RootAggregate):
         """Cancels the event."""
         ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.REMOVED)
-        self._events.append(
+        self.events.append(
             AssetReleaseCanceled(
                 aggregate_id=self.id.id,
                 timestamp=ts,

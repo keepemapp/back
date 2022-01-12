@@ -16,7 +16,7 @@ def asset_to_flat_dict(a: Asset):
     d["state"] = d.pop("state").value
     d["owners_id"] = [oid["id"] for oid in d.pop("owners_id")]
     d["modified_ts"] = a.last_modified()
-    del d["_events"]
+    del d["events"]
     return d
 
 

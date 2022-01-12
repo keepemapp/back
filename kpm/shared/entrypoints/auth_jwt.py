@@ -1,9 +1,10 @@
 import uuid
-from dataclasses import dataclass, field
+from dataclasses import field
 from datetime import timedelta
 from typing import List, Optional, Union
 
 from jose import jwt
+from pydantic.dataclasses import dataclass
 
 from kpm.settings import settings as s
 from kpm.shared.domain.time_utils import now_utc_sec
@@ -131,13 +132,17 @@ class JWTToken:
 @dataclass
 class AccessToken(JWTToken):
     type: str = "access"
-    exp_time_delta: Union[timedelta, int] = s.JWT_ACCESS_EXPIRE_TIME
+    exp_time_delta: Union[timedelta, int, None] = field(
+        default=s.JWT_ACCESS_EXPIRE_TIME
+    )
 
 
 @dataclass
 class RefreshToken(JWTToken):
     type: str = "refresh"
-    exp_time_delta: Union[timedelta, int] = s.JWT_REFRESH_EXPIRE_TIME
+    exp_time_delta: Union[timedelta, int, None] = field(
+        default=s.JWT_REFRESH_EXPIRE_TIME
+    )
 
 
 def from_token(encoded_token: str) -> Union[AccessToken, RefreshToken]:
@@ -156,7 +161,7 @@ def from_token(encoded_token: str) -> Union[AccessToken, RefreshToken]:
 
     return tok_cls(
         subject=decoded.get(JWTClaims.SUBJECT),
-        fresh=decoded.get(JWTClaims.FRESH),
+        fresh=decoded.get(JWTClaims.FRESH, False),
         scopes=decoded.get(JWTClaims.SCOPES),
         exp_time_delta=None,
         can_generate_str=False,

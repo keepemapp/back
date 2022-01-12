@@ -1,7 +1,9 @@
 import dataclasses
 import re
-from dataclasses import dataclass, field
+from dataclasses import field
 from typing import List, Optional
+
+from pydantic.dataclasses import dataclass
 
 import kpm.users.domain.commands as cmds
 from kpm.shared.domain import required_field, updatable_field
@@ -68,7 +70,7 @@ class User(RootAggregate):
     def is_pending_validation(self):
         return self.state in [RootAggState.PENDING]
 
-    def erase_sensitive_data(self) -> 'User':
+    def erase_sensitive_data(self) -> "User":
         return dataclasses.replace(self, salt="", password_hash="")
 
     def change_password_hash(self, cmd: cmds.UpdateUserPassword):
@@ -116,7 +118,7 @@ class UsernameAlreadyExistsException(Exception):
 class Keep(RootAggregate):
     requester: UserId = required_field()  # type: ignore
     requested: UserId = required_field()  # type: ignore
-    name_by_requester: str = required_field()  # type: ignore
+    name_by_requester: Optional[str] = None
     name_by_requested: Optional[str] = None
     declined_by: Optional[str] = None
     declined_reason: Optional[str] = None

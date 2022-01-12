@@ -19,7 +19,7 @@ def to_flat_dict(a: model.AssetRelease):
     d["owner"] = d.pop("owner_id")
     d["receivers"] = [id["id"] for id in d.pop("receivers")]
     d["assets"] = [id["id"] for id in d.pop("assets")]
-    del d["_events"]
+    del d["events"]
     d.pop("conditions")
     d["conditions"] = {}
     d["state"] = d["state"].value

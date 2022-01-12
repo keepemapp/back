@@ -1,4 +1,6 @@
-from dataclasses import dataclass, field
+from dataclasses import field
+
+from pydantic.dataclasses import dataclass
 
 from kpm.settings import settings
 from kpm.shared.domain import IDT, required_field

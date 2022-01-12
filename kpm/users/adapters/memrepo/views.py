@@ -60,7 +60,7 @@ def keep_to_flat_dict(k: Keep):
     d["requester"] = d.pop("requester_id")
     d["state"] = d.pop("state").value
     d["modified_ts"] = k.last_modified()
-    del d["_events"]
+    del d["events"]
     return d
 
 

@@ -1,5 +1,6 @@
-from dataclasses import dataclass
 from typing import Dict, List
+
+from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import required_field
 from kpm.shared.domain.events import Event

@@ -1,8 +1,10 @@
 from __future__ import annotations
 
-from dataclasses import Field, dataclass, field
+from dataclasses import Field, field
 from typing import Callable, TypeVar
 from uuid import uuid4
+
+from pydantic.dataclasses import dataclass
 
 
 def required_field(**kwargs) -> Field:
