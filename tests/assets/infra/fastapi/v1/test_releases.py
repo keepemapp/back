@@ -237,7 +237,6 @@ class TestAssetReleasesTypes:
             "min_date": 232,
             "max_date": 20,
         }
-        print(payload)
         # When
         response = client.post(
             s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload

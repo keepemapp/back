@@ -1,9 +1,7 @@
-from __future__ import annotations
-
-from dataclasses import asdict, field
+from dataclasses import field, asdict
 from datetime import timedelta
 from os import path
-from typing import Dict, List, Union
+from typing import List, Union
 
 from pydantic import BaseSettings
 from pydantic.dataclasses import dataclass
@@ -14,10 +12,10 @@ class ApiRoute:
     prefix: str
     tags: List[str] = field(default_factory=list)
 
-    def dict(self) -> Dict:
+    def dict(self):
         return asdict(self)
 
-    def concat(self, *others: Union[ApiRoute, str]) -> ApiRoute:
+    def concat(self, *others: Union['ApiRoute', str]) -> 'ApiRoute':
         res = self
         for o in others:
             if isinstance(o, ApiRoute):
@@ -84,6 +82,10 @@ class Settings(BaseSettings):
     EMAIL_SMTP_SERVER: str = None
     EMAIL_SMTP_PORT: int = 587
     EMAIL_SMTP_SECURITY: str = "STARTTLS"
+
+    MONGODB_URL: str = ""
+    MONGODB_USER: str = ""
+    MONGODB_PWD: str = ""
 
     class Config:
         env_file = ".env"

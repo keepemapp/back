@@ -61,6 +61,11 @@ class NoValue(Enum):
         return str(self.value)
 
 
+class FrozenException(Exception):
+    def __init__(self):
+        super().__init__("This item is frozen/removed and can't be modified.")
+
+
 @unique
 class RootAggState(NoValue):
     ACTIVE = "active"
@@ -70,8 +75,18 @@ class RootAggState(NoValue):
     REMOVED = "removed"
 
 
+VISIBLE_STATES = [
+    RootAggState.ACTIVE,
+    RootAggState.PENDING,
+]
+
 NOT_VISIBLE_STATES = [
     RootAggState.HIDDEN,
+    RootAggState.INACTIVE,
+    RootAggState.REMOVED,
+]
+
+FINAL_STATES = [
     RootAggState.INACTIVE,
     RootAggState.REMOVED,
 ]
@@ -102,22 +117,33 @@ class RootAggregate(Entity):
     class Config:
         underscore_attrs_are_private = True
 
-    def update_fields(self, mod_ts: int, updates: Dict[str, Any]):
+    def update_fields(self, mod_ts: int, updates: Dict[str, Any],
+                      allow_all: bool = False):
         """
         Updates internal fields that can be directly changed by the user
         :param mod_ts: when the change happens
         :param updates: dict with field_name, new_value
+        :param allow_all: bool indicating if all fields can be updated
         """
-        updated_pairs = [kv for kv in updates.items() if kv[1] is not None]
-
+        updated_pairs = []
+        status_update = None
+        for kv in updates.items():
+            if kv[0] == "state":
+                status_update = kv[1]
+            elif kv[1] is not None:
+                updated_pairs.append(kv)
         for f, value in updated_pairs:
-            if f not in self._updatable_fields():
+            if not allow_all and f not in self._updatable_fields():
                 raise AttributeError(f"Attribute '{f}' is not user updatable.")
             if not self.__isinstance(f, value):
                 raise TypeError(f"Attribute '{f}' updated with wrong type. ")
         for f, value in updated_pairs:
-
             self._update_field(mod_ts, f, value)
+        if status_update:
+            if not self.__isinstance("state", status_update):
+                raise TypeError(
+                    f"Attribute '{status_update}' updated with wrong type. ")
+            return self._update_field(mod_ts, "state", status_update)
 
     def __isinstance(self, field: str, value: Any) -> bool:
         """Support for generic types in isinstance
@@ -147,12 +173,14 @@ class RootAggregate(Entity):
             if f.metadata.get("user_updatable", False)
         ]
 
-    def _update_field(self, mod_ts: int, field: str, value) -> bool:
+    def _update_field(self, mod_ts: Optional[int], field: str, value) -> bool:
         """Updates a field and returns true if updated successfully
 
         It does not update it if mod_ts is older than the latest update for
         that field.
         """
+        if self.state in FINAL_STATES:
+            raise FrozenException()
         if mod_ts is None:
             mod_ts = now_utc_millis()
         is_newer = mod_ts >= self._modified_ts_for(field)
@@ -174,6 +202,10 @@ class RootAggregate(Entity):
 
     def is_visible(self):
         return self.state not in NOT_VISIBLE_STATES
+
+    def delete(self, mod_ts: Optional[int]):
+        if self.state != RootAggState.FINAL_STATES:
+            self._update_field(mod_ts, "state", RootAggState.REMOVED)
 
 
 @dataclass(frozen=True, eq=True)

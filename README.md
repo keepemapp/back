@@ -15,7 +15,7 @@ Backend in python
 6. Before committing execute `make precommit` (runs formatting, linting, test and clean)
 
 
-## Understanding the repo organization
+## 🗄️ Understanding the repo organization
 
 
 We divide the packages in:
@@ -65,7 +65,7 @@ emo
     └── service_layer
 ````
 
-## Testing and code cleaning
+## 🧪✅ Testing and code cleaning
 
 * Run all pre-commit steps: `make precommit`
 * Run tests calling `make test`
@@ -73,23 +73,6 @@ emo
 * Lint code with `make lint`
 
 NOTE: clean python cache via `make clean` if needed
-
-## Resources
-
-* https://github.com/iktakahiro/dddpy
-* https://softwareengineering.stackexchange.com/questions/396151/which-layer-do-ddd-repositories-belong-to
-* https://jsonapi.org/
-* https://pydantic-docs.helpmanual.io/usage/dataclasses/
-* https://sderosiaux.medium.com/cqrs-what-why-how-945543482313
-* https://github.com/CodelyTV/scala-ddd-example/blob/master/src/mooc/main/tv/codely/mooc/video/application/search/VideosSearcher.scala
-* https://medium.com/codex/clean-architecture-for-dummies-df6561d42c94
-* https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
-* https://stackoverflow.com/questions/50802874/use-case-to-command-application-layer-mapping-implementation
-* Monitoring: https://medium.com/swlh/fastapi-microservice-patterns-application-monitoring-49fcb7341d9a
-
-Extra:
-* https://github.com/dannysteenman/aws-toolbox#aws-toolbox-
-* https://github.com/donnemartin/system-design-primer
 
 ### Domain Driven Design 
 
@@ -142,10 +125,47 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 |**EXCEPTION**: login to obtain token|
 
 
+## 📧 E-mail service
+
+As of now it's not activated since it takes some time to connect to the mail svc. 
+But see `shared/adapters/notifications` and `shared/entrypoints/fastapi/dependencies.py`
+
+## 🗃️ MongoDB 
+
+Some integration tests require a mongoDB running. 
+And to support transactions, it requires some extra configuration (replica set).
+
+Update your `mongod.cfg` with the following
+
+```yaml
+replication:
+  oplogSizeMB: 2000
+  replSetName: rs0
+  enableMajorityReadConcern: false
+```
+
+start your mongod with 
+
+```shell
+mongod --port 27017 --replSet rs0 --bind_ip localhost
+```
+
+Then, in another terminal execute `mongosh` (or `mongo.exe`) 
+and use `rs.initiate()` to initiate a new replica set.
+
+See:
+
+* https://docs.mongodb.com/manual/tutorial/convert-standalone-to-replica-set/
+* 
 
 
+Extra for future
 
-# TODOs
+* pymongo docs https://pymongo.readthedocs.io/en/stable/api/pymongo/
+* Capped Collections (for events): https://docs.mongodb.com/manual/core/capped-collections/
+* Authentication https://docs.mongodb.com/manual/tutorial/configure-scram-client-authentication/
+
+## 🔘️ TODOs
 
 * [X] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
   Either give them the publish_url or the view URL for the file when they do a `get` on the asset
@@ -172,3 +192,22 @@ Low prio:
 * [ ] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas
 * [ ] Create flake8 rule to ensure domain does not have any dependencies on INF
 * [ ] flake8 rules to forbid cross-bounded context dependencies
+
+
+
+## 📚 Resources
+
+* https://github.com/iktakahiro/dddpy
+* https://softwareengineering.stackexchange.com/questions/396151/which-layer-do-ddd-repositories-belong-to
+* https://jsonapi.org/
+* https://pydantic-docs.helpmanual.io/usage/dataclasses/
+* https://sderosiaux.medium.com/cqrs-what-why-how-945543482313
+* https://github.com/CodelyTV/scala-ddd-example/blob/master/src/mooc/main/tv/codely/mooc/video/application/search/VideosSearcher.scala
+* https://medium.com/codex/clean-architecture-for-dummies-df6561d42c94
+* https://paulovich.net/guidelines-to-enrich-anemic-domain-models-tdd-ddd/
+* https://stackoverflow.com/questions/50802874/use-case-to-command-application-layer-mapping-implementation
+* Monitoring: https://medium.com/swlh/fastapi-microservice-patterns-application-monitoring-49fcb7341d9a
+
+Extra:
+* https://github.com/dannysteenman/aws-toolbox#aws-toolbox-
+* https://github.com/donnemartin/system-design-primer

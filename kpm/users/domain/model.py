@@ -161,10 +161,12 @@ class Keep(RootAggregate):
             raise ValueError("User declining it is not part of this keep.")
 
         was_accepted = self.state == RootAggState.ACTIVE
-        is_updated = self._update_field(mod_ts, "state", RootAggState.REMOVED)
+        is_updated = self.update_fields(mod_ts, {
+            "state": RootAggState.REMOVED,
+            "declined_by": declined_by_value,
+            "declined_reason": reason,
+        }, allow_all=True)
         if is_updated:
-            self._update_field(mod_ts, "declined_by", declined_by_value)
-            self._update_field(mod_ts, "declined_reason", reason)
             self.events.append(
                 events.KeepDeclined(
                     aggregate_id=self.id.id,

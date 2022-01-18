@@ -24,6 +24,7 @@ class AssetRepository(DomainRepository):
         order: str = "asc",
         visible_only: bool = True,
         asset_types: List[str] = None,
+        bookmarked: Optional[bool] = None
     ) -> List[Asset]:
         raise NotImplementedError
 
@@ -100,8 +101,8 @@ class AssetRepository(DomainRepository):
         return ids[0] if ids else None
 
     @abstractmethod
-    def delete(self, id: AssetId) -> None:
-        """Deletes asset matching the ID.
+    def remove(self, id: AssetId) -> None:
+        """Removes asset matching the ID from the database. Use it with care.
 
         ATTENTION: if ID does not exist, it does not raise anything.
         """

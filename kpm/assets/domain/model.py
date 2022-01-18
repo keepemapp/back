@@ -97,10 +97,10 @@ class Asset(RootAggregate):
         if not self._title_is_valid(self.title):
             raise AssetTitleException()
 
-    def hide(self, mod_ts: int):
+    def hide(self, mod_ts: Optional[int]):
         self._update_field(mod_ts, "state", RootAggState.HIDDEN)
 
-    def show(self, mod_ts: int):
+    def show(self, mod_ts: Optional[int]):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
     def is_visible(self) -> bool:
@@ -109,7 +109,7 @@ class Asset(RootAggregate):
     def upload_file(self, mod_ts: int):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
-    def change_owner(self, mod_ts: int, transferor: UIDT, new: List[UIDT]):
+    def change_owner(self, mod_ts: Optional[int], transferor: UIDT, new: List[UIDT]):
         """Changes asset ownership
 
         Raises `AssetOwnershipException` if the transferor does not own
@@ -129,14 +129,15 @@ class Asset(RootAggregate):
             return
         news = [o for o in self.owners_id if o != transferor]
         news.extend(self._to_uids(new))
-        self._update_field(mod_ts, "owners_id", news)
-        self.events.append(
-            AssetOwnershipChanged(
-                aggregate_id=self.id.id,
-                timestamp=mod_ts,
-                owners=[uid.id for uid in self.owners_id],
+        updated = self._update_field(mod_ts, "owners_id", news)
+        if updated:
+            self.events.append(
+                AssetOwnershipChanged(
+                    aggregate_id=self.id.id,
+                    timestamp=self.modified_ts["owners_id"],
+                    owners=[uid.id for uid in self.owners_id],
+                )
             )
-        )
 
     @staticmethod
     def _to_uid(uid: UIDT):

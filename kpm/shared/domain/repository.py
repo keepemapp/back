@@ -22,3 +22,7 @@ class DomainRepository(ABC):
     def commit(self):
         """Optional method to be used for commit"""
         pass
+
+    def abort(self):
+        """Optional method to abort transactions"""
+        pass

@@ -13,5 +13,5 @@ python-jose[cryptography]
 passlib
 bcrypt
 flatdict
-dataclasses-json
 gitpython
+pymongo

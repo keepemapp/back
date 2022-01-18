@@ -49,7 +49,6 @@ def update_password(
     with user_uow as uow:
         repo: UserRepository = uow.repo
         user: model.User = repo.get(UserId(cmd.user_id))
-        print("Old password : ", user.password_hash)
         if not user:
             raise model.UserNotFound()
         user.change_password_hash(cmd)
@@ -59,7 +58,6 @@ def update_password(
     with user_uow as uow:
         repo: UserRepository = uow.repo
         user: model.User = repo.get(UserId(cmd.user_id))
-        print("New password : ", user.password_hash)
 
 
 def update_user_attributes(cmd: cmds.UpdateUser, user_uow: AbstractUnitOfWork):

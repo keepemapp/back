@@ -37,6 +37,7 @@ class MemoryAssetRepository(AssetRepository):
         order: str = "asc",
         visible_only: bool = True,
         asset_types: List[str] = None,
+        bookmarked: Optional[bool] = None
     ) -> List[Asset]:
 
         list_params = [ids, owners, asset_types]
@@ -69,6 +70,8 @@ class MemoryAssetRepository(AssetRepository):
                 filters.append(asset.is_visible())
             if asset_types:
                 filters.append(asset.file.type in asset_types)
+            if isinstance(bookmarked, bool):
+                filters.append(asset.bookmarked == bookmarked)
 
             if all(filters):  # Select if all filters are true
                 results.append(asset)
@@ -106,7 +109,7 @@ class MemoryAssetRepository(AssetRepository):
         except KeyError:
             pass
 
-    def delete(self, id: AssetId) -> NoReturn:
+    def remove(self, id: AssetId) -> NoReturn:
         asset = self.find_by_id(id)
         if asset:
             self._delete(asset)
