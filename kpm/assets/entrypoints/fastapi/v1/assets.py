@@ -29,6 +29,7 @@ from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
     get_admin_token,
 )
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 
 router = APIRouter(
@@ -268,15 +269,22 @@ async def remove_asset_fields(
     asset_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    file_repo: AssetFileRepository = Depends(asset_file_repository),
 ):
     """
     Removes an asset and its file
     """
-    if views_asset.owned_by(asset_id, token.subject, bus=bus):
+    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
+    if a:
         cmd = cmds.RemoveAsset(asset_id=asset_id)
         bus.handle(cmd)
+        try:
+            file_repo.delete(a["file_location"])
+        except Exception:
+            logger.error(f"File {a['file_location']} could not be deleted.")
     else:
         raise ex.FORBIDDEN_GENERIC
+
 
 @router.get(
     "/{asset_id}/file",
