@@ -66,6 +66,10 @@ class FrozenException(Exception):
         super().__init__("This item is frozen/removed and can't be modified.")
 
 
+class RemovalNotPossible(Exception):
+    pass
+
+
 @unique
 class RootAggState(NoValue):
     ACTIVE = "active"
@@ -203,8 +207,8 @@ class RootAggregate(Entity):
     def is_visible(self):
         return self.state not in NOT_VISIBLE_STATES
 
-    def delete(self, mod_ts: Optional[int]):
-        if self.state != RootAggState.FINAL_STATES:
+    def remove(self, mod_ts: Optional[int]):
+        if self.state != FINAL_STATES:
             self._update_field(mod_ts, "state", RootAggState.REMOVED)
 
 

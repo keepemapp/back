@@ -256,6 +256,28 @@ async def update_asset_fields(
         raise ex.FORBIDDEN_GENERIC
 
 
+@router.delete(
+    "/{asset_id}",
+    responses={
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
+    },
+    status_code=status.HTTP_200_OK,
+)
+async def remove_asset_fields(
+    asset_id: str,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    """
+    Removes an asset and its file
+    """
+    if views_asset.owned_by(asset_id, token.subject, bus=bus):
+        cmd = cmds.RemoveAsset(asset_id=asset_id)
+        bus.handle(cmd)
+    else:
+        raise ex.FORBIDDEN_GENERIC
+
 @router.get(
     "/{asset_id}/file",
     responses={

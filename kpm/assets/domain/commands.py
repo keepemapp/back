@@ -58,6 +58,11 @@ class UpdateAssetFields(Command):
 
 
 @dataclass(frozen=True)
+class RemoveAsset(Command):
+    asset_id: str = required_field()  # type: ignore
+
+
+@dataclass(frozen=True)
 class CreateAssetInABottle(Command):
     assets: List[str] = required_field()  # type: ignore
     """UNIX timestamp in milliseconds"""

@@ -168,6 +168,17 @@ class TestGetAssets:
         response = user_client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 200
 
+    def test_remove_asset(self, user_client):
+        owners = [USER_TOKEN.subject]
+        _, r1 = create_asset(user_client, 0, owners)
+        aid1 = r1.headers["location"].split("/")[-2]
+
+        response = user_client.delete(ASSET_ROUTE + "/" + aid1)
+        assert response.status_code == 200
+
+        response = user_client.get(ASSET_ROUTE + "/" + aid1)
+        assert response.status_code == 403
+
 
 @pytest.mark.unit
 class TestUpdateAsset:

@@ -5,7 +5,7 @@ import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.events as events
 from kpm.assets.domain.model import Asset, FileData
 from kpm.assets.service_layer.unit_of_work import AssetUoW
-from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.model import AssetId, RemovalNotPossible, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
 
 
@@ -74,6 +74,18 @@ def update_asset_fields(cmd: cmds.UpdateAssetFields, asset_uow: AssetUoW):
         a.update_fields(mod_ts=cmd.timestamp, updates=cmd.update_dict())
         uow.repo.update(a)
         uow.commit()
+
+
+def remove_asset(cmd: cmds.RemoveAsset, asset_uow: AssetUoW):
+    with asset_uow as uow:
+        a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=False)
+        if isinstance(a, Asset):
+            a.remove(mod_ts=cmd.timestamp)
+            uow.repo.update(a)
+            uow.commit()
+        else:
+            raise RemovalNotPossible("Asset has releases on it. "
+                                     "Please remove it from them.")
 
 
 def asset_file_upload(cmd: cmds.UploadAssetFile, asset_uow: AssetUoW):
