@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, field
-from typing import List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Union
 
 from pydantic.dataclasses import dataclass
 
@@ -88,7 +88,7 @@ class Asset(RootAggregate):
         regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,31}$"
         return True if re.match(regex, name) else False
 
-    def __post_init__(self):
+    def __post_init__(self, loaded_from_db: bool):
         self._id_type_is_valid(AssetId)
         if not self.owners_id:
             raise EmptyOwnerException()
@@ -96,6 +96,10 @@ class Asset(RootAggregate):
             self._id_type_is_valid(UserId, uid)
         if not self._title_is_valid(self.title):
             raise AssetTitleException()
+
+        if not loaded_from_db:
+            # Send asset creation event
+            pass
 
     def hide(self, mod_ts: Optional[int]):
         self._update_field(mod_ts, "state", RootAggState.HIDDEN)
@@ -109,7 +113,9 @@ class Asset(RootAggregate):
     def upload_file(self, mod_ts: int):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
-    def change_owner(self, mod_ts: Optional[int], transferor: UIDT, new: List[UIDT]):
+    def change_owner(
+        self, mod_ts: Optional[int], transferor: UIDT, new: List[UIDT]
+    ):
         """Changes asset ownership
 
         Raises `AssetOwnershipException` if the transferor does not own
@@ -153,6 +159,8 @@ class Asset(RootAggregate):
 
 @dataclass(frozen=True, eq=True)
 class ReleaseCondition(ValueObject, ABC):
+    type: str
+
     @abstractmethod
     def is_met(self) -> bool:
         raise NotImplementedError
@@ -160,16 +168,30 @@ class ReleaseCondition(ValueObject, ABC):
 
 @dataclass(frozen=True, eq=True)
 class TrueCondition(ReleaseCondition):
+    type: str = "true_condition"
+
     def is_met(self) -> bool:
         return True
 
 
 @dataclass(frozen=True, eq=True)
 class TimeCondition(ReleaseCondition):
-    release_ts: int
+    release_ts: int = required_field()
+    type: str = "time_condition"
 
     def is_met(self) -> bool:
         return self.release_ts < now_utc_millis()
+
+
+def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
+    cond_type = condition.get("type").lower()
+    if cond_type == "true_condition":
+        return TrueCondition(**condition)
+    elif cond_type == "time_condition":
+        print(condition)
+        return TimeCondition(**condition)
+    else:
+        raise TypeError("Condition type not recognized")
 
 
 @dataclass
@@ -187,20 +209,21 @@ class AssetRelease(RootAggregate):
     assets: List[AssetId] = required_field()  # type: ignore
     conditions: List[ReleaseCondition] = required_field()  # type: ignore
     release_type: str = required_field()  # type: ignore
-    id: DomainId = init_id(DomainId)
+    id: DomainId = field(default_factory=lambda: init_id(DomainId))
 
-    def __post_init__(self):
+    def __post_init__(self, loaded_from_db: bool):
         self._assert_conditions_compatibility()
-        self.events.append(
-            AssetReleaseScheduled(
-                aggregate_id=self.id.id,
-                re_conditions=self._conditons_dict(),
-                re_type=self.release_type,
-                owner=self.owner.id,
-                assets=[a.id for a in self.assets],
-                receivers=[u.id for u in self.receivers],
+        if not loaded_from_db:
+            self.events.append(
+                AssetReleaseScheduled(
+                    aggregate_id=self.id.id,
+                    re_conditions=self._conditons_dict(),
+                    re_type=self.release_type,
+                    owner=self.owner.id,
+                    assets=[a.id for a in self.assets],
+                    receivers=[u.id for u in self.receivers],
+                )
             )
-        )
 
     def _assert_conditions_compatibility(self):
         # TODO implement ?

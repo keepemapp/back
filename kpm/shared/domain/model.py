@@ -1,4 +1,4 @@
-from dataclasses import field, fields
+from dataclasses import InitVar, field, fields
 from enum import Enum, unique
 from typing import Any, Dict, List, Optional, Type
 
@@ -117,12 +117,14 @@ class RootAggregate(Entity):
     created_ts: int = now_utc_millis()
     modified_ts: Dict[str, int] = field(default_factory=dict)
     state: RootAggState = RootAggState.ACTIVE
+    loaded_from_db: InitVar[bool] = False
 
     class Config:
         underscore_attrs_are_private = True
 
-    def update_fields(self, mod_ts: int, updates: Dict[str, Any],
-                      allow_all: bool = False):
+    def update_fields(
+        self, mod_ts: int, updates: Dict[str, Any], allow_all: bool = False
+    ):
         """
         Updates internal fields that can be directly changed by the user
         :param mod_ts: when the change happens
@@ -146,7 +148,8 @@ class RootAggregate(Entity):
         if status_update:
             if not self.__isinstance("state", status_update):
                 raise TypeError(
-                    f"Attribute '{status_update}' updated with wrong type. ")
+                    f"Attribute '{status_update}' updated with wrong type. "
+                )
             return self._update_field(mod_ts, "state", status_update)
 
     def __isinstance(self, field: str, value: Any) -> bool:

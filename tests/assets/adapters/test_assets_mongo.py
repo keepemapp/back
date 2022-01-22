@@ -1,15 +1,23 @@
-import time
-import uuid
-
-import pytest
 import random
 import string
+import time
+import uuid
+from dataclasses import fields
 
+import pytest
 from pymongo import MongoClient
 
-from kpm.assets.adapters.mongo.repository import AssetMongoRepo
+from kpm.assets.adapters.mongo.repository import (
+    AssetMongoRepo,
+    AssetReleaseMongoRepo,
+)
 from kpm.assets.domain import DuplicatedAssetException
-from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.model import (
+    AssetId,
+    RootAggregate,
+    RootAggState,
+    UserId,
+)
 from tests.assets.domain import *
 
 
@@ -22,12 +30,23 @@ def mongo_client():
 @pytest.fixture
 def assets_repo():
     url = "mongodb://127.0.0.1:27017/?replicaSet=rs0"
-    db = "assets_" + ''.join(random.choice("smiwysndkajsown") for _ in range(5))
+    db = "assets_" + "".join(
+        random.choice("smiwysndkajsown") for _ in range(5)
+    )
     db = "assets_skiyw"
-    repo = AssetMongoRepo(url, db)
+    repo = AssetMongoRepo(mongo_url=url, mongo_db=db)
     yield db, repo
+    repo.rollback()
     client = MongoClient(url)
     client.drop_database(db)
+
+
+def assert_result_equality(result: RootAggregate, original: RootAggregate):
+    assert isinstance(result, type(original))
+    original.events = []
+    fs = fields(original)
+    for f in fs:
+        assert getattr(result, f.name) == getattr(original, f.name)
 
 
 @pytest.mark.integration
@@ -36,14 +55,14 @@ class TestMongoAssetRepo:
         db, repo = assets_repo
         repo.create(asset)
 
-        assets = mongo_client[db]['assets']
+        assets = mongo_client[db]["assets"]
         assert assets.count_documents({}) == 0
         # If no commit
 
         repo.commit()
         assert assets.count_documents({}) == 1
         a = assets.find_one({"_id": asset.id.id})
-        assert a['_id'] == asset.id.id
+        assert a["_id"] == asset.id.id
 
     def test_cannot_create_duplicate(self, assets_repo, asset, mongo_client):
         db, repo = assets_repo
@@ -54,7 +73,7 @@ class TestMongoAssetRepo:
             repo.create(asset)
 
         # Then
-        assets = mongo_client[db]['assets']
+        assets = mongo_client[db]["assets"]
         assert assets.count_documents({}) == 1
 
     def test_updates_work(self, assets_repo, asset, mongo_client):
@@ -68,19 +87,15 @@ class TestMongoAssetRepo:
         asset.change_owner(None, old_owner, [new_owner])
         repo.update(asset)
 
-        assets = mongo_client[db]['assets']
-        assert assets.count_documents({'owners_id':
-                        {'$elemMatch': {'id': old_owner.id}}}) == 1
-        assert assets.count_documents({'owners_id':
-                        {'$elemMatch': {'id': new_owner.id}}}) == 0
+        assets = mongo_client[db]["assets"]
+        assert assets.count_documents({"owners_id": old_owner.id}) == 1
+        assert assets.count_documents({"owners_id": new_owner.id}) == 0
         # after commit
         repo.commit()
 
         # Then
-        assert assets.count_documents({'owners_id':
-                        {'$elemMatch': {'id': old_owner.id}}}) == 0
-        assert assets.count_documents({'owners_id':
-                        {'$elemMatch': {'id': new_owner.id}}}) == 1
+        assert assets.count_documents({"owners_id": old_owner.id}) == 0
+        assert assets.count_documents({"owners_id": new_owner.id}) == 1
 
     def test_can_find_by_id(self, assets_repo, asset):
         db, repo = assets_repo
@@ -92,7 +107,11 @@ class TestMongoAssetRepo:
         assert resp.id == asset.id
 
         # Multiple ids
-        assert len(repo.find_by_ids([asset.id])) == 1
+        results = repo.find_by_ids([asset.id])
+        assert len(results) == 1
+        a_res = results[0]
+        assert isinstance(a_res.file, type(asset.file))
+        assert_result_equality(a_res, asset)
 
     def test_non_existent_asset_id(self, assets_repo, asset):
         db, repo = assets_repo
@@ -154,8 +173,8 @@ class TestMongoAssetRepo:
         repo.create(asset2)
         repo.commit()
 
-        asc = repo.all(order_by='created_ts', order='asc')
-        desc = repo.all(order_by='created_ts', order='desc')
+        asc = repo.all(order_by="created_ts", order="asc")
+        desc = repo.all(order_by="created_ts", order="desc")
 
         for a1, a2 in zip(asc, [asset2, asset]):
             assert a1.id == a2.id
@@ -200,3 +219,65 @@ class TestMongoAssetRepo:
         db, repo = assets_repo
         repo.commit()
         assert len(repo.all()) == 0
+
+
+@pytest.mark.integration
+class TestMongoAssetReleaseRepo:
+    @pytest.fixture
+    def arrepo(self) -> AssetReleaseMongoRepo:
+        url = "mongodb://127.0.0.1:27017/?replicaSet=rs0"
+        db = "assets_" + "".join(
+            random.choice("smiwysndkajsown") for _ in range(5)
+        )
+        db = "assets_skiyw"
+        repo = AssetReleaseMongoRepo(mongo_url=url, mongo_db=db)
+        yield db, repo
+        client = MongoClient(url)
+        client.drop_database(db)
+
+    def test_create(self, arrepo, release1, mongo_client):
+        db, repo = arrepo
+        repo.put(release1)
+
+        collection = mongo_client[db]["releases"]
+        assert collection.count_documents({}) == 0
+        # If no commit
+
+        repo.commit()
+        assert collection.count_documents({}) == 1
+        a = collection.find_one({"_id": release1.id.id})
+        assert a["_id"] == release1.id.id
+
+    def test_update(self, arrepo, release1, mongo_client):
+        db, repo = arrepo
+        repo.put(release1)
+        repo.commit()
+
+        collection = mongo_client[db]["releases"]
+        assert collection.count_documents({}) == 1
+
+        release1.remove(mod_ts=None)
+        repo.put(release1)
+        repo.commit()
+
+        a = collection.find_one({"_id": release1.id.id})
+        assert a["state"] == RootAggState.REMOVED.value
+
+    def test_get_one(self, arrepo, release1):
+        db, repo = arrepo
+        repo.put(release1)
+        repo.commit()
+
+        res = repo.get(release1.id)
+        assert res
+        assert len(res.events) == 0
+        assert_result_equality(res, release1)
+
+    def test_get_all(self, arrepo, release1, release2):
+        db, repo = arrepo
+        repo.put(release1)
+        repo.put(release2)
+        repo.commit()
+
+        ress = repo.all()
+        assert len(ress) == 2

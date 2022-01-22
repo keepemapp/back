@@ -42,19 +42,21 @@ class User(RootAggregate):
         regex = r"^[a-z_0-9]{2,15}$"
         return True if re.match(regex, name) else False
 
-    def __post_init__(self):
+    def __post_init__(self, loaded_from_db: bool):
         self._id_type_is_valid(UserId)
         if not self._name_is_valid(self.username):
             raise ValueError(INVALID_USERNAME)
         if not self._email_is_valid(self.email):
             raise ValueError(INVALID_EMAIL)
-        self.events.append(
-            events.UserRegistered(
-                aggregate_id=self.id.id,
-                username=self.username,
-                email=self.email,
+
+        if not loaded_from_db:
+            self.events.append(
+                events.UserRegistered(
+                    aggregate_id=self.id.id,
+                    username=self.username,
+                    email=self.email,
+                )
             )
-        )
 
     def activate(self, mod_ts: int = None):
         is_updated = self._update_field(mod_ts, "state", RootAggState.ACTIVE)
@@ -124,15 +126,16 @@ class Keep(RootAggregate):
     declined_reason: Optional[str] = None
     state: RootAggState = field(default=RootAggState.PENDING)
 
-    def __post_init__(self):
+    def __post_init__(self, loaded_from_db: bool):
         if self.state == RootAggState.PENDING:
-            self.events.append(
-                events.KeepRequested(
-                    aggregate_id=self.id.id,
-                    requester=self.requester.id,
-                    requested=self.requested.id,
+            if not loaded_from_db:
+                self.events.append(
+                    events.KeepRequested(
+                        aggregate_id=self.id.id,
+                        requester=self.requester.id,
+                        requested=self.requested.id,
+                    )
                 )
-            )
 
     def accept(self, name_by_requested: str, mod_ts: int = None):
         if self.state != RootAggState.PENDING:
@@ -161,11 +164,15 @@ class Keep(RootAggregate):
             raise ValueError("User declining it is not part of this keep.")
 
         was_accepted = self.state == RootAggState.ACTIVE
-        is_updated = self.update_fields(mod_ts, {
-            "state": RootAggState.REMOVED,
-            "declined_by": declined_by_value,
-            "declined_reason": reason,
-        }, allow_all=True)
+        is_updated = self.update_fields(
+            mod_ts,
+            {
+                "state": RootAggState.REMOVED,
+                "declined_by": declined_by_value,
+                "declined_reason": reason,
+            },
+            allow_all=True,
+        )
         if is_updated:
             self.events.append(
                 events.KeepDeclined(

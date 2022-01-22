@@ -13,7 +13,7 @@ class DomainRepository(ABC):
     """
 
     def __init__(self, **kwargs):
-        pass
+        super().__init__(**kwargs)
 
     @property
     def seen(self) -> Set[RootAggregate]:

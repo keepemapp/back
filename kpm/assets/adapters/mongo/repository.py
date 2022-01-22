@@ -1,48 +1,43 @@
-import os
-import pickle
 import re
 from dataclasses import asdict
-from pathlib import Path
-import pprint
-import json
-from typing import Dict, List, NoReturn, Optional, Set, Union
+from typing import Dict, List, NoReturn, Optional, Set
 
 import pymongo
-from pydantic.json import pydantic_encoder
-from bson import ObjectId
-from pymongo import MongoClient
-from pymongo.client_session import ClientSession
 
+from kpm.assets.domain import AssetRelease
 from kpm.assets.domain.model import (
     Asset,
-    AssetRelease,
-    DuplicatedAssetException, FileData,
+    DuplicatedAssetException,
+    FileData,
+    dict_to_release_cond,
 )
 from kpm.assets.domain.repositories import (
     AssetReleaseRepository,
     AssetRepository,
 )
 from kpm.settings import settings as s
+from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import AssetId, RootAggState, UserId, \
-    VISIBLE_STATES
+from kpm.shared.domain.model import (
+    VISIBLE_STATES,
+    AssetId,
+    RootAggState,
+    UserId,
+)
 from kpm.shared.log import logger
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, Set[AssetId]]
 
 
-class AssetMongoRepo(AssetRepository):
+class AssetMongoRepo(MongoBase, AssetRepository):
     def __init__(
         self,
-        mongo_url: str = s.MONGODB_URL,
         mongo_db: str = "assets",
-
+        mongo_url: str = s.MONGODB_URL,
     ):
-        super(AssetMongoRepo, self).__init__()
-        self._client = MongoClient(mongo_url)
+        super().__init__(mongo_url=mongo_url)
         self._assets = self._client[mongo_db].assets
-        self._tx_session = None
 
     def _query(
         self,
@@ -53,88 +48,132 @@ class AssetMongoRepo(AssetRepository):
         order: str = "asc",
         visible_only: bool = True,
         asset_types: List[str] = None,
-        bookmarked: Optional[bool] = None
+        bookmarked: Optional[bool] = None,
     ) -> List[Asset]:
 
         find_dict = {}
 
         if ids:
-            find_dict['_id'] = {'$in': [aid.id for aid in ids]}
+            find_dict["_id"] = {"$in": [aid.id for aid in ids]}
         if owners:
-            find_dict['owners_id'] = {
-                '$elemMatch': {'id': {'$in': [o.id for o in owners]}}
-            }
+            find_dict["owners_id"] = {"$in": [o.id for o in owners]}
         if visible_only:
-            find_dict['state'] = {'$in': [st.value for st in VISIBLE_STATES]}
+            find_dict["state"] = {"$in": [st.value for st in VISIBLE_STATES]}
         else:
-            find_dict['state'] = {
-                '$not': re.compile(RootAggState.REMOVED.value)}
+            find_dict["state"] = {
+                "$not": re.compile(RootAggState.REMOVED.value)
+            }
         if asset_types:
-            find_dict['file.type'] = {'$in': asset_types}
+            find_dict["file.type"] = {"$in": asset_types}
         if isinstance(bookmarked, bool):
-            find_dict['bookmarked'] = bookmarked
+            find_dict["bookmarked"] = bookmarked
 
         logger.info(f"Mongo query filters {find_dict}")
         resps = self._assets.find(find_dict)
         if order_by:
-            orval = pymongo.DESCENDING if order == 'desc' else pymongo.ASCENDING
+            orval = (
+                pymongo.DESCENDING if order == "desc" else pymongo.ASCENDING
+            )
             resps = resps.sort(order_by, orval)
         res = []
         for a in resps:
-            a['id'] = AssetId(a.pop('_id'))
-            a['owners_id'] = [UserId(o['id']) for o in a.pop('owners_id')]
-            a['file'] = FileData(**a.pop('file'))
-            res.append(Asset(**a))
+            res.append(self._from_bson(a))
         logger.info(f"Mongo response count: {len(res)}")
         return res
 
-    def _to_bson(self, asset: Asset) -> Dict:
+    @staticmethod
+    def _to_bson(asset: Asset) -> Dict:
         bson = asdict(asset)
-        bson['_id'] = bson.pop('id')['id']
+        bson["_id"] = bson.pop("id")["id"]
+        bson["owners_id"] = [o["id"] for o in bson.pop("owners_id")]
         bson.pop("events")
-        bson['state'] = bson.pop("state").value
-        bson['tags'] = list(bson.pop("tags"))
-        bson['people'] = list(bson.pop("people"))
+        bson["state"] = bson.pop("state").value
+        bson["tags"] = list(bson.pop("tags"))
+        bson["people"] = list(bson.pop("people"))
         return bson
+
+    @staticmethod
+    def _from_bson(bson: Dict) -> Asset:
+        bson["id"] = AssetId(id=bson.pop("_id"))
+        bson["owners_id"] = [UserId(id=o) for o in bson.pop("owners_id")]
+        bson["file"] = FileData(**bson.pop("file"))
+        return Asset(loaded_from_db=True, **bson)
 
     def create(self, asset: Asset) -> NoReturn:
         logger.info(f"Creating asset with id '{asset.id.id}'")
         if self._assets.find_one({"_id": asset.id.id}):
             raise DuplicatedAssetException()
-        self._start_transaction()
-        self._assets.insert_one(self._to_bson(asset), session=self._tx_session)
+        self._insert(self._assets, self._to_bson(asset))
         self._seen.add(asset)
 
     def update(self, asset: Asset) -> None:
-        self._start_transaction()
         bson = self._to_bson(asset)
         logger.info(f"Updating asset with id '{asset.id.id}'")
-        self._assets.replace_one(
-            {'_id': bson['_id']}, bson, session=self._tx_session
-        )
+        self._update(self._assets, {"_id": bson["_id"]}, bson)
         self._seen.add(asset)
 
     def remove(self, id: AssetId) -> NoReturn:
-        self._start_transaction()
-        res = self._assets.delete_one({'_id': id.id}, session=self._tx_session)
-        logger.info(f"Mongo deletion of id: '{id.id}' "
-                    f"with count {res.deleted_count}")
+        res = self._remove(self._assets, {"_id": id.id})
+        logger.info(
+            f"Mongo deletion of id: '{id.id}' "
+            f"with count {res.deleted_count}"
+        )
 
-    def _start_transaction(self):
-        if not isinstance(self._tx_session, ClientSession):
-            self._tx_session = self._client.start_session()
-            self._tx_session.start_transaction()
-        if self._tx_session.has_ended:
-            self._tx_session = self._client.start_session()
-            self._tx_session.start_transaction()
 
-    def rollback(self):
-        if isinstance(self._tx_session, ClientSession):
-            self._tx_session.abort_transaction()
-            self._tx_session.end_session()
+class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
+    def __init__(
+        self,
+        mongo_db: str = "assets",
+        mongo_url: str = s.MONGODB_URL,
+    ):
+        super().__init__(mongo_url=mongo_url)
+        self._releases = self._client[mongo_db].releases
 
-    def commit(self) -> None:
-        if isinstance(self._tx_session, ClientSession):
-            self._tx_session.commit_transaction()
-            self._tx_session.end_session()
+    def _to_bson(self, release: AssetRelease) -> Dict:
+        bson = asdict(release)
+        bson["_id"] = bson.pop("id")["id"]
+        bson["owner"] = bson.pop("owner")["id"]
+        bson["receivers"] = [r["id"] for r in bson.pop("receivers")]
+        bson["assets"] = [r["id"] for r in bson.pop("assets")]
+        bson.pop("events")
+        bson["state"] = bson.pop("state").value
+        return bson
 
+    def _from_bson(self, bson: Dict) -> AssetRelease:
+        print(bson)
+        bson["id"] = DomainId(id=bson.pop("_id"))
+        bson["owner"] = UserId(id=bson.pop("owner"))
+        bson["receivers"] = [UserId(id=o) for o in bson.pop("receivers")]
+        bson["assets"] = [AssetId(id=o) for o in bson.pop("assets")]
+        bson["conditions"] = [
+            dict_to_release_cond(c) for c in bson.pop("conditions")
+        ]
+        print("conditions", bson["conditions"])
+        return AssetRelease(loaded_from_db=True, **bson)
+
+    def put(self, release: AssetRelease):
+        bson = self._to_bson(release)
+        self._update(self._releases, {"_id": bson["_id"]}, bson)
+        self._seen.add(release)
+
+    def get(self, release_id: DomainId) -> Optional[AssetRelease]:
+        find_dict = {"_id": release_id.id}
+        resp = self._releases.find_one(find_dict)
+        if resp:
+            return self._from_bson(resp)
+
+    def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
+        pass
+
+    def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
+        pass
+
+    def all(self) -> List[AssetRelease]:
+        find_dict = {}
+        logger.info(f"Mongo query filters {find_dict}")
+        resps = self._releases.find(find_dict)
+        res = []
+        for a in resps:
+            res.append(self._from_bson(a))
+        logger.info(f"Mongo response count: {len(res)}")
+        return res

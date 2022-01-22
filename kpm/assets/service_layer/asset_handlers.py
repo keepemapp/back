@@ -84,8 +84,9 @@ def remove_asset(cmd: cmds.RemoveAsset, asset_uow: AssetUoW):
             uow.repo.update(a)
             uow.commit()
         else:
-            raise RemovalNotPossible("Asset has releases on it. "
-                                     "Please remove it from them.")
+            raise RemovalNotPossible(
+                "Asset has releases on it. " "Please remove it from them."
+            )
 
 
 def asset_file_upload(cmd: cmds.UploadAssetFile, asset_uow: AssetUoW):

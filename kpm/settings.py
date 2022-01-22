@@ -1,4 +1,4 @@
-from dataclasses import field, asdict
+from dataclasses import asdict, field
 from datetime import timedelta
 from os import path
 from typing import List, Union
@@ -15,7 +15,7 @@ class ApiRoute:
     def dict(self):
         return asdict(self)
 
-    def concat(self, *others: Union['ApiRoute', str]) -> 'ApiRoute':
+    def concat(self, *others: Union["ApiRoute", str]) -> "ApiRoute":
         res = self
         for o in others:
             if isinstance(o, ApiRoute):

@@ -43,7 +43,7 @@ def create_asset_in_a_bottle(
             receivers=[UserId(u) for u in cmd.receivers],
             assets=[AssetId(a) for a in cmd.assets],
             release_type="asset_future_self",
-            conditions=[model.TimeCondition(scheduled_date)],
+            conditions=[model.TimeCondition(release_ts=scheduled_date)],
         )
         uow.repo.put(rel)
         uow.commit()
@@ -85,7 +85,7 @@ def create_asset_future_self(
             receivers=[UserId(cmd.owner)],
             assets=[AssetId(a) for a in cmd.assets],
             release_type="asset_future_self",
-            conditions=[model.TimeCondition(cmd.scheduled_date)],
+            conditions=[model.TimeCondition(release_ts=cmd.scheduled_date)],
         )
         uow.repo.put(rel)
         uow.commit()

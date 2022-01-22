@@ -10,8 +10,8 @@ from kpm.shared.domain.repository import DomainRepository
 
 
 class AssetRepository(DomainRepository):
-    def __init__(self):
-        super(AssetRepository, self).__init__()
+    def __init__(self, **kwargs):
+        super(AssetRepository, self).__init__(**kwargs)
         self._seen: Set[Asset] = set()
 
     @abstractmethod

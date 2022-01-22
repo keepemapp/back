@@ -37,7 +37,7 @@ class MemoryAssetRepository(AssetRepository):
         order: str = "asc",
         visible_only: bool = True,
         asset_types: List[str] = None,
-        bookmarked: Optional[bool] = None
+        bookmarked: Optional[bool] = None,
     ) -> List[Asset]:
 
         list_params = [ids, owners, asset_types]

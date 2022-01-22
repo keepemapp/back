@@ -21,11 +21,11 @@ class TestReleaseConditions:
     def test_time_condition(self):
         assert model.TrueCondition().is_met() == True
         past = to_millis(now_utc() + dt.timedelta(minutes=-10))
-        past_rel = model.TimeCondition(past)
+        past_rel = model.TimeCondition(release_ts=past)
         assert past_rel.is_met()
 
         future_date = to_millis(now_utc() + dt.timedelta(minutes=10))
-        assert model.TimeCondition(future_date).is_met() is False
+        assert model.TimeCondition(release_ts=future_date).is_met() is False
 
 
 @pytest.mark.unit
@@ -55,7 +55,10 @@ class TestRelease:
             receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[model.TrueCondition(), model.TimeCondition(past)],
+            conditions=[
+                model.TrueCondition(),
+                model.TimeCondition(release_ts=past),
+            ],
         )
         assert r_past.can_trigger()
 
@@ -66,7 +69,10 @@ class TestRelease:
             receivers=[UserId("U")],
             assets=[AssetId("a1"), AssetId("a2")],
             release_type="example",
-            conditions=[model.TrueCondition(), model.TimeCondition(future)],
+            conditions=[
+                model.TrueCondition(),
+                model.TimeCondition(release_ts=future),
+            ],
         )
         assert r_future.can_trigger() is False
 

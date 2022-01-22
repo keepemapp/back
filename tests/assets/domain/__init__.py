@@ -1,10 +1,13 @@
-from typing import Any, Dict
+import datetime as dt
 import uuid
+from typing import Any, Dict
 
 import pytest
 
+from kpm.assets.domain import model
 from kpm.assets.domain.model import Asset, FileData
 from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.time_utils import now_utc, to_millis
 
 DataType = Dict[str, Any]
 
@@ -31,17 +34,51 @@ def asset(valid_asset) -> Asset:
 
 @pytest.fixture
 def asset2() -> Asset:
-    yield Asset(**{
-        "id": AssetId(str(uuid.uuid4())),
-        "owners_id": [UserId("userid2")],
-        "file": FileData(
-            name="file2.jpg",
-            location="some/place/under_the_sea",
-            type="type2",
-        ),
-        "title": "z second asset",
-        "description": "description of the second asset",
-    })
+    yield Asset(
+        **{
+            "id": AssetId(str(uuid.uuid4())),
+            "owners_id": [UserId("userid2")],
+            "file": FileData(
+                name="file2.jpg",
+                location="some/place/under_the_sea",
+                type="type2",
+            ),
+            "title": "z second asset",
+            "description": "description of the second asset",
+        }
+    )
 
 
-__all__ = ["valid_asset", "asset", "asset2"]
+@pytest.fixture
+def release1() -> model.AssetRelease:
+    future = to_millis(now_utc() + dt.timedelta(minutes=10))
+    print(future)
+    print(type(future))
+    return model.AssetRelease(
+        name="Ar1",
+        description="1",
+        owner=UserId("u1"),
+        receivers=[UserId("U")],
+        assets=[AssetId("a11"), AssetId("a12")],
+        release_type="example",
+        conditions=[
+            model.TrueCondition(),
+            model.TimeCondition(release_ts=future),
+        ],
+    )
+
+
+@pytest.fixture
+def release2() -> model.AssetRelease:
+    return model.AssetRelease(
+        name="Ar2",
+        description="2",
+        owner=UserId("u2"),
+        receivers=[UserId("U")],
+        assets=[AssetId("a22"), AssetId("a21")],
+        release_type="example",
+        conditions=[model.TrueCondition()],
+    )
+
+
+__all__ = ["valid_asset", "asset", "asset2", "release1", "release2"]
