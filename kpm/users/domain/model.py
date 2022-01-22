@@ -137,7 +137,7 @@ class Keep(RootAggregate):
                     )
                 )
 
-    def accept(self, name_by_requested: str, mod_ts: int = None):
+    def accept(self, name_by_requested: str = None, mod_ts: int = None):
         if self.state != RootAggState.PENDING:
             if self.state == RootAggState.ACTIVE:
                 return
@@ -182,6 +182,9 @@ class Keep(RootAggregate):
                     requested=self.requested.id,
                 )
             )
+
+    def __hash__(self):
+        return hash(self.id.id)
 
 
 class DuplicatedKeepException(Exception):

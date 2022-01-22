@@ -1,11 +1,15 @@
+from abc import ABC, abstractmethod
+from typing import Dict
+
 from pymongo import MongoClient
 from pymongo.client_session import ClientSession
 
 from kpm.settings import settings as s
+from kpm.shared.domain.model import RootAggregate
 from kpm.shared.log import logger
 
 
-class MongoBase:
+class MongoBase(ABC):
     """
     Base class for managing mongo sessions.
 
@@ -30,6 +34,16 @@ class MongoBase:
         print(mongo_url)
         self._client = MongoClient(mongo_url)
         self._tx_session = None
+
+    @staticmethod
+    @abstractmethod
+    def _to_bson(agg: RootAggregate) -> Dict:
+        raise NotImplementedError
+
+    @staticmethod
+    @abstractmethod
+    def _from_bson(bson: Dict) -> RootAggregate:
+        raise NotImplementedError
 
     def _insert(self, collection, document):
         self._start_transaction()

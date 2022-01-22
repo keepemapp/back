@@ -1,9 +1,10 @@
+import uuid
 from typing import Any, Dict
 
 import pytest
 
 from kpm.shared.domain.model import RootAggState, UserId
-from kpm.users.domain.model import User
+from kpm.users.domain.model import Keep, User
 from tests.users.utils import MemoryUserRepository
 
 DataType = Dict[str, Any]
@@ -18,7 +19,7 @@ pwd_group = {
 @pytest.fixture
 def valid_user() -> DataType:
     yield {
-        "id": UserId("as092092"),
+        "id": UserId(str(uuid.uuid4())),
         "username": "me",
         "salt": pwd_group["salt"],
         "password_hash": pwd_group["hash"],
@@ -30,6 +31,19 @@ def valid_user() -> DataType:
 def active_user(valid_user) -> DataType:
     valid_user["state"] = RootAggState.ACTIVE
     yield valid_user
+
+
+@pytest.fixture
+def user(active_user) -> User:
+    yield User(**active_user)
+
+
+@pytest.fixture
+def user2(active_user) -> User:
+    active_user["id"] = UserId(str(uuid.uuid4()))
+    active_user["email"] = "second@email.com"
+    active_user["username"] = "iamsecond"
+    yield User(**active_user)
 
 
 @pytest.fixture
@@ -48,4 +62,6 @@ __all__ = [
     "user_repo_with_test_user",
     "DataType",
     "pwd_group",
+    "user",
+    "user2",
 ]

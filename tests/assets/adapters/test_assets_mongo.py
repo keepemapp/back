@@ -33,7 +33,6 @@ def assets_repo():
     db = "assets_" + "".join(
         random.choice("smiwysndkajsown") for _ in range(5)
     )
-    db = "assets_skiyw"
     repo = AssetMongoRepo(mongo_url=url, mongo_db=db)
     yield db, repo
     repo.rollback()
@@ -229,7 +228,6 @@ class TestMongoAssetReleaseRepo:
         db = "assets_" + "".join(
             random.choice("smiwysndkajsown") for _ in range(5)
         )
-        db = "assets_skiyw"
         repo = AssetReleaseMongoRepo(mongo_url=url, mongo_db=db)
         yield db, repo
         client = MongoClient(url)

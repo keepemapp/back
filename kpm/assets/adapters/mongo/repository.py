@@ -1,6 +1,6 @@
 import re
 from dataclasses import asdict
-from typing import Dict, List, NoReturn, Optional, Set
+from typing import Dict, List, NoReturn, Optional
 
 import pymongo
 
@@ -25,9 +25,6 @@ from kpm.shared.domain.model import (
     UserId,
 )
 from kpm.shared.log import logger
-
-Assets = Dict[AssetId, Asset]
-OwnerIndex = Dict[UserId, Set[AssetId]]
 
 
 class AssetMongoRepo(MongoBase, AssetRepository):
@@ -82,8 +79,8 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         return res
 
     @staticmethod
-    def _to_bson(asset: Asset) -> Dict:
-        bson = asdict(asset)
+    def _to_bson(agg: Asset) -> Dict:
+        bson = asdict(agg)
         bson["_id"] = bson.pop("id")["id"]
         bson["owners_id"] = [o["id"] for o in bson.pop("owners_id")]
         bson.pop("events")
@@ -129,8 +126,8 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         super().__init__(mongo_url=mongo_url)
         self._releases = self._client[mongo_db].releases
 
-    def _to_bson(self, release: AssetRelease) -> Dict:
-        bson = asdict(release)
+    def _to_bson(self, agg: AssetRelease) -> Dict:
+        bson = asdict(agg)
         bson["_id"] = bson.pop("id")["id"]
         bson["owner"] = bson.pop("owner")["id"]
         bson["receivers"] = [r["id"] for r in bson.pop("receivers")]
@@ -140,7 +137,6 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         return bson
 
     def _from_bson(self, bson: Dict) -> AssetRelease:
-        print(bson)
         bson["id"] = DomainId(id=bson.pop("_id"))
         bson["owner"] = UserId(id=bson.pop("owner"))
         bson["receivers"] = [UserId(id=o) for o in bson.pop("receivers")]
@@ -148,7 +144,6 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         bson["conditions"] = [
             dict_to_release_cond(c) for c in bson.pop("conditions")
         ]
-        print("conditions", bson["conditions"])
         return AssetRelease(loaded_from_db=True, **bson)
 
     def put(self, release: AssetRelease):
