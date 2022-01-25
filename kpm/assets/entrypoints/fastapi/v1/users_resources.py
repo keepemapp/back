@@ -11,6 +11,7 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import (
 )
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
+from kpm.shared.entrypoints.fastapi import query_params
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
@@ -36,24 +37,15 @@ router = APIRouter(
     responses={status.HTTP_200_OK: {"model": Page[AssetResponse]}},
 )
 async def get_current_user_assets(
-    order_by: str = Query(
-        None,
-        max_length=20,
-        regex=r"^[^;\-'\"]+$",
-        description="Attribute to sort by",
-    ),
-    order: str = Query(
-        "asc",
-        max_length=4,
-        regex=r"^[^;\-'\"]+$",
-        description="Available options: 'asc', 'desc'",
-    ),
+    order_by: str = query_params.order_by,
+    order: str = query_params.order,
     file_types: str = Query(
         None,
         max_length=50,
         regex=r"^[^;\-'\"]+$",
         description="Comma separated list of file types.",
     ),
+    bookmarked: bool = query_params.bookmarked,
     paginate_params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
@@ -62,7 +54,8 @@ async def get_current_user_assets(
     if file_types:
         fts = file_types.split(",")
     assets = views_asset.find_by_ownerid(
-        token.subject, bus=bus, order_by=order_by, order=order, asset_types=fts
+        token.subject, bus=bus, order_by=order_by, order=order,
+        asset_types=fts, bookmarked=bookmarked
     )
     return paginate(
         [asset_to_response(a, token) for a in assets], paginate_params

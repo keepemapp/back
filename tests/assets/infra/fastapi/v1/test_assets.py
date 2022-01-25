@@ -12,7 +12,8 @@ from tests.assets.infra.fastapi.v1.fixtures import *
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).path()
 
 
-def create_asset(client: TestClient, num: int, uids: List[str] = None):
+def create_asset(client: TestClient, num: int, uids: List[str] = None,
+                 bookmark: bool = True):
     asset = AssetCreate(
         title=f"Asset number {num}",
         description=f"Description for {num}",
@@ -20,7 +21,7 @@ def create_asset(client: TestClient, num: int, uids: List[str] = None):
         file_type=f"Type of {num}",
         file_name=f"file_of_{num}.jpg",
         file_size_bytes=123333,
-        bookmarked=True,
+        bookmarked=bookmark,
         tags=["family"],
     )
     response = client.post(ASSET_ROUTE, json=asset.dict())
@@ -131,6 +132,29 @@ class TestGetAssets:
         items = response.json()["items"]
         for r, aid in zip(items, [aid2, aid1]):
             assert r["id"] == aid
+
+    def test_bookmarked_search(self, user_client, admin_client):
+        create_asset(user_client, 0, bookmark=True)
+        create_asset(user_client, 1, bookmark=False)
+        create_asset(user_client, 2, bookmark=False)
+
+        response = query_uas(user_client, "?bookmarked=1")
+        assert len(response.json()["items"]) == 1
+        response = query_uas(user_client, "?bookmarked=true")
+        assert len(response.json()["items"]) == 1
+        response = query_uas(user_client, "?bookmarked=false")
+        assert len(response.json()["items"]) == 2
+        response = query_uas(user_client, "")
+        assert len(response.json()["items"]) == 3
+
+        response = query_uas(admin_client, "?bookmarked=1")
+        assert len(response.json()["items"]) == 1
+        response = query_uas(admin_client, "?bookmarked=true")
+        assert len(response.json()["items"]) == 1
+        response = query_uas(admin_client, "?bookmarked=false")
+        assert len(response.json()["items"]) == 2
+        response = query_uas(admin_client, "")
+        assert len(response.json()["items"]) == 3
 
     invalid_params = [
         "?order_by=title;",

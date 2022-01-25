@@ -22,3 +22,9 @@ state = Query(
     regex=rf"^({RootAggState.PENDING.value}|{RootAggState.ACTIVE.value})$",
     description="Available options: 'pending' or 'active'",
 )
+
+
+bookmarked = Query(
+    None,
+    description="Allow to filter by bookmarked status",
+)
