@@ -15,6 +15,7 @@ class CreateAsset(Command):
     owners_id: List[str] = required_field()  # type: ignore
     file_type: str = required_field()  # type: ignore
     file_name: str = required_field()  # type: ignore
+    file_size_bytes: int = required_field()  # type: ignore
     description: Optional[str] = None
     tags: Optional[Set[str]] = None
     people: Optional[Set[str]] = None

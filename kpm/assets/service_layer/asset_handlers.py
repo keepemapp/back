@@ -60,6 +60,7 @@ def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
         type=dic.pop("file_type"),
         name=dic.pop("file_name"),
         location=_compute_location(cmd.owners_id[0], cmd.asset_id),
+        size_bytes=dic.pop("file_size_bytes")
     )
     dic["created_ts"] = dic.pop("timestamp")
     asset = Asset(**{k: v for k, v in dic.items() if v is not None})

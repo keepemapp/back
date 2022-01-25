@@ -30,6 +30,8 @@ class AssetBase(AssetUpdatableFields):
     owners_id: List[str]
     file_type: str
     file_name: str
+    """File size in bytes. Will be double checked but it's needed."""
+    file_size_bytes: int
 
 
 class AssetCreate(AssetBase):

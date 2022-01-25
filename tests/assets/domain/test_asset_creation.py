@@ -17,6 +17,7 @@ def create_asset_cmd():
         description="Asset description",
         file_type="image",
         file_name="my_asset.jpg",
+        file_size_bytes=1232,
         owners_id=["owner1", "/users/owner2"],
     )
 

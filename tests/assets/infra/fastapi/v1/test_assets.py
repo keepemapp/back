@@ -19,6 +19,7 @@ def create_asset(client: TestClient, num: int, uids: List[str] = None):
         owners_id=uids,
         file_type=f"Type of {num}",
         file_name=f"file_of_{num}.jpg",
+        file_size_bytes=123333,
         bookmarked=True,
         tags=["family"],
     )
@@ -47,6 +48,7 @@ class TestRegisterAsset:
             owners_id=uids,
             file_type=f"Type of ",
             file_name=f"file_of_.jpg",
+            file_size_bytes=12323,
         )
         response = user_client.post(ASSET_ROUTE, json=asset.dict())
 
@@ -61,6 +63,7 @@ class TestRegisterAsset:
             owners_id=uids,
             file_type=f"Type of ",
             file_name=f"file_of_.jpg",
+            file_size_bytes=12323,
         )
         response = user_client.post(ASSET_ROUTE, json=asset.dict())
         assert response.status_code == 201
@@ -73,6 +76,7 @@ class TestRegisterAsset:
             owners_id=uids,
             file_type=f"Type of ",
             file_name=f"file_of_.jpg",
+            file_size_bytes=12323,
         )
         response = user_client.post(ASSET_ROUTE, json=asset.dict())
         assert response.status_code == 400
@@ -261,6 +265,7 @@ class TestUploadAsset:
                 owners_id=uids,
                 file_type=ftype,
                 file_name=fname,
+                file_size_bytes=23123,
             )
             response = user_client.post(ASSET_ROUTE, json=asset.dict())
             upload_loc = s.API_V1.concat(response.headers["location"]).path()

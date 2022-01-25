@@ -53,6 +53,8 @@ class FileData(ValueObject):
     name: str
     location: str
     type: str
+    "Size of the data in BYTES. It will get double checked"
+    size_bytes: int
 
 
 UIDT = Union[UserId, str]
