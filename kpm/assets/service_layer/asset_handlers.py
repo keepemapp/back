@@ -1,3 +1,4 @@
+from dataclasses import asdict
 from os import path as path
 from typing import Union
 
@@ -52,17 +53,16 @@ def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
     :type asset_uow: AssetUoW
     :return:
     """
-    asset = Asset(
-        owners_id=[UserId(u) for u in cmd.owners_id],
-        file=FileData(
-            type=cmd.file_type,
-            name=cmd.file_name,
-            location=_compute_location(cmd.owners_id[0], cmd.asset_id),
-        ),
-        id=AssetId(cmd.asset_id),
-        title=cmd.title,
-        description=cmd.description,
+    dic = asdict(cmd)
+    dic["owners_id"] = [UserId(u) for u in dic.pop("owners_id")]
+    dic["id"] = AssetId(dic.pop("asset_id"))
+    dic["file"] = FileData(
+        type=dic.pop("file_type"),
+        name=dic.pop("file_name"),
+        location=_compute_location(cmd.owners_id[0], cmd.asset_id),
     )
+    dic["created_ts"] = dic.pop("timestamp")
+    asset = Asset(**{k: v for k, v in dic.items() if v is not None})
     with asset_uow:
         asset_uow.repo.create(asset)
         asset_uow.commit()

@@ -19,6 +19,8 @@ def create_asset(client: TestClient, num: int, uids: List[str] = None):
         owners_id=uids,
         file_type=f"Type of {num}",
         file_name=f"file_of_{num}.jpg",
+        bookmarked=True,
+        tags=["family"],
     )
     response = client.post(ASSET_ROUTE, json=asset.dict())
     assert response.status_code == 201
@@ -154,8 +156,10 @@ class TestGetAssets:
         for owner in a.owners_id:
             assert True in (owner in oid for oid in resp["owners_id"])
         assert resp["title"] == a.title
-        assert not resp["bookmarked"]
+        assert resp["bookmarked"]
         assert not resp["extra_private"]
+        assert resp['tags'] == ['family']
+        assert len(resp['people']) == 0
 
     def test_non_existing_asset_gives_unauthorized(self, user_client):
         response = user_client.get(ASSET_ROUTE + "/random-asset-id")
