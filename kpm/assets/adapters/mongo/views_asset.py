@@ -96,7 +96,7 @@ def find_by_ownerid(
 
 
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
-    filter = {'owners': user_id}
+    filter = {'owners_id': user_id}
     fields = ['_id', 'title', 'file.type']
     limit_results = 2
     results = []
@@ -104,17 +104,15 @@ def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
         col = client['assets'].assets
         assets = col.find(filter=filter, projection=fields, limit=limit_results)
         for a in assets:
+            print(a)
             results.append({"id": a["_id"], "title": a["title"],
-                            "file_type": a["file.type"]})
+                            "file_type": a["file"]["type"]})
+    return results
 
 
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     type_agg = [
-        {"$match": {"owners": user_id}},
-        {"$group": {"file.type": {"$sum": 1}}},
-    ]
-    type_agg = [
-        {"$match": {"owners": user_id}},
+        {"$match": {"owners_id": user_id}},
         {"$group": {
             "_id": "$file.type",
             "count": {"$sum": 1},

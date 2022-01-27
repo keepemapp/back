@@ -6,7 +6,7 @@ We will have a private network for both of our containers
 
 [code, bash]
 ----
-docker network ls
+sudo docker network ls
 
 KEEP_NETW=keepem
 KEEP_DATA=$HOME/data
@@ -18,20 +18,22 @@ mkdir $KEEP_DATA
 mkdir $KEEP_DATA_MONGO
 mkdir $KEEP_DATA_API
 
-docker network create $KEEP_NETW
+sudo docker network create $KEEP_NETW
 ----
 
 == MongoDB
 
 [code,bash]
 ----
-docker pull mongo
+sudo docker pull mongo
 
-docker run \
--p 27017:27017 \
+sudo docker run \
+-p 127.0.0.1:27017:27017 \
 --name kpm_mongo \
 --net $KEEP_NETW \
 -v $KEEP_DATA_MONGO:/data/db \
+--restart unless-stopped \
+--log-opt max-size=50m --log-opt max-file=1 \
 mongo mongod --replSet rs0
 ----
 
@@ -49,13 +51,16 @@ DATA_FOLDER=/data
 
 [code,bash]
 ----
-docker build -t kpm_api ./
+sudo docker build -t kpm_api ./
+sudo docker stop kpm_api && sudo docker rm kpm_api
 
-docker run \
--p 8023:80 \
+sudo docker run \
+-p 127.0.0.1:2400:80 \
 --name kpm_api \
 --net $KEEP_NETW \
 --env-file .env \
 -v $KEEP_DATA_API:/data \
+--restart unless-stopped \
+--log-opt max-size=50m --log-opt max-file=1 \
 keepem_api
 ----
