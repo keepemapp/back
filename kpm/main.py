@@ -59,6 +59,16 @@ app.include_router(assets_router)
 app.logger = logger
 
 
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Application startup")
+
+
+@app.on_event("shutdown")
+def shutdown_event():
+    logger.warn("Application shutdown")
+
+
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))

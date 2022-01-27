@@ -190,7 +190,6 @@ def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
     if cond_type == "true_condition":
         return TrueCondition(**condition)
     elif cond_type == "time_condition":
-        print(condition)
         return TimeCondition(**condition)
     else:
         raise TypeError("Condition type not recognized")

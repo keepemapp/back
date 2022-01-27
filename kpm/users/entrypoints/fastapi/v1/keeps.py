@@ -4,12 +4,11 @@ from fastapi_pagination import Page, Params, paginate
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi import query_params
-from kpm.shared.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.exceptions import FORBIDDEN_GENERIC
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
-from kpm.users.adapters.memrepo import views
 from kpm.users.domain import commands as cmds
 from kpm.users.domain.model import KeepActionError, KeepAlreadyDeclined
 from kpm.users.entrypoints.fastapi.v1.schemas import keeps as schemas
@@ -34,6 +33,7 @@ async def list_keeps(
     paginate_params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(user_view),
 ):
     keeps = views.user_keeps(bus, token.subject, order_by, order, state)
     return paginate(
@@ -46,6 +46,7 @@ async def new_keep(
     request: schemas.RequestKeep,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(user_view),
 ):
     target_user = views.by_id(request.to_user, bus)
     if not target_user:

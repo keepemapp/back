@@ -5,13 +5,12 @@ import kpm.shared.entrypoints.fastapi.exceptions as ex
 import kpm.users.domain.commands as cmds
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_admin_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.dependencies import get_current_active_user
-from kpm.users.adapters.memrepo import views
 from kpm.users.domain.model import (
     EmailAlreadyExistsException,
     User,
@@ -54,6 +53,7 @@ async def get_all_users(
     params: Params = Depends(),
     bus: MessageBus = Depends(message_bus),
     _: AccessToken = Depends(get_admin_token),
+    views=Depends(user_view),
 ):
     return paginate(
         [
@@ -91,7 +91,9 @@ async def activate_user(
     },
 )
 def register_user(
-    new_user: schemas.UserCreate, bus: MessageBus = Depends(message_bus)
+    new_user: schemas.UserCreate,
+    bus: MessageBus = Depends(message_bus),
+    views=Depends(user_view),
 ):
     cmd = cmds.RegisterUser(
         username=new_user.username,

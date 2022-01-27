@@ -6,11 +6,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
-from kpm.shared.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
-from kpm.users.adapters.memrepo import views
 from kpm.users.domain.model import MissmatchPasswordException, User
 from kpm.users.entrypoints.fastapi.v1.schemas.token import LoginResponse
 
@@ -23,6 +22,7 @@ def authenticate_by_email(
     email: str,
     password: str,
     bus: MessageBus,
+    views,
 ) -> Optional[User]:
     logger.info(f"Trying to authenticate email '{email}'")
     try:
@@ -37,6 +37,7 @@ def authenticate_by_id(
     user_id: str,
     password: str,
     bus: MessageBus,
+    views,
 ) -> Optional[User]:
     logger.info(f"Trying to authenticate user id '{user_id}'")
     try:
@@ -52,6 +53,7 @@ def authenticate_by_id(
 async def login_for_access_token(
     form_data: OAuth2PasswordRequestForm = Depends(),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(user_view),
 ):
     """
     With credentials, creates new access and refresh tokens
@@ -61,7 +63,7 @@ async def login_for_access_token(
     """
     if "@" not in form_data.username:
         raise ex.USER_CREDENTIALS_ER
-    user = authenticate_by_email(form_data.username, form_data.password, bus)
+    user = authenticate_by_email(form_data.username, form_data.password, bus, views)
 
     if user.is_pending_validation():
         raise ex.USER_PENDING_VALIDATION
@@ -93,6 +95,7 @@ async def login_for_access_token(
 async def refresh_access_token(
     token: RefreshToken = Depends(get_refresh_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(user_view),
 ):
     """
     Refreshes token. This will generate a new access token however it will

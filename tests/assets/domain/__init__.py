@@ -54,8 +54,6 @@ def asset2() -> Asset:
 @pytest.fixture
 def release1() -> model.AssetRelease:
     future = to_millis(now_utc() + dt.timedelta(minutes=10))
-    print(future)
-    print(type(future))
     return model.AssetRelease(
         name="Ar1",
         description="1",

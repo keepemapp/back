@@ -16,8 +16,12 @@ class AbstractUnitOfWork(ABC):
     def __enter__(self):
         return self
 
-    def __exit__(self, *args):
-        self.rollback()
+    def __exit__(self, exc_type, exc_value, traceback):
+        if not exc_type:
+            # Graceful exit
+            pass
+        else:
+            self.rollback()
 
     def commit(self):
         self._events.extend(self._collect_events_from_entities())

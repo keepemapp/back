@@ -4,14 +4,13 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.responses import RedirectResponse
 from fastapi_pagination import Page, Params, paginate
 
-import kpm.assets.adapters.memrepo.views_asset as assets
-import kpm.assets.adapters.memrepo.views_asset_release as views
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schemas
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
+    asset_view, message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
     get_access_token,
     get_admin_token,
@@ -52,11 +51,11 @@ def assert_same_user(a, b):
         )
 
 
-def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str):
+def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str, asset_view):
     as_clear = [a.replace("/assets/", "") for a in asset_list]
     o_clear = owner.replace("/users/", "")
 
-    if not assets.are_assets_active(as_clear, bus=bus, user=o_clear):
+    if not asset_view.are_assets_active(as_clear, bus=bus, user=o_clear):
         return HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Some assets do not exist or are not modifyable",
@@ -77,6 +76,7 @@ async def get_releases(
     params: Params = Depends(),
     token: AccessToken = Depends(get_admin_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_rel_view),
 ):
     return paginate(
         [schemas.ReleaseResponse(**r) for r in views.all(bus=bus)], params
@@ -96,6 +96,7 @@ async def get_release(
     release_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_rel_view),
 ):
     release = views.get(release_id, bus=bus)
     if release and release.get("owner") == token.subject:
@@ -114,8 +115,9 @@ async def add_asset_future_self(
     create: schemas.CreateAssetToFutureSelf,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    assets=Depends(asset_view),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
+    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject, assets)
     if error:
         raise error
 
@@ -135,8 +137,9 @@ async def add_asset_bottle(
     create: schemas.CreateAssetInABottle,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    assets=Depends(asset_view),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
+    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject, assets)
     if error:
         raise error
 
@@ -156,8 +159,9 @@ async def add_stash(
     create: schemas.CreateAssetInABottle,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    assets=Depends(asset_view),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject)
+    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject, assets)
     if error:
         raise error
 

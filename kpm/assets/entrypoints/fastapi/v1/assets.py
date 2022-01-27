@@ -10,7 +10,6 @@ from jose import JWTError
 import kpm.assets.domain.commands as cmds
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.adapters.filestorage import AssetFileRepository
-from kpm.assets.adapters.memrepo import views_asset
 from kpm.assets.entrypoints.fastapi.dependencies import asset_file_repository
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetCreate,
@@ -22,7 +21,7 @@ from kpm.settings import settings as s
 from kpm.shared.domain.model import RootAggState
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi import query_params
-from kpm.shared.entrypoints.fastapi.dependencies import message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import asset_view, message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
     create_jwt_token,
     decode_token,
@@ -125,10 +124,11 @@ async def add_asset_file(
     token: AccessToken = Depends(get_access_token),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_view),
     file: UploadFile = File(...),
 ):
     auth_data = decode_asset_upload_token(authorizer_token)
-    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
+    a = views.find_by_id_and_owner(asset_id, token.subject, bus=bus)
 
     if not a:
         raise HTTPException(
@@ -184,12 +184,13 @@ async def get_all_assets(
     bookmarked: bool = query_params.bookmarked,
     paginate_params: Params = Depends(),
     token: AccessToken = Depends(get_admin_token),
+    views=Depends(asset_view),
     bus: MessageBus = Depends(message_bus),
 ):
     fts = []
     if file_types:
         fts = file_types.split(",")
-    assets = views_asset.all_assets(
+    assets = views.all_assets(
         bus=bus, order_by=order_by, order=order,
         asset_types=fts, bookmarked=bookmarked
     )
@@ -210,8 +211,9 @@ async def get_asset(
     asset_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_view),
 ):
-    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
+    a = views.find_by_id_and_owner(asset_id, token.subject, bus=bus)
     if a:
         return asset_to_response(a, token)
     else:
@@ -231,11 +233,12 @@ async def update_asset_fields(
     asset_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_view),
 ):
     """
     Idempotent update of asset fields
     """
-    if views_asset.owned_by(asset_id, token.subject, bus=bus):
+    if views.owned_by(asset_id, token.subject, bus=bus):
         payload = updates.__dict__
         payload = {k: v for k, v in payload.items() if v is not None}
         if "tags" in payload.keys():
@@ -263,11 +266,12 @@ async def remove_asset_fields(
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
+    views=Depends(asset_view),
 ):
     """
     Removes an asset and its file
     """
-    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
+    a = views.find_by_id_and_owner(asset_id, token.subject, bus=bus)
     if a:
         cmd = cmds.RemoveAsset(asset_id=asset_id)
         bus.handle(cmd)
@@ -291,9 +295,10 @@ async def get_asset_file(
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
     file_repo: AssetFileRepository = Depends(asset_file_repository),
+    views=Depends(asset_view),
 ):
     """Returns the asset's binary file"""
-    a = views_asset.find_by_id_and_owner(asset_id, token.subject, bus=bus)
+    a = views.find_by_id_and_owner(asset_id, token.subject, bus=bus)
     if a:
         # TODO when we go with encrypted files, media_type will be different
         try:
