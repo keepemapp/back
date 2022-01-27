@@ -31,7 +31,7 @@ class AssetBase(AssetUpdatableFields):
     file_type: str
     file_name: str
     """File size in bytes. Will be double checked but it's needed."""
-    file_size_bytes: int
+    file_size_bytes: int = 0  # TODO remove the default value
 
 
 class AssetCreate(AssetBase):

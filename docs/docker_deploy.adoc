@@ -1,0 +1,61 @@
+= Depolyment using docker
+
+== Networking and set-up
+
+We will have a private network for both of our containers
+
+[code, bash]
+----
+docker network ls
+
+KEEP_NETW=keepem
+KEEP_DATA=$HOME/data
+KEEP_DATA_MONGO=$KEEP_DATA/mongo
+KEEP_DATA_API=$KEEP_DATA/api
+
+
+mkdir $KEEP_DATA
+mkdir $KEEP_DATA_MONGO
+mkdir $KEEP_DATA_API
+
+docker network create $KEEP_NETW
+----
+
+== MongoDB
+
+[code,bash]
+----
+docker pull mongo
+
+docker run \
+-p 27017:27017 \
+--name kpm_mongo \
+--net $KEEP_NETW \
+-v $KEEP_DATA_MONGO:/data/db \
+mongo mongod --replSet rs0
+----
+
+== API
+
+Create a `.env`  file with:
+
+----
+MONGODB_URL=mongodb://kpm_mongo:27017/?replicaSet=rs0
+# openssl rand -hex 32
+JWT_SECRET_KEY=
+DATA_FOLDER=/data
+----
+
+
+[code,bash]
+----
+docker build -t kpm_api ./
+
+docker run \
+-p 8023:80 \
+--name kpm_api \
+--net $KEEP_NETW \
+--env-file .env \
+-v $KEEP_DATA_API:/data \
+keepem_api
+----

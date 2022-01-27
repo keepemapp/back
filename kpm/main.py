@@ -80,9 +80,9 @@ async def log_requests(request: Request, call_next):
         request.url.path,
     )
     start_time = time.time()
-    # if "profile" in request.query_params:
-    profiler = Profiler()
-    profiler.start()
+    if "profile" in request.query_params:
+        profiler = Profiler()
+        profiler.start()
     response = await call_next(request)
 
     process_time = (time.time() - start_time) * 1000
@@ -94,13 +94,13 @@ async def log_requests(request: Request, call_next):
         response.status_code,
     )
 
-    # if "profile" in request.query_params:
-    # TODO remove me for production
-    profiler.stop()
-    fname = join(dirname(dirname(__file__)), "profile.html")
-    logger.debug(f"Writing profile to {fname}")
-    with open(fname, "w") as f:
-        f.write(profiler.output_html())
+    if "profile" in request.query_params:
+        # TODO remove me for production
+        profiler.stop()
+        fname = join(dirname(dirname(__file__)), "profile.html")
+        logger.debug(f"Writing profile to {fname}")
+        with open(fname, "w") as f:
+            f.write(profiler.output_html())
 
     return response
 
