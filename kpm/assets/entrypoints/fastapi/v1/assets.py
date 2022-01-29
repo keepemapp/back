@@ -191,8 +191,11 @@ async def get_all_assets(
     if file_types:
         fts = file_types.split(",")
     assets = views.all_assets(
-        bus=bus, order_by=order_by, order=order,
-        asset_types=fts, bookmarked=bookmarked
+        bus=bus,
+        order_by=order_by,
+        order=order,
+        asset_types=fts,
+        bookmarked=bookmarked,
     )
     return paginate(
         [asset_to_response(a, token) for a in assets], paginate_params

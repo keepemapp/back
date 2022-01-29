@@ -43,9 +43,7 @@ class MongoUoW(AbstractUnitOfWork):
 def mongo_client(mongo_url: str = s.MONGODB_URL) -> MongoClient:
     if s.MONGODB_USER and s.MONGODB_PWD:
         return MongoClient(
-            mongo_url,
-            user=s.MONGODB_USER,
-            password=s.MONGODB_PWD
+            mongo_url, user=s.MONGODB_USER, password=s.MONGODB_PWD
         )
     else:
         return MongoClient(mongo_url)

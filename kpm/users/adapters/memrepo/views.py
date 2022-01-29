@@ -23,6 +23,15 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
         return None
 
 
+def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
+    with bus.uows.get(User) as uow:
+        user = next(
+            (u for u in uow.repo.all() if u.referral_code == referral_code),
+            None,
+        )
+    return user.id.id if user else None
+
+
 def credentials_email(email: str, password: str, bus: MessageBus) -> User:
     def is_email_equals(email1: str, email2: str):
         if "@gmail" in email1:

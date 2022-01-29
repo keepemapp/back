@@ -15,6 +15,7 @@ class RegisterUser(Command):
     email: str = required_field(repr=False)  # type: ignore
     user_id: Optional[str] = field(default_factory=lambda: init_id(UserId).id)
     public_name: Optional[str] = field(default=None, repr=False)
+    referred_by: Optional[str] = field(default=None)
 
 
 @dataclass(frozen=True)

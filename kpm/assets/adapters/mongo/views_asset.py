@@ -1,9 +1,7 @@
-import random
 from dataclasses import asdict
 from typing import Dict, List, Optional
 
 import flatdict
-from pymongo import MongoClient
 
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
@@ -74,12 +72,9 @@ def are_assets_active(
 
     If a user is passed, it checks the ownership of all assets.
     """
-    filter = {
-        "_id": {"$in": assets},
-        "owners": user
-    }
+    filter = {"_id": {"$in": assets}, "owners": user}
     with mongo_client() as client:
-        col = client['assets'].assets
+        col = client["assets"].assets
         num_found = col.count_documents(filter=filter)
     return num_found == len(assets)
 
@@ -97,16 +92,18 @@ def find_by_ownerid(
 
 
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
-    filter = {'owners_id': user_id, "state": RootAggState.ACTIVE.value}
-    fields = {'_id': 0, 'id': '$_id', 'title': 1, 'file_type': '$file.type'}
+    filter = {"owners_id": user_id, "state": RootAggState.ACTIVE.value}
+    fields = {"_id": 0, "id": "$_id", "title": 1, "file_type": "$file.type"}
     limit_results = 2
     with mongo_client() as client:
-        col = client['assets'].assets
-        assets = col.aggregate([
-            {"$match": filter},
-            {"$sample": {"size": limit_results}},
-            {"$project": fields}
-        ])
+        col = client["assets"].assets
+        assets = col.aggregate(
+            [
+                {"$match": filter},
+                {"$sample": {"size": limit_results}},
+                {"$project": fields},
+            ]
+        )
         results = list(assets)
     logger.debug(f"Assets of the week selected for {user_id}: {results}")
     return results
@@ -115,14 +112,16 @@ def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     type_agg = [
         {"$match": {"owners_id": user_id}},
-        {"$group": {
-            "_id": "$file.type",
-            "count": {"$sum": 1},
-            "size:": {"$sum": "file.size_bytes"}
-        }},
+        {
+            "$group": {
+                "_id": "$file.type",
+                "count": {"$sum": 1},
+                "size:": {"$sum": "file.size_bytes"},
+            }
+        },
     ]
     with mongo_client() as client:
-        col = client['assets'].assets
+        col = client["assets"].assets
         res = col.aggregate(type_agg)
     print(res)
     return {

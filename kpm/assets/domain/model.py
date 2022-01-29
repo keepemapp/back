@@ -32,8 +32,10 @@ from kpm.shared.domain.time_utils import now_utc_millis
 class AssetTitleException(Exception):
     """Exception to raise when title is not valid"""
 
-    def __init__(self):
-        super().__init__("Asset name is not valid")
+    def __init__(self, msg: str = None):
+        if not msg:
+            msg = "Asset title is not valid"
+        super().__init__(msg)
 
 
 class EmptyOwnerException(Exception):
@@ -87,7 +89,7 @@ class Asset(RootAggregate):
         :param name: str:
 
         """
-        regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,100}$"
+        regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,64}$"
         return True if re.match(regex, name) else False
 
     def __post_init__(self, loaded_from_db: bool):
@@ -97,7 +99,9 @@ class Asset(RootAggregate):
         for uid in self.owners_id:
             self._id_type_is_valid(UserId, uid)
         if not self._title_is_valid(self.title):
-            raise AssetTitleException()
+            raise AssetTitleException(
+                "Title too long or containing too many thigns"
+            )
 
         if not loaded_from_db:
             # Send asset creation event

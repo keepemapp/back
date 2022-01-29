@@ -95,10 +95,19 @@ def register_user(
     bus: MessageBus = Depends(message_bus),
     views=Depends(user_view),
 ):
+    referred_by = None
+    if new_user.referral_code:
+        referred_by = views.id_from_referral(new_user.referral_code, bus)
+        if not referred_by:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Referral code not found",
+            )
     cmd = cmds.RegisterUser(
         username=new_user.username,
         email=new_user.email,
         password=new_user.password,
+        referred_by=referred_by,
     )
     try:
         bus.handle(cmd)

@@ -1,5 +1,7 @@
 import dataclasses
+import random
 import re
+import string
 from dataclasses import field
 from typing import List, Optional
 
@@ -20,6 +22,16 @@ INVALID_USERNAME = (
 INVALID_EMAIL = "Email is not valid"
 
 
+def generate_referral_code() -> str:
+    chars = string.ascii_letters + string.digits
+    candidate = "".join(random.choice(chars) for x in range(5))
+    forbidden_words = ["nazis", "nigga"]
+    if candidate in forbidden_words:
+        return generate_referral_code()
+    else:
+        return candidate
+
+
 @dataclass
 class User(RootAggregate):
     id: UserId = required_field()  # type: ignore
@@ -31,6 +43,8 @@ class User(RootAggregate):
     email: str = required_field()  # type: ignore
     state: RootAggState = field(default=RootAggState.PENDING)
     roles: List[str] = field(default_factory=lambda: ["user"])
+    referral_code: str = field(default_factory=generate_referral_code)
+    referred_by: Optional[str] = field(default=None)
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:
@@ -55,6 +69,7 @@ class User(RootAggregate):
                     aggregate_id=self.id.id,
                     username=self.username,
                     email=self.email,
+                    referred_by=self.referred_by,
                 )
             )
 

@@ -21,7 +21,8 @@ class TestAssetModel:
         "",
         ".a2c",
         "c/sc",
-        "this title is too long and should now be allowed",
+        "this title is too long and should now be allowed "
+        + "asdadasdsasaassaasdwwdwwdsdsdsdsdadadasddwdwdw",
         "  ",
         "#2sd",
         "*invalid initial char",

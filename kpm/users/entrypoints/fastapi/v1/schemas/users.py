@@ -18,6 +18,18 @@ class UserBase(BaseModel):
 class UserCreate(UserBase):
     email: str
     password: str
+    """Referral code of another user for registering thanks to them"""
+    referral_code: str = None
+
+    class Config:
+        schema_extra = {
+            "example": {
+                "username": "email",
+                "email": "mymail@nonexist.com",
+                "password": "REPLACE_ME_PASSWORD",
+                "referral_code": "skwe8c",
+            }
+        }
 
 
 # Additional properties to return via API
@@ -26,6 +38,10 @@ class UserResponse(UserBase):
     state: str
     roles: List[str]
     links: Optional[Links]
+    """Referral code of this user. It can be whared with others"""
+    referral_code: str
+    """ID of the user who referred this"""
+    referred_by: Optional[str] = None
 
     @validator("links", always=True)
     def populate_links(cls, _, values):
