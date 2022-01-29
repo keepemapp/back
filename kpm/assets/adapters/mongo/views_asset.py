@@ -98,19 +98,16 @@ def find_by_ownerid(
 
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
     filter = {'owners_id': user_id, "state": RootAggState.ACTIVE.value}
-    fields = ['_id', 'title', 'file.type']
+    fields = {'_id': 0, 'id': '$_id', 'title': 1, 'file_type': '$file.type'}
     limit_results = 2
-    results = []
     with mongo_client() as client:
         col = client['assets'].assets
         assets = col.aggregate([
             {"$match": filter},
             {"$sample": {"size": limit_results}},
-            {"$projection": fields}
+            {"$project": fields}
         ])
-        for a in assets:
-            results.append({"id": a["_id"], "title": a["title"],
-                            "file_type": a["file"]["type"]})
+        results = list(assets)
     logger.debug(f"Assets of the week selected for {user_id}: {results}")
     return results
 
