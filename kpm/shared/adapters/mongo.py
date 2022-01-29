@@ -27,6 +27,10 @@ class MongoUoW(AbstractUnitOfWork):
         self.repo: DomainRepository = self.__repo_cls(**self.__repo_kwargs)
         return super().__enter__()
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        if isinstance(self.repo, MongoBase):
+            self.repo.close_conn()
+
     def _commit(self):
         if len(self.repo.seen) > 0:
             self.repo.commit()

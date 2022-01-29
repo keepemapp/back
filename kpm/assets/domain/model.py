@@ -87,7 +87,7 @@ class Asset(RootAggregate):
         :param name: str:
 
         """
-        regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,31}$"
+        regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,100}$"
         return True if re.match(regex, name) else False
 
     def __post_init__(self, loaded_from_db: bool):

@@ -8,7 +8,8 @@ from pymongo import MongoClient
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.model import AssetId, RootAggState, UserId
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 
 
@@ -96,17 +97,21 @@ def find_by_ownerid(
 
 
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
-    filter = {'owners_id': user_id}
+    filter = {'owners_id': user_id, "state": RootAggState.ACTIVE}
     fields = ['_id', 'title', 'file.type']
     limit_results = 2
     results = []
     with mongo_client() as client:
         col = client['assets'].assets
-        assets = col.find(filter=filter, projection=fields, limit=limit_results)
+        assets = col.aggregate([
+            {"$match": filter},
+            {"$sample": {"size": limit_results}},
+            {"$projection": fields}
+        ])
         for a in assets:
-            print(a)
             results.append({"id": a["_id"], "title": a["title"],
                             "file_type": a["file"]["type"]})
+    logger.debug(f"Assets of the week selected for {user_id}: {results}")
     return results
 
 
