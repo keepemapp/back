@@ -97,7 +97,7 @@ def find_by_ownerid(
 
 
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
-    filter = {'owners_id': user_id, "state": RootAggState.ACTIVE}
+    filter = {'owners_id': user_id, "state": RootAggState.ACTIVE.value}
     fields = ['_id', 'title', 'file.type']
     limit_results = 2
     results = []
