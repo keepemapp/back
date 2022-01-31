@@ -65,5 +65,5 @@ clean:
 clean-data:
 	find $(DATA_FOLDER) -type f -delete
 
-clean-deep: clean
+clean-deep: clean clean-data
 	rm -rf $(VENV)

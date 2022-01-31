@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
 from fastapi_pagination import Page, Params, paginate
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
@@ -18,6 +18,7 @@ from kpm.users.domain.model import (
     UserNotFound,
 )
 from kpm.users.entrypoints.fastapi.v1.schemas import users as schemas
+from kpm.users.service_layer import user_handler
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -101,7 +102,7 @@ def register_user(
         if not referred_by:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
-                detail="Referral code not found",
+                detail="Referral code erroneous or not found",
             )
     cmd = cmds.RegisterUser(
         username=new_user.username,

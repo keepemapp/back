@@ -38,7 +38,18 @@ mongo mongod --replSet rs0
 
 sudo docker exec -it kpm_mongo mongo
 # And inside execute
-# rs.initiate()
+# rs.initiate({"_id" : "rs0", "members" : [{"_id" : 0,"host" : "kpm_mongo:27017"}]})
+----
+
+
+You can access with python like this.
+Keep in mind that in your hosts file you will need to map `kpm_mongo` to `127.0.0.1` .
+
+[source,python]
+----
+from pymongo import MongoClient
+db = MongoClient("mongodb://kpm_mongo:27017/?replicaSet=rs0").assets
+list(db.list_collections())
 ----
 
 == API

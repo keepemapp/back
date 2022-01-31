@@ -152,6 +152,14 @@ mongod --port 27017 --replSet rs0 --bind_ip localhost
 
 Then, in another terminal execute `mongosh` (or `mongo.exe`) 
 and use `rs.initiate()` to initiate a new replica set.
+If you fet some errors like not finding the config file or replica set not configured,
+in the `mongosh` terminal execute: 
+
+```shell
+cfg = { _id:"rs0", members: [{ _id:0,host:"kpm_mongo:27017"}] };
+
+rs.initiate(cfg)
+```
 
 See:
 
