@@ -12,8 +12,9 @@ from tests.assets.infra.fastapi.v1.fixtures import *
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).path()
 
 
-def create_asset(client: TestClient, num: int, uids: List[str] = None,
-                 bookmark: bool = True):
+def create_asset(
+    client: TestClient, num: int, uids: List[str] = None, bookmark: bool = True
+):
     asset = AssetCreate(
         title=f"Asset number {num}",
         description=f"Description for {num}",
@@ -186,8 +187,8 @@ class TestGetAssets:
         assert resp["title"] == a.title
         assert resp["bookmarked"]
         assert not resp["extra_private"]
-        assert resp['tags'] == ['family']
-        assert len(resp['people']) == 0
+        assert resp["tags"] == ["family"]
+        assert len(resp["people"]) == 0
 
     def test_non_existing_asset_gives_unauthorized(self, user_client):
         response = user_client.get(ASSET_ROUTE + "/random-asset-id")

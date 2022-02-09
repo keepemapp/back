@@ -191,8 +191,11 @@ async def get_all_assets(
     if file_types:
         fts = file_types.split(",")
     assets = views.all_assets(
-        bus=bus, order_by=order_by, order=order,
-        asset_types=fts, bookmarked=bookmarked
+        bus=bus,
+        order_by=order_by,
+        order=order,
+        asset_types=fts,
+        bookmarked=bookmarked,
     )
     return paginate(
         [asset_to_response(a, token) for a in assets], paginate_params
@@ -303,7 +306,11 @@ async def get_asset_file(
         # TODO when we go with encrypted files, media_type will be different
         try:
             return FileResponse(
-                file_repo.get(a["file_location"]), media_type=a["file_type"]
+                file_repo.get(a["file_location"]),
+                media_type=a["file_type"],
+                headers={
+                    "Cache-Control": "private, max-age=2592000, immutable"
+                },
             )
         except RuntimeError as e:
             raise HTTPException(detail=e.msg)

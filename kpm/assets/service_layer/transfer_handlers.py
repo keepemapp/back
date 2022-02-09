@@ -2,12 +2,14 @@ import random
 
 import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.model as model
+from kpm.assets.domain import events
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
+from kpm.users.domain.repositories import KeepRepository
 
 
 def create_asset_in_a_bottle(
@@ -24,10 +26,6 @@ def create_asset_in_a_bottle(
         Fail if not)
     3. scheduled date must be in the future
 
-    TODO Return event that will be picked up by another
-        handler to actually act on the files themselves if needed.
-        here we act only on the assets metadata
-
     :param cmd: command
     :type cmd: CreateAssetInABottle
     :param uow:
@@ -43,6 +41,7 @@ def create_asset_in_a_bottle(
             receivers=[UserId(u) for u in cmd.receivers],
             assets=[AssetId(a) for a in cmd.assets],
             release_type="asset_future_self",
+            bequest_type=model.BequestType.GIFT,
             conditions=[model.TimeCondition(release_ts=scheduled_date)],
         )
         uow.repo.put(rel)
@@ -85,6 +84,7 @@ def create_asset_future_self(
             receivers=[UserId(cmd.owner)],
             assets=[AssetId(a) for a in cmd.assets],
             release_type="asset_future_self",
+            bequest_type=model.BequestType.SELF,
             conditions=[model.TimeCondition(release_ts=cmd.scheduled_date)],
         )
         uow.repo.put(rel)
@@ -92,7 +92,9 @@ def create_asset_future_self(
 
 
 def trigger_release(
-    cmd: cmds.TriggerRelease, assetrelease_uow: AbstractUnitOfWork
+    cmd: cmds.TriggerRelease,
+    assetrelease_uow: AbstractUnitOfWork,
+    keep_uow: AbstractUnitOfWork,
 ):
     """
 
@@ -101,12 +103,30 @@ def trigger_release(
     :param assetrelease_uow:
     :return:
     """
-    with assetrelease_uow as uow:
+    with assetrelease_uow as uow, keep_uow as keeps:
         rel: model.AssetRelease = uow.repo.get(DomainId(cmd.aggregate_id))
         if rel.can_trigger():
-            rel.release()
-            uow.repo.put(rel)
-            uow.commit()
+            kr: KeepRepository = keeps.repo
+            not_contacts = []
+            for reciver in rel.receivers:
+
+                if not kr.exists(rel.owner, reciver):
+                    not_contacts.append(reciver)
+            if not_contacts:
+                reason = (
+                    "There are receivers not part of your contacts and "
+                    "thus we could not deliver to them."
+                )
+                rel.cancel(reason=reason)
+                uow.repo.put(rel)
+                uow.commit()
+                # FIXME if we raise this, we cannot handle the other events
+                # Maybe we add a canceling motive/status and send an email?
+                # raise model.ReceiversNotInContacts(not_contacts)
+            else:
+                rel.trigger()
+                uow.repo.put(rel)
+                uow.commit()
 
 
 def cancel_release(
@@ -139,10 +159,6 @@ def stash_asset(cmd: cmds.Stash, assetrelease_uow: AbstractUnitOfWork):
     2. If there are no receivers, it's open to anyone
     3. scheduled date must be in the future
 
-    TODO Return event that will be picked up by another
-        handler to actually act on the files themselves if needed.
-        here we act only on the assets metadata
-
     :param cmd: command
     :type cmd: Stash
     :param uow:
@@ -162,10 +178,6 @@ def create_time_capsule(
     1. The person using it must own the assets
     2. scheduled date must be in the future
 
-    TODO Return TimeCapsuleCreated event that will be picked up by another
-        handler to actually act on the files themselves if needed
-        here we act only on the assets metadata
-
     :param cmd: command
     :type cmd: CreateTimeCapsule
     :param uow:
@@ -183,10 +195,6 @@ def transfer_asset(cmd: cmds.TransferAssets, asset_uow: AssetUoW):
         QUESTION: Must uniquely own them?
     2. Happens "immediately"
 
-    TODO Return event that will be picked up by another
-        handler to actually act on the files themselves if needed.
-        here we act only on the assets metadata
-
     :param TransferAssets cmd: command
     :param AssetUoW asset_uow:
     :return:
@@ -197,3 +205,13 @@ def transfer_asset(cmd: cmds.TransferAssets, asset_uow: AssetUoW):
             a: Asset = uow.repo.find_by_id(AssetId(aid))
             a.change_owner(mod_ts, cmd.owner, cmd.receivers)
         uow.commit()
+
+
+def notify_transfer_cancellation(
+    event: events.AssetReleaseCanceled,
+    asset_uow: AssetUoW,
+    assetrelease_uow: AbstractUnitOfWork,
+    user_uow: AbstractUnitOfWork,
+):
+    # TODO implement me
+    pass

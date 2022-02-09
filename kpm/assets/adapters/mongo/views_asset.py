@@ -1,14 +1,14 @@
-import random
 from dataclasses import asdict
 from typing import Dict, List, Optional
 
 import flatdict
-from pymongo import MongoClient
+from bson import SON
 
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.model import AssetId, RootAggState, UserId
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 
 
@@ -75,11 +75,13 @@ def are_assets_active(
     """
     filter = {
         "_id": {"$in": assets},
-        "owners": user
+        "owners_id": user,
+        "state": RootAggState.ACTIVE.value,
     }
     with mongo_client() as client:
-        col = client['assets'].assets
+        col = client["assets"].assets
         num_found = col.count_documents(filter=filter)
+        logger.debug(f"Executed MongoQuery {filter} with {num_found} results")
     return num_found == len(assets)
 
 
@@ -96,39 +98,56 @@ def find_by_ownerid(
 
 
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
-    filter = {'owners_id': user_id}
-    fields = ['_id', 'title', 'file.type']
+    filter = {"owners_id": user_id, "state": RootAggState.ACTIVE.value}
+    fields = {"_id": 0, "id": "$_id", "title": 1, "file_type": "$file.type"}
     limit_results = 2
-    results = []
     with mongo_client() as client:
-        col = client['assets'].assets
-        assets = col.find(filter=filter, projection=fields, limit=limit_results)
-        for a in assets:
-            print(a)
-            results.append({"id": a["_id"], "title": a["title"],
-                            "file_type": a["file"]["type"]})
+        col = client["assets"].assets
+        assets = col.aggregate(
+            [
+                {"$match": filter},
+                {"$sample": {"size": limit_results}},
+                {"$project": fields},
+            ]
+        )
+        results = list(assets)
+    logger.debug(f"Assets of the week selected for {user_id}: {results}")
     return results
 
 
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     type_agg = [
         {"$match": {"owners_id": user_id}},
-        {"$group": {
-            "_id": "$file.type",
-            "count": {"$sum": 1},
-            "size:": {"$sum": "file.size_bytes"}
-        }},
+        {
+            "$group": {
+                "_id": {"$arrayElemAt": [{"$split": ["$file.type", "/"]}, 0]},
+                "count": {"$sum": 1},
+                "size:": {"$sum": "$file.size_bytes"},
+            }
+        },
+    ]
+    sizes_mb = {}
+    count = {}
+    with mongo_client() as client:
+        col = client["assets"].assets
+        for t in col.aggregate(type_agg):
+            sizes_mb[t["_id"]] = t["size"] / (1014 * 1024)
+            count[t["_id"]] = t["count"]
+    logger.debug(f"Executed MongoQuery {type_agg}")
+    return {"size_mb": sizes_mb, "count": count}
+
+
+def tag_cloud(user_id: str, bus: MessageBus = None) -> Dict:
+    type_agg = [
+        {"$match": {"owners_id": user_id}},
+        {"$unwind": "$tags"},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
+        {"$sort": SON([("count", -1)])},
+        {"$limit": 8},
     ]
     with mongo_client() as client:
-        col = client['assets'].assets
-        res = col.aggregate(type_agg)
-    print(res)
-    return {
-        "total": 32,
-        "images": 20,
-        "documents": 2,
-        "videos": 7,
-        "audios": 3,
-        "others": 0,
-        "visible": 28,
-    }
+        col = client["assets"].assets
+        tags = {r["_id"]: r["count"] for r in col.aggregate(type_agg)}
+
+    logger.debug(f"Executed MongoQuery {type_agg}")
+    return tags

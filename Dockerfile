@@ -13,6 +13,6 @@ FROM tiangolo/uvicorn-gunicorn-fastapi:python3.9
 
 COPY --from=requirements-stage /tmp/requirements.txt /app/requirements.txt
 
-RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt && mkdir -m /data/assets
+RUN pip install --no-cache-dir --upgrade -r /app/requirements.txt && mkdir -p /data/assets
 
 COPY ./kpm /app/kpm

@@ -2,7 +2,6 @@ import os
 import random
 import string
 import time
-from os.path import dirname, join
 
 import uvicorn
 from fastapi import FastAPI
@@ -45,7 +44,7 @@ if os.name != "nt":
     try:
         repo = git.Repo(search_parent_directories=True)
         version = repo.git.rev_parse(repo.head, short=True)
-    except:
+    except Exception:
         pass
 
 app = FastAPI(

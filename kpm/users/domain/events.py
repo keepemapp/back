@@ -1,3 +1,6 @@
+from dataclasses import field
+from typing import Optional
+
 from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import required_field
@@ -9,6 +12,7 @@ class UserRegistered(Event):
     eventType: str = "user_registered"
     username: str = required_field()  # type: ignore
     email: str = required_field()  # type: ignore
+    referred_by: Optional[str] = field(default=None)
 
 
 @dataclass(frozen=True)

@@ -26,6 +26,7 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
                 id=UserId(cmd.user_id),
                 state=RootAggState.ACTIVE,
                 roles=["admin"],
+                referred_by=cmd.referred_by,
             )
         else:
             if repo.exists_email(cmd.email):
@@ -38,6 +39,7 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
                 email=cmd.email,
                 password_hash=hash_password(salt_password(cmd.password, salt)),
                 id=UserId(cmd.user_id),
+                referred_by=cmd.referred_by,
             )
         repo.create(user)
         uow.commit()

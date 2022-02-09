@@ -12,7 +12,9 @@ from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
 from kpm.shared.entrypoints import bootstrap
 from kpm.shared.service_layer.message_bus import UoWs
+from kpm.users.domain.model import Keep
 from tests.shared.utils import TestUoW
+from tests.users.utils import TestKeepRepository
 
 
 class TestAssetRepository(MemoryAssetRepository):
@@ -74,6 +76,7 @@ def bus():
             {
                 model.Asset: TestUoW(TestAssetRepository),
                 model.AssetRelease: TestUoW(TestReleaseRepo),
+                Keep: TestUoW(TestKeepRepository),
             }
         ),
         event_handlers=EVENT_HANDLERS,

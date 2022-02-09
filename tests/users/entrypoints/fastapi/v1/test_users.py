@@ -51,6 +51,36 @@ class TestRegisterUser:
         assert user_resp.get("email") == user.email
         assert user_resp.get("id")
         assert user_resp.get("id") in user_resp.get("links").get("self")
+        assert user_resp.get("referral_code")
+
+    def test_referral(self, client):
+        _, create_resp = create_user(client)
+        referrer_id = create_resp.json().get("id")
+        referral_code = create_resp.json().get("referral_code")
+
+        user = UserCreate(
+            username="user",
+            email="valid@email.com",
+            password="pwd",
+            referral_code=referral_code,
+        )
+        response = client.post(user_route, json=user.dict())
+        assert response.status_code == 200
+        user_resp = response.json()
+        assert user_resp.get("referred_by") == referrer_id
+        # the created user gets a new referral code different from the original
+        assert user_resp.get("referral_code") != referral_code
+
+    def test_no_existant_referral(self, client):
+        _, create_resp = create_user(client)
+        user = UserCreate(
+            username="user2",
+            email="valid2@email.com",
+            password="pwd2",
+            referral_code="does not exist",
+        )
+        response = client.post(user_route, json=user.dict())
+        assert response.status_code == 404
 
     def test_first_user_is_admin(self, client):
         _, create_resp = create_user(client)

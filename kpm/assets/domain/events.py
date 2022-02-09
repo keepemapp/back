@@ -1,4 +1,4 @@
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from pydantic.dataclasses import dataclass
 
@@ -25,6 +25,7 @@ class AssetReleaseScheduled(Event):
 class AssetReleaseCanceled(Event):
     eventType: str = "AssetReleaseCanceled"
     assets: List[str] = required_field()  # type: ignore
+    reason: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -34,6 +35,7 @@ class AssetReleased(Event):
     owner: str = required_field()  # type: ignore
     assets: List[str] = required_field()  # type: ignore
     receivers: List[str] = required_field()  # type: ignore
+    bequest_type: str = required_field()  # type: ignore
 
 
 @dataclass(frozen=True)

@@ -62,5 +62,7 @@ class KeepRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def exists(self, user1: UserId, user2: UserId) -> bool:
+    def exists(
+        self, user1: UserId, user2: UserId, all_states: bool = False
+    ) -> bool:
         raise NotImplementedError

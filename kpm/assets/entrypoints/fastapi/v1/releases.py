@@ -9,8 +9,11 @@ import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schemas
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
-    asset_view, message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import (
+    asset_rel_view,
+    asset_view,
+    message_bus,
+)
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
     get_access_token,
     get_admin_token,
@@ -51,7 +54,9 @@ def assert_same_user(a, b):
         )
 
 
-def assert_assets_can_be_scheduled(bus, asset_list: List[str], owner: str, asset_view):
+def assert_assets_can_be_scheduled(
+    bus, asset_list: List[str], owner: str, asset_view
+):
     as_clear = [a.replace("/assets/", "") for a in asset_list]
     o_clear = owner.replace("/users/", "")
 
@@ -117,7 +122,9 @@ async def add_asset_future_self(
     bus: MessageBus = Depends(message_bus),
     assets=Depends(asset_view),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject, assets)
+    error = assert_assets_can_be_scheduled(
+        bus, create.assets, token.subject, assets
+    )
     if error:
         raise error
 
@@ -139,7 +146,9 @@ async def add_asset_bottle(
     bus: MessageBus = Depends(message_bus),
     assets=Depends(asset_view),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject, assets)
+    error = assert_assets_can_be_scheduled(
+        bus, create.assets, token.subject, assets
+    )
     if error:
         raise error
 
@@ -161,7 +170,9 @@ async def add_stash(
     bus: MessageBus = Depends(message_bus),
     assets=Depends(asset_view),
 ):
-    error = assert_assets_can_be_scheduled(bus, create.assets, token.subject, assets)
+    error = assert_assets_can_be_scheduled(
+        bus, create.assets, token.subject, assets
+    )
     if error:
         raise error
 

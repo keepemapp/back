@@ -63,7 +63,9 @@ async def login_for_access_token(
     """
     if "@" not in form_data.username:
         raise ex.USER_CREDENTIALS_ER
-    user = authenticate_by_email(form_data.username, form_data.password, bus, views)
+    user = authenticate_by_email(
+        form_data.username, form_data.password, bus, views
+    )
 
     if user.is_pending_validation():
         raise ex.USER_PENDING_VALIDATION

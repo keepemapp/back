@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, field
+from enum import unique
 from typing import Dict, List, Optional, Set, Union
 
 from pydantic.dataclasses import dataclass
@@ -21,6 +22,7 @@ from kpm.shared.domain import (
 )
 from kpm.shared.domain.model import (
     AssetId,
+    NoValue,
     RootAggregate,
     RootAggState,
     UserId,
@@ -32,8 +34,10 @@ from kpm.shared.domain.time_utils import now_utc_millis
 class AssetTitleException(Exception):
     """Exception to raise when title is not valid"""
 
-    def __init__(self):
-        super().__init__("Asset name is not valid")
+    def __init__(self, msg: str = None):
+        if not msg:
+            msg = "Asset title is not valid"
+        super().__init__(msg)
 
 
 class EmptyOwnerException(Exception):
@@ -87,7 +91,7 @@ class Asset(RootAggregate):
         :param name: str:
 
         """
-        regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,31}$"
+        regex = r"^[\w][\w ?!'¿¡*-\.\[\]\{\}\(\)]{0,64}$"
         return True if re.match(regex, name) else False
 
     def __post_init__(self, loaded_from_db: bool):
@@ -97,7 +101,9 @@ class Asset(RootAggregate):
         for uid in self.owners_id:
             self._id_type_is_valid(UserId, uid)
         if not self._title_is_valid(self.title):
-            raise AssetTitleException()
+            raise AssetTitleException(
+                "Title too long or containing too many thigns"
+            )
 
         if not loaded_from_db:
             # Send asset creation event
@@ -195,6 +201,19 @@ def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
         raise TypeError("Condition type not recognized")
 
 
+@unique
+class BequestType(NoValue):
+    """The sender looses access to the assets"""
+
+    GIFT = "gitft"
+    """All the users will co-own the assets"""
+    CO_OWNSRSHIP = "co-ownership"
+    """Duplication of assets. Copying the entities."""
+    COPY = "copy"
+    """Asset to one self"""
+    SELF = "self"
+
+
 @dataclass
 class AssetRelease(RootAggregate):
     """It represents an event that will trigger the transfer (release) of an
@@ -210,6 +229,7 @@ class AssetRelease(RootAggregate):
     assets: List[AssetId] = required_field()  # type: ignore
     conditions: List[ReleaseCondition] = required_field()  # type: ignore
     release_type: str = required_field()  # type: ignore
+    bequest_type: BequestType = required_field()  # type: ignore
     id: DomainId = field(default_factory=lambda: init_id(DomainId))
 
     def __post_init__(self, loaded_from_db: bool):
@@ -246,7 +266,7 @@ class AssetRelease(RootAggregate):
         """If all the condition are met, returns `True`."""
         return all([c.is_met() for c in self.conditions])
 
-    def release(self):
+    def trigger(self):
         if not self.can_trigger():
             raise Exception(f"Release {self.id} not ready to be released.")
         ts = now_utc_millis()
@@ -256,13 +276,14 @@ class AssetRelease(RootAggregate):
                 aggregate_id=self.id.id,
                 timestamp=ts,
                 re_type=self.release_type,
+                bequest_type=self.bequest_type.value,
                 owner=self.owner.id,
                 assets=[a.id for a in self.assets],
                 receivers=[u.id for u in self.receivers],
             )
         )
 
-    def cancel(self):
+    def cancel(self, reason: str = None):
         """Cancels the event."""
         ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.REMOVED)
@@ -271,6 +292,7 @@ class AssetRelease(RootAggregate):
                 aggregate_id=self.id.id,
                 timestamp=ts,
                 assets=[a.id for a in self.assets],
+                reason=reason,
             )
         )
 
@@ -278,10 +300,20 @@ class AssetRelease(RootAggregate):
         return hash(self.id.id)
 
 
+class ReceiversNotInContacts(Exception):
+    def __init__(self, not_contacts: List[str]):
+        self.msg = (
+            "There are receivers not part of your contacts and thus we"
+            "could not deliver to them."
+        )
+        super().__init__()
+
+
 class DuplicatedAssetException(Exception):
     def __init__(self):
-        super().__init__(
+        super().__init__()
+        self.msg = (
             "You have tried creating the same asset "
-            "twice. This is not allowed. "
-            "Try updating it."
+            + "twice. This is not allowed. "
+            + "Try updating it."
         )

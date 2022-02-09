@@ -134,6 +134,7 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         bson["assets"] = [r["id"] for r in bson.pop("assets")]
         bson.pop("events")
         bson["state"] = bson.pop("state").value
+        bson["bequest_type"] = bson.pop("bequest_type").value
         return bson
 
     def _from_bson(self, bson: Dict) -> AssetRelease:

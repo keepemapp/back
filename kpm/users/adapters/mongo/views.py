@@ -3,6 +3,7 @@ from typing import List, Optional
 
 import flatdict
 
+from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain.model import UserId
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import Keep, User, UserNotFound
@@ -21,6 +22,16 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
         return user.erase_sensitive_data()
     else:
         return None
+
+
+def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
+    with mongo_client() as client:
+        col = client["users"].user
+        res = col.find_one(
+            filter={"referral_code": referral_code}, projection=["_id"]
+        )
+
+    return res.get("_id", None) if res else None
 
 
 def credentials_email(email: str, password: str, bus: MessageBus) -> User:

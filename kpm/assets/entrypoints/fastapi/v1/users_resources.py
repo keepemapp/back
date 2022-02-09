@@ -10,8 +10,11 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import (
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi import query_params
-from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
-    asset_view, message_bus
+from kpm.shared.entrypoints.fastapi.dependencies import (
+    asset_rel_view,
+    asset_view,
+    message_bus,
+)
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -54,8 +57,12 @@ async def get_current_user_assets(
     if file_types:
         fts = file_types.split(",")
     assets = views_asset.find_by_ownerid(
-        token.subject, bus=bus, order_by=order_by, order=order,
-        asset_types=fts, bookmarked=bookmarked
+        token.subject,
+        bus=bus,
+        order_by=order_by,
+        order=order,
+        asset_types=fts,
+        bookmarked=bookmarked,
     )
     return paginate(
         [asset_to_response(a, token) for a in assets], paginate_params
