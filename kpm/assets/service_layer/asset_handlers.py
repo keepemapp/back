@@ -4,7 +4,7 @@ from typing import Union
 
 import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.events as events
-from kpm.assets.domain.model import Asset, FileData
+from kpm.assets.domain.model import Asset, BequestType, FileData
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain.model import AssetId, RemovalNotPossible, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
@@ -32,11 +32,22 @@ def make_asset_visible(event: Visible, asset_uow: AssetUoW):
 
 
 def change_asset_owner(event: events.AssetReleased, asset_uow: AssetUoW):
+    if event.bequest_type == BequestType.SELF:
+        return
     with asset_uow as uow:
         for aid in event.assets:
             a: Asset = uow.repo.find_by_id(AssetId(aid), visible_only=False)
-            a.change_owner(event.timestamp, event.owner, event.receivers)
-            uow.repo.update(a)
+            if event.bequest_type == BequestType.GIFT.value:
+                a.change_owner(event.timestamp, event.owner, event.receivers)
+                uow.repo.update(a)
+            elif event.bequest_type == BequestType.CO_OWNSRSHIP.value:
+                new_owners = event.receivers + [event.owner]
+                a.change_owner(event.timestamp, event.owner, new_owners)
+                uow.repo.update(a)
+            elif event.bequest_type == BequestType.COPY.value:
+                raise NotImplementedError()
+            else:
+                raise NotImplementedError()
         uow.commit()
 
 

@@ -5,7 +5,7 @@ from typing import Any, Dict
 import pytest
 
 from kpm.assets.domain import model
-from kpm.assets.domain.model import Asset, FileData
+from kpm.assets.domain.model import Asset, BequestType, FileData
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.time_utils import now_utc, to_millis
 
@@ -61,6 +61,7 @@ def release1() -> model.AssetRelease:
         receivers=[UserId("U")],
         assets=[AssetId("a11"), AssetId("a12")],
         release_type="example",
+        bequest_type=BequestType.GIFT,
         conditions=[
             model.TrueCondition(),
             model.TimeCondition(release_ts=future),
@@ -77,6 +78,7 @@ def release2() -> model.AssetRelease:
         receivers=[UserId("U")],
         assets=[AssetId("a22"), AssetId("a21")],
         release_type="example",
+        bequest_type=BequestType.GIFT,
         conditions=[model.TrueCondition()],
     )
 

@@ -3,6 +3,7 @@ from __future__ import annotations
 import re
 from abc import ABC, abstractmethod
 from dataclasses import asdict, field
+from enum import unique
 from typing import Dict, List, Optional, Set, Union
 
 from pydantic.dataclasses import dataclass
@@ -21,7 +22,7 @@ from kpm.shared.domain import (
 )
 from kpm.shared.domain.model import (
     AssetId,
-    RootAggregate,
+    NoValue, RootAggregate,
     RootAggState,
     UserId,
     ValueObject,
@@ -198,6 +199,17 @@ def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
     else:
         raise TypeError("Condition type not recognized")
 
+@unique
+class BequestType(NoValue):
+    """The sender looses access to the assets"""
+    GIFT = "gitft"
+    """All the users will co-own the assets"""
+    CO_OWNSRSHIP = "co-ownership"
+    """Duplication of assets. Copying the entities."""
+    COPY = "copy"
+    """Asset to one self"""
+    SELF = "self"
+
 
 @dataclass
 class AssetRelease(RootAggregate):
@@ -214,6 +226,7 @@ class AssetRelease(RootAggregate):
     assets: List[AssetId] = required_field()  # type: ignore
     conditions: List[ReleaseCondition] = required_field()  # type: ignore
     release_type: str = required_field()  # type: ignore
+    bequest_type: BequestType = required_field()  # type: ignore
     id: DomainId = field(default_factory=lambda: init_id(DomainId))
 
     def __post_init__(self, loaded_from_db: bool):
@@ -250,7 +263,7 @@ class AssetRelease(RootAggregate):
         """If all the condition are met, returns `True`."""
         return all([c.is_met() for c in self.conditions])
 
-    def release(self):
+    def trigger(self):
         if not self.can_trigger():
             raise Exception(f"Release {self.id} not ready to be released.")
         ts = now_utc_millis()
@@ -260,13 +273,14 @@ class AssetRelease(RootAggregate):
                 aggregate_id=self.id.id,
                 timestamp=ts,
                 re_type=self.release_type,
+                bequest_type=self.bequest_type.value,
                 owner=self.owner.id,
                 assets=[a.id for a in self.assets],
                 receivers=[u.id for u in self.receivers],
             )
         )
 
-    def cancel(self):
+    def cancel(self, reason: str = None):
         """Cancels the event."""
         ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.REMOVED)
@@ -275,6 +289,7 @@ class AssetRelease(RootAggregate):
                 aggregate_id=self.id.id,
                 timestamp=ts,
                 assets=[a.id for a in self.assets],
+                reason=reason,
             )
         )
 
@@ -282,10 +297,16 @@ class AssetRelease(RootAggregate):
         return hash(self.id.id)
 
 
+class ReceiversNotInContacts(Exception):
+    def __init__(self, not_contacts: List[str]):
+        self.msg = "There are receivers not part of your contacts and thus we" \
+                   "could not deliver to them."
+        super().__init__()
+
+
 class DuplicatedAssetException(Exception):
     def __init__(self):
-        super().__init__(
-            "You have tried creating the same asset "
-            "twice. This is not allowed. "
+        super().__init__()
+        self.msg = "You have tried creating the same asset " +\
+            "twice. This is not allowed. " +\
             "Try updating it."
-        )

@@ -183,25 +183,38 @@ class TestMongoKeepRepo:
         a = collection.find_one({"_id": k.id.id})
         assert a["state"] == RootAggState.ACTIVE.value
 
-    def test_exists(self, _repo):
+    @pytest.mark.parametrize("state", [
+        RootAggState.ACTIVE,
+        RootAggState.PENDING,
+        RootAggState.REMOVED,
+        RootAggState.INACTIVE,
+    ])
+    def test_exists(self, _repo, state):
         u1 = UserId(id="user1")
         u2 = UserId(id="user2")
-        k = Keep(requester=u1, requested=u2)
+        k = Keep(requester=u1, requested=u2, state=state)
         db, repo = _repo
         repo.put(k)
         repo.commit()
 
         # Matching
-        assert repo.exists(u1, u2)
-        assert repo.exists(u2, u1)
+        assert repo.exists(u1, u2, all_states=True)
+        assert repo.exists(u2, u1, all_states=True)
+        # Self relationship exists and is good
+        assert repo.exists(u1, u1, all_states=True)
+        assert repo.exists(u1, u1, all_states=False)
+        if state == RootAggState.ACTIVE:
+            assert repo.exists(u1, u2, all_states=False)
+            assert repo.exists(u2, u1, all_states=False)
+        else:
+            assert not repo.exists(u1, u2, all_states=False)
+            assert not repo.exists(u2, u1, all_states=False)
 
         # Not matching
-        assert not repo.exists(UserId(id="34123"), UserId(id="11111"))
-        assert not repo.exists(UserId(id="34123"), UserId(id="34123"))
+        assert not repo.exists(UserId(id="34123"), UserId(id="11111"), all_states=True)
         for u in [u1, u2]:
-            assert not repo.exists(u, UserId(id="another"))
-            assert not repo.exists(UserId(id="another"), u)
-            assert not repo.exists(u, u)
+            assert not repo.exists(u, UserId(id="another"), all_states=True)
+            assert not repo.exists(UserId(id="another"), u, all_states=True)
 
     def test_get(self, _repo):
         k = Keep(requester=UserId(id="user1"), requested=UserId(id="user2"))

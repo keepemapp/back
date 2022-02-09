@@ -8,8 +8,10 @@ import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schema
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
+from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
+from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.infra.fastapi.v1.fixtures import ADMIN_TOKEN
 from tests.assets.utils import bus
@@ -29,6 +31,9 @@ class TestReleases:
     @staticmethod
     @pytest.fixture
     def populated_bus(bus, create_asset_cmd):
+        keep_r = bus.uows.get(Keep).repo
+        keep_r.put(Keep(requester=UserId(id=OWNER1), requested=UserId(id=OWNER2), state=RootAggState.ACTIVE))
+        keep_r.commit()
         to_cancel = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
             scheduled_date=123232,

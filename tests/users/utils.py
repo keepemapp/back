@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional
 
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import UserId
+from kpm.shared.domain.model import RootAggState, UserId
 from kpm.users.domain.model import Keep, User
 from kpm.users.domain.repositories import KeepRepository, UserRepository
 
@@ -70,10 +70,14 @@ class TestKeepRepository(KeepRepository):
     def put(self, k: Keep):
         self._keeps.append(k)
 
-    def exists(self, user1: UserId, user2: UserId) -> bool:
+    def exists(self, user1: UserId, user2: UserId, all_states: bool = False
+               ) -> bool:
+        if user1.id == user2.id:
+            return True
         for k in self._keeps:
             cond1 = k.requester in (user1, user2)
             cond2 = k.requested in (user1, user2)
-            if cond1 and cond2:
+            cond3 = all_states or k.state == RootAggState.ACTIVE
+            if cond1 and cond2 and cond3:
                 return True
         return False
