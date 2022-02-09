@@ -73,8 +73,11 @@ def are_assets_active(
 
     If a user is passed, it checks the ownership of all assets.
     """
-    filter = {"_id": {"$in": assets}, "owners_id": user,
-              "state": RootAggState.ACTIVE.value}
+    filter = {
+        "_id": {"$in": assets},
+        "owners_id": user,
+        "state": RootAggState.ACTIVE.value,
+    }
     with mongo_client() as client:
         col = client["assets"].assets
         num_found = col.count_documents(filter=filter)
@@ -128,8 +131,8 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     with mongo_client() as client:
         col = client["assets"].assets
         for t in col.aggregate(type_agg):
-            sizes_mb[t['_id']] = t['size'] / (1014 * 1024)
-            count[t['_id']] = t['count']
+            sizes_mb[t["_id"]] = t["size"] / (1014 * 1024)
+            count[t["_id"]] = t["count"]
     logger.debug(f"Executed MongoQuery {type_agg}")
     return {"size_mb": sizes_mb, "count": count}
 
@@ -138,13 +141,13 @@ def tag_cloud(user_id: str, bus: MessageBus = None) -> Dict:
     type_agg = [
         {"$match": {"owners_id": user_id}},
         {"$unwind": "$tags"},
-        {"$group": {"_id": "$tags",  "count": {"$sum": 1}}},
+        {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
         {"$sort": SON([("count", -1)])},
-        {"$limit": 8}
+        {"$limit": 8},
     ]
     with mongo_client() as client:
         col = client["assets"].assets
-        tags = {r['_id']: r['count'] for r in col.aggregate(type_agg)}
+        tags = {r["_id"]: r["count"] for r in col.aggregate(type_agg)}
 
     logger.debug(f"Executed MongoQuery {type_agg}")
     return tags

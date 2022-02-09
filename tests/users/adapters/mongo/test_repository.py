@@ -183,12 +183,15 @@ class TestMongoKeepRepo:
         a = collection.find_one({"_id": k.id.id})
         assert a["state"] == RootAggState.ACTIVE.value
 
-    @pytest.mark.parametrize("state", [
-        RootAggState.ACTIVE,
-        RootAggState.PENDING,
-        RootAggState.REMOVED,
-        RootAggState.INACTIVE,
-    ])
+    @pytest.mark.parametrize(
+        "state",
+        [
+            RootAggState.ACTIVE,
+            RootAggState.PENDING,
+            RootAggState.REMOVED,
+            RootAggState.INACTIVE,
+        ],
+    )
     def test_exists(self, _repo, state):
         u1 = UserId(id="user1")
         u2 = UserId(id="user2")
@@ -211,7 +214,9 @@ class TestMongoKeepRepo:
             assert not repo.exists(u2, u1, all_states=False)
 
         # Not matching
-        assert not repo.exists(UserId(id="34123"), UserId(id="11111"), all_states=True)
+        assert not repo.exists(
+            UserId(id="34123"), UserId(id="11111"), all_states=True
+        )
         for u in [u1, u2]:
             assert not repo.exists(u, UserId(id="another"), all_states=True)
             assert not repo.exists(UserId(id="another"), u, all_states=True)

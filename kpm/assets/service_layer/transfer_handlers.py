@@ -92,7 +92,9 @@ def create_asset_future_self(
 
 
 def trigger_release(
-    cmd: cmds.TriggerRelease, assetrelease_uow: AbstractUnitOfWork, keep_uow: AbstractUnitOfWork
+    cmd: cmds.TriggerRelease,
+    assetrelease_uow: AbstractUnitOfWork,
+    keep_uow: AbstractUnitOfWork,
 ):
     """
 
@@ -111,8 +113,10 @@ def trigger_release(
                 if not kr.exists(rel.owner, reciver):
                     not_contacts.append(reciver)
             if not_contacts:
-                reason = "There are receivers not part of your contacts and " \
-                         "thus we could not deliver to them."
+                reason = (
+                    "There are receivers not part of your contacts and "
+                    "thus we could not deliver to them."
+                )
                 rel.cancel(reason=reason)
                 uow.repo.put(rel)
                 uow.commit()
@@ -204,10 +208,10 @@ def transfer_asset(cmd: cmds.TransferAssets, asset_uow: AssetUoW):
 
 
 def notify_transfer_cancellation(
-        event: events.AssetReleaseCanceled,
-        asset_uow: AssetUoW,
-        assetrelease_uow: AbstractUnitOfWork,
-        user_uow: AbstractUnitOfWork,
+    event: events.AssetReleaseCanceled,
+    asset_uow: AssetUoW,
+    assetrelease_uow: AbstractUnitOfWork,
+    user_uow: AbstractUnitOfWork,
 ):
     # TODO implement me
     pass

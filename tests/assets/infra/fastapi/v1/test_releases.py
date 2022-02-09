@@ -32,7 +32,13 @@ class TestReleases:
     @pytest.fixture
     def populated_bus(bus, create_asset_cmd):
         keep_r = bus.uows.get(Keep).repo
-        keep_r.put(Keep(requester=UserId(id=OWNER1), requested=UserId(id=OWNER2), state=RootAggState.ACTIVE))
+        keep_r.put(
+            Keep(
+                requester=UserId(id=OWNER1),
+                requested=UserId(id=OWNER2),
+                state=RootAggState.ACTIVE,
+            )
+        )
         keep_r.commit()
         to_cancel = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],

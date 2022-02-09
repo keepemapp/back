@@ -6,7 +6,7 @@ from pymongo.collation import Collation
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import RootAggState, RootAggregate, UserId
+from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
 from kpm.shared.log import logger
 from kpm.users.domain.model import Keep, User
 from kpm.users.domain.repositories import KeepRepository, UserRepository
@@ -128,8 +128,9 @@ class KeepMongoRepo(MongoBase, KeepRepository):
         if resp:
             return self._from_bson(resp)
 
-    def exists(self, user1: UserId, user2: UserId, all_states: bool = False
-               ) -> bool:
+    def exists(
+        self, user1: UserId, user2: UserId, all_states: bool = False
+    ) -> bool:
         if user1.id == user2.id:
             return True
         queries = [

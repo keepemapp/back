@@ -106,8 +106,9 @@ class KeepMemoryRepository(KeepRepository):
             return r
         return []
 
-    def exists(self, user1: UserId, user2: UserId, all_states: bool = False
-               ) -> bool:
+    def exists(
+        self, user1: UserId, user2: UserId, all_states: bool = False
+    ) -> bool:
         if user1.id == user2.id:
             return True
         for k in self._keeps:

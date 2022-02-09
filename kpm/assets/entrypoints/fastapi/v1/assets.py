@@ -308,7 +308,9 @@ async def get_asset_file(
             return FileResponse(
                 file_repo.get(a["file_location"]),
                 media_type=a["file_type"],
-                headers={'Cache-Control': 'private, max-age=2592000, immutable'}
+                headers={
+                    "Cache-Control": "private, max-age=2592000, immutable"
+                },
             )
         except RuntimeError as e:
             raise HTTPException(detail=e.msg)

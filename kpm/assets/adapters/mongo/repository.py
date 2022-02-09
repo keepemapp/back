@@ -7,7 +7,7 @@ import pymongo
 from kpm.assets.domain import AssetRelease
 from kpm.assets.domain.model import (
     Asset,
-    BequestType, DuplicatedAssetException,
+    DuplicatedAssetException,
     FileData,
     dict_to_release_cond,
 )

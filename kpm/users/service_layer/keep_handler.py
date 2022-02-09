@@ -9,8 +9,9 @@ from kpm.users.domain.repositories import KeepRepository
 def new_keep(cmd: cmds.RequestKeep, keep_uow: AbstractUnitOfWork):
     with keep_uow as uow:
         repo: KeepRepository = uow.repo
-        if repo.exists(UserId(cmd.requester), UserId(cmd.requested),
-                       all_states=True):
+        if repo.exists(
+            UserId(cmd.requester), UserId(cmd.requested), all_states=True
+        ):
             raise model.DuplicatedKeepException()
         k = model.Keep(
             created_ts=cmd.timestamp,

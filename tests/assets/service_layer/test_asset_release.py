@@ -159,14 +159,19 @@ class TestAssetReleaseVisibility:
             r: model.AssetRelease = rs[0]
             assert r.is_past()
 
-    KEEP_STATE_TO_FAIL_RELEASE = [None, RootAggState.PENDING,
-                                  RootAggState.REMOVED, RootAggState.INACTIVE]
+    KEEP_STATE_TO_FAIL_RELEASE = [
+        None,
+        RootAggState.PENDING,
+        RootAggState.REMOVED,
+        RootAggState.INACTIVE,
+    ]
 
     @pytest.mark.parametrize("keep_state", KEEP_STATE_TO_FAIL_RELEASE)
     def test_cancellation_if_no_keep(self, bus, create_asset_cmd, keep_state):
         # Given
-        release = self.populate_bus_with_release(bus, create_asset_cmd,
-                                                 keep_state=keep_state)
+        release = self.populate_bus_with_release(
+            bus, create_asset_cmd, keep_state=keep_state
+        )
         release_id = release.id
         asset_id = release.assets[0]
         original_owner = release.owner
@@ -185,8 +190,9 @@ class TestAssetReleaseVisibility:
 
     def test_triggers_if_keep(self, bus, create_asset_cmd):
         # Given
-        release = self.populate_bus_with_release(bus, create_asset_cmd,
-                                                 keep_state=RootAggState.ACTIVE)
+        release = self.populate_bus_with_release(
+            bus, create_asset_cmd, keep_state=RootAggState.ACTIVE
+        )
         release_id = release.id
         asset_id = release.assets[0]
         # When
@@ -234,18 +240,24 @@ class TestAssetReleaseVisibility:
 
     @staticmethod
     def populate_bus_with_release(
-            bus,
-            create_asset_cmd,
-            owner="1",
-            receiver="2",
-            release_id="123",
-            keep_state: RootAggState = RootAggState.ACTIVE
+        bus,
+        create_asset_cmd,
+        owner="1",
+        receiver="2",
+        release_id="123",
+        keep_state: RootAggState = RootAggState.ACTIVE,
     ) -> model.AssetRelease:
         # Given
         asset_id = "assetId"
         if keep_state:
             keep_r = bus.uows.get(Keep).repo
-            keep_r.put(Keep(requester=UserId(id=owner), requested=UserId(id=receiver), state=keep_state))
+            keep_r.put(
+                Keep(
+                    requester=UserId(id=owner),
+                    requested=UserId(id=receiver),
+                    state=keep_state,
+                )
+            )
             keep_r.commit()
         bus.handle(
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])

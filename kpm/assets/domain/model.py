@@ -22,7 +22,8 @@ from kpm.shared.domain import (
 )
 from kpm.shared.domain.model import (
     AssetId,
-    NoValue, RootAggregate,
+    NoValue,
+    RootAggregate,
     RootAggState,
     UserId,
     ValueObject,
@@ -199,9 +200,11 @@ def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
     else:
         raise TypeError("Condition type not recognized")
 
+
 @unique
 class BequestType(NoValue):
     """The sender looses access to the assets"""
+
     GIFT = "gitft"
     """All the users will co-own the assets"""
     CO_OWNSRSHIP = "co-ownership"
@@ -299,14 +302,18 @@ class AssetRelease(RootAggregate):
 
 class ReceiversNotInContacts(Exception):
     def __init__(self, not_contacts: List[str]):
-        self.msg = "There are receivers not part of your contacts and thus we" \
-                   "could not deliver to them."
+        self.msg = (
+            "There are receivers not part of your contacts and thus we"
+            "could not deliver to them."
+        )
         super().__init__()
 
 
 class DuplicatedAssetException(Exception):
     def __init__(self):
         super().__init__()
-        self.msg = "You have tried creating the same asset " +\
-            "twice. This is not allowed. " +\
-            "Try updating it."
+        self.msg = (
+            "You have tried creating the same asset "
+            + "twice. This is not allowed. "
+            + "Try updating it."
+        )

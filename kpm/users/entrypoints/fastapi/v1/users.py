@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status, BackgroundTasks
+from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
@@ -18,7 +18,6 @@ from kpm.users.domain.model import (
     UserNotFound,
 )
 from kpm.users.entrypoints.fastapi.v1.schemas import users as schemas
-from kpm.users.service_layer import user_handler
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
