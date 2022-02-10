@@ -43,13 +43,13 @@ class TestReleases:
         to_cancel = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
             scheduled_date=123232,
-            name="note",
+            name="note_cancel",
             owner=OWNER1,
         )
         to_trigger = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
             scheduled_date=123232,
-            name="note",
+            name="note_trigger",
             owner=OWNER1,
         )
         setup = [

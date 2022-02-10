@@ -300,13 +300,10 @@ class AssetRelease(RootAggregate):
         return hash(self.id.id)
 
 
-class ReceiversNotInContacts(Exception):
-    def __init__(self, not_contacts: List[str]):
-        self.msg = (
-            "There are receivers not part of your contacts and thus we"
-            "could not deliver to them."
-        )
+class DuplicatedAssetReleaseException(Exception):
+    def __init__(self):
         super().__init__()
+        self.msg = "You cannot create two asset releases with the same name."
 
 
 class DuplicatedAssetException(Exception):

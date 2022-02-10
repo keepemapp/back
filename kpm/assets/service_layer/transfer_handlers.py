@@ -3,11 +3,9 @@ import random
 import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.model as model
 from kpm.assets.domain import events
-from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
-from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 from kpm.users.domain.repositories import KeepRepository
 
@@ -26,12 +24,10 @@ def create_asset_in_a_bottle(
         Fail if not)
     3. scheduled date must be in the future
 
-    :param cmd: command
-    :type cmd: CreateAssetInABottle
-    :param uow:
-    :return:
     """
     with assetrelease_uow as uow:
+        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+            raise model.DuplicatedAssetReleaseException()
         scheduled_date = random.randint(cmd.min_date, cmd.max_date)
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
@@ -76,6 +72,8 @@ def create_asset_future_self(
     :return:
     """
     with assetrelease_uow as uow:
+        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+            raise model.DuplicatedAssetReleaseException()
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
             name=cmd.name,
@@ -132,13 +130,7 @@ def trigger_release(
 def cancel_release(
     cmd: cmds.CancelRelease, assetrelease_uow: AbstractUnitOfWork
 ):
-    """
-
-    :param cmd: command
-    :type cmd: CreateTimeCapsule
-    :param assetrelease_uow:
-    :return:
-    """
+    """ """
     with assetrelease_uow as uow:
         rel: model.AssetRelease = uow.repo.get(DomainId(cmd.aggregate_id))
         rel.cancel()
@@ -158,12 +150,8 @@ def stash_asset(cmd: cmds.Stash, assetrelease_uow: AbstractUnitOfWork):
         QUESTION: Must uniquely own them?
     2. If there are no receivers, it's open to anyone
     3. scheduled date must be in the future
-
-    :param cmd: command
-    :type cmd: Stash
-    :param uow:
-    :return:
     """
+    # TODO ensure there is no asset release already
     raise NotImplementedError
 
 
@@ -177,16 +165,14 @@ def create_time_capsule(
     Rules:
     1. The person using it must own the assets
     2. scheduled date must be in the future
-
-    :param cmd: command
-    :type cmd: CreateTimeCapsule
-    :param uow:
-    :return:
     """
+    # TODO ensure there is no asset release already
     raise NotImplementedError
 
 
-def transfer_asset(cmd: cmds.TransferAssets, asset_uow: AssetUoW):
+def transfer_asset(
+    cmd: cmds.TransferAssets, assetrelease_uow: AbstractUnitOfWork
+):
     """
     Changes the ownership of a group of assets
 
@@ -194,17 +180,25 @@ def transfer_asset(cmd: cmds.TransferAssets, asset_uow: AssetUoW):
     1. The person using it must own the assets
         QUESTION: Must uniquely own them?
     2. Happens "immediately"
-
-    :param TransferAssets cmd: command
-    :param AssetUoW asset_uow:
-    :return:
     """
-    with asset_uow as uow:
-        mod_ts = now_utc_millis()
-        for aid in cmd.asset_ids:
-            a: Asset = uow.repo.find_by_id(AssetId(aid))
-            a.change_owner(mod_ts, cmd.owner, cmd.receivers)
-        uow.commit()
+    with assetrelease_uow as ruow:
+        if ruow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+            raise model.DuplicatedAssetReleaseException()
+
+        rel = model.AssetRelease(
+            id=DomainId(cmd.aggregate_id),
+            name=cmd.name,
+            description=cmd.description,
+            owner=UserId(cmd.owner),
+            receivers=[UserId(u) for u in cmd.receivers],
+            assets=[AssetId(a) for a in cmd.assets],
+            release_type="transfer",
+            bequest_type=model.BequestType.GIFT,
+            conditions=[model.TrueCondition()],
+        )
+        rel.trigger()
+        ruow.repo.put(rel)
+        ruow.commit()
 
 
 def notify_transfer_cancellation(

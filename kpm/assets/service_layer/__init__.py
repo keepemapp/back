@@ -5,7 +5,10 @@ from kpm.assets.service_layer import transfer_handlers as th
 
 EVENT_HANDLERS = {
     events.AssetReleaseScheduled: [ah.hide_asset],
-    events.AssetReleaseCanceled: [ah.make_asset_visible],
+    events.AssetReleaseCanceled: [
+        ah.make_asset_visible,
+        th.notify_transfer_cancellation,
+    ],
     events.AssetReleased: [ah.change_asset_owner, ah.make_asset_visible],
     events.AssetOwnershipChanged: [],
 }

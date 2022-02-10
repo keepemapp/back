@@ -271,6 +271,16 @@ class TestMongoAssetReleaseRepo:
         assert len(res.events) == 0
         assert_result_equality(res, release1)
 
+    def test_exists(self, arrepo, release1):
+        db, repo = arrepo
+        repo.put(release1)
+        repo.commit()
+
+        assert repo.exists(owner=release1.owner, name=release1.name)
+        assert not repo.exists(owner=UserId("another u"), name=release1.name)
+        assert not repo.exists(owner=release1.owner, name="random")
+        assert not repo.exists(owner=UserId("another u"), name="random")
+
     def test_get_all(self, arrepo, release1, release2):
         db, repo = arrepo
         repo.put(release1)

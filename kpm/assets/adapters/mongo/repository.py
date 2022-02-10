@@ -152,6 +152,10 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         self._update(self._releases, {"_id": bson["_id"]}, bson)
         self._seen.add(release)
 
+    def exists(self, owner: UserId, name: str) -> bool:
+        find_dict = {"owner": owner.id, "name": name}
+        return self._releases.count_documents(find_dict) > 0
+
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         find_dict = {"_id": release_id.id}
         resp = self._releases.find_one(find_dict)

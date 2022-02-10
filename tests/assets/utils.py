@@ -44,6 +44,12 @@ class TestReleaseRepo(AssetReleaseRepository):
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         return self._repo.get(release_id)
 
+    def exists(self, owner: UserId, name: str) -> bool:
+        for r in self.all():
+            if r.owner == owner and r.name == name:
+                return True
+        return False
+
     def all(self) -> List[AssetRelease]:
         return list(self._repo.values())
 

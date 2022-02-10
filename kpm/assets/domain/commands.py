@@ -106,7 +106,7 @@ class CancelRelease(Command):
 class Stash(Command):
     """ """
 
-    asset_ids: List[str] = required_field()  # type: ignore
+    assets: List[str] = required_field()  # type: ignore
     # TODO have a good location class
     location: Dict = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
@@ -118,7 +118,7 @@ class Stash(Command):
 
 @dataclass(frozen=True)
 class CreateTimeCapsule(Command):
-    asset_ids: List[str] = required_field()  # type: ignore
+    assets: List[str] = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
     description: str = required_field()  # type: ignore
     owners_id: List[str] = required_field()  # type: ignore
@@ -129,7 +129,7 @@ class CreateTimeCapsule(Command):
 class TransferAssets(Command):
     """"""
 
-    asset_ids: List[str] = required_field()  # type: ignore
+    assets: List[str] = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
     owner: str = required_field()  # type: ignore
     receivers: List[str] = required_field()  # type: ignore

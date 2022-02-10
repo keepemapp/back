@@ -119,6 +119,10 @@ class AssetReleaseRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
+    def exists(self, owner: UserId, name: str) -> bool:
+        raise NotImplementedError
+
+    @abstractmethod
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         raise NotImplementedError
 

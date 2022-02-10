@@ -7,7 +7,11 @@ import pytest
 
 import kpm.assets.domain.events as events
 import kpm.assets.domain.model as model
-from kpm.assets.domain.commands import CancelRelease, TriggerRelease
+from kpm.assets.domain.commands import (
+    CancelRelease,
+    TransferAssets,
+    TriggerRelease,
+)
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, RootAggState, UserId
 from kpm.shared.domain.time_utils import now_utc, to_millis
@@ -208,6 +212,79 @@ class TestAssetReleaseVisibility:
             assert len(a.owners_id) == 1
             assert a.owners_id[0] == UserId(id="2")
 
+    def test_transfers(self, bus, create_asset_cmd):
+        # Given
+        self.populate_bus_with_asset_and_keep(
+            bus,
+            create_asset_cmd,
+            keep_state=RootAggState.ACTIVE,
+            asset_id="aid",
+            owner="owner",
+            receiver="receiver",
+        )
+        # When
+        transfer_cmd = TransferAssets(
+            assets=["aid"],
+            name="Name",
+            owner="owner",
+            receivers=["receiver"],
+            description="Some description",
+        )
+        bus.handle(transfer_cmd)
+
+        # Then
+        with bus.uows.get(model.AssetRelease) as uow:
+            r = uow.repo.get(DomainId(transfer_cmd.aggregate_id))
+            assert r.is_past()
+        with bus.uows.get(model.Asset) as uow:
+            a: model.Asset = uow.repo.find_by_id(AssetId(id="aid"))
+            assert a.is_visible()
+            assert len(a.owners_id) == 1
+            assert a.owners_id[0] == UserId(id="receiver")
+
+    def test_transfer_idempotent(self, bus, create_asset_cmd):
+        # Given
+        self.populate_bus_with_asset_and_keep(
+            bus,
+            create_asset_cmd,
+            keep_state=RootAggState.ACTIVE,
+            asset_id="aid",
+            owner="owner",
+            receiver="receiver",
+        )
+        transfer_cmd = TransferAssets(
+            assets=["aid"],
+            name="Name",
+            owner="owner",
+            receivers=["receiver"],
+            description="Some description",
+        )
+        bus.handle(transfer_cmd)
+
+        # When
+        with pytest.raises(model.DuplicatedAssetReleaseException):
+            bus.handle(transfer_cmd)
+
+        # Then
+        with bus.uows.get(model.AssetRelease) as uow:
+            assert len(uow.repo.all()) == 1
+
+        # When command created twice
+        transfer_cmd2 = TransferAssets(
+            assets=["aid"],
+            name="Name",
+            owner="owner",
+            receivers=["receiver"],
+            description="Some description",
+        )
+
+        with pytest.raises(model.DuplicatedAssetReleaseException):
+            bus.handle(transfer_cmd2)
+
+        # Then
+        with bus.uows.get(model.AssetRelease) as uow:
+            assert len(uow.repo.all()) == 1
+
     def test_asset_visibility_idempotent(self, bus, create_asset_cmd):
         asset_id = "assetId"
         owner = "1"
@@ -239,16 +316,14 @@ class TestAssetReleaseVisibility:
             assert a.is_visible()
 
     @staticmethod
-    def populate_bus_with_release(
+    def populate_bus_with_asset_and_keep(
         bus,
         create_asset_cmd,
         owner="1",
         receiver="2",
-        release_id="123",
+        asset_id="assetId",
         keep_state: RootAggState = RootAggState.ACTIVE,
-    ) -> model.AssetRelease:
-        # Given
-        asset_id = "assetId"
+    ):
         if keep_state:
             keep_r = bus.uows.get(Keep).repo
             keep_r.put(
@@ -261,6 +336,21 @@ class TestAssetReleaseVisibility:
             keep_r.commit()
         bus.handle(
             dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])
+        )
+
+    def populate_bus_with_release(
+        self,
+        bus,
+        create_asset_cmd,
+        owner="1",
+        receiver="2",
+        release_id="123",
+        keep_state: RootAggState = RootAggState.ACTIVE,
+    ) -> model.AssetRelease:
+        # Given
+        asset_id = "assetId"
+        self.populate_bus_with_asset_and_keep(
+            bus, create_asset_cmd, owner, receiver, asset_id, keep_state
         )
         release = model.AssetRelease(
             id=DomainId(release_id),
