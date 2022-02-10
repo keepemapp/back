@@ -131,7 +131,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     with mongo_client() as client:
         col = client["assets"].assets
         for t in col.aggregate(type_agg):
-            sizes_mb[t["_id"]] = t["size"] / (1014 * 1024)
+            sizes_mb[t["_id"]] = t["size"] / (1024 * 1024)
             count[t["_id"]] = t["count"]
     logger.debug(f"Executed MongoQuery {type_agg}")
     return {"size_mb": sizes_mb, "count": count}
