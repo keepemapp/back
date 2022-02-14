@@ -95,6 +95,8 @@ class CreateAssetToFutureSelf(Command):
 @dataclass(frozen=True)
 class TriggerRelease(Command):
     aggregate_id: str = required_field()  # type: ignore
+    """Optional field for the geographical conditions."""
+    geo_location: Optional[str] = None
 
 
 @dataclass(frozen=True)

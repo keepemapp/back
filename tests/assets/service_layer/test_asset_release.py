@@ -1,7 +1,7 @@
 import dataclasses as dc
 import datetime as dt
 import time
-from typing import Optional
+from typing import List, Optional
 
 import pytest
 
@@ -14,7 +14,7 @@ from kpm.assets.domain.commands import (
 )
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, RootAggState, UserId
-from kpm.shared.domain.time_utils import now_utc, to_millis
+from kpm.shared.domain.time_utils import now_utc, now_utc_millis, to_millis
 from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
@@ -34,6 +34,79 @@ class TestReleaseConditions:
         future_date = to_millis(now_utc() + dt.timedelta(minutes=10))
         assert model.TimeCondition(release_ts=future_date).is_met() is False
 
+    @pytest.mark.parametrize('location_cantrigger', [
+        ("Cambrils", True),
+        ("Ca mbrils", True),
+        ("cAmbrils", True),
+        ("Reus", False),
+        ("Cambrilsss", False),
+    ])
+    def test_geographical_condition(self, location_cantrigger):
+        release = model.AssetRelease(
+            id=DomainId("123"),
+            name="",
+            description="",
+            owner=UserId("1"),
+            receivers=[UserId("2")],
+            conditions=[model.GeographicalCondition(location="Cambrils")],
+            release_type="dummy",
+            bequest_type=model.BequestType.GIFT,
+            assets=[AssetId("asset_id")],
+        )
+
+        loc = location_cantrigger[0]
+        can = location_cantrigger[1]
+        assert release.can_trigger(context={'location': loc}) == can
+
+    @pytest.mark.parametrize('location_cantrigger', [
+        ("Cambrils", True),
+        ("Ca mbrils", True),
+        ("cAmbrils", True),
+        ("Reus", False),
+        ("Cambrilsss", False),
+    ])
+    def test_geographical_and_time_condition(self, location_cantrigger):
+        release = model.AssetRelease(
+            id=DomainId("123"),
+            name="",
+            description="",
+            owner=UserId("1"),
+            receivers=[UserId("2")],
+            conditions=[model.GeographicalCondition(location="Cambrils"),
+                        model.TimeCondition(release_ts=now_utc_millis()-100)],
+            release_type="dummy",
+            bequest_type=model.BequestType.GIFT,
+            assets=[AssetId("asset_id")],
+        )
+
+        loc = location_cantrigger[0]
+        can = location_cantrigger[1]
+        assert release.can_trigger(context={'location': loc}) == can
+
+    @pytest.mark.parametrize('location_cantrigger', [
+        ("Cambrils", False),
+        ("Ca mbrils", False),
+        ("cAmbrils", False),
+        ("Reus", False),
+        ("Cambrilsss", False),
+    ])
+    def test_geographical_and_time_condition_cannot(self, location_cantrigger):
+        release = model.AssetRelease(
+            id=DomainId("123"),
+            name="",
+            description="",
+            owner=UserId("1"),
+            receivers=[UserId("2")],
+            conditions=[model.GeographicalCondition(location="Cambrils"),
+                        model.TimeCondition(release_ts=now_utc_millis()+10000)],
+            release_type="dummy",
+            bequest_type=model.BequestType.GIFT,
+            assets=[AssetId("asset_id")],
+        )
+
+        loc = location_cantrigger[0]
+        can = location_cantrigger[1]
+        assert release.can_trigger(context={'location': loc}) == can
 
 @pytest.mark.unit
 class TestRelease:
@@ -242,6 +315,39 @@ class TestAssetReleaseVisibility:
             assert len(a.owners_id) == 1
             assert a.owners_id[0] == UserId(id="receiver")
 
+    PAST_TS = now_utc_millis() - 100000
+    FUTURE_TS = now_utc_millis() + 1000000000
+
+    @pytest.mark.parametrize("conditions", [
+        {'time': PAST_TS, 'geog': 'cmb', 'guess': 'cmb', 'result': True},
+        {'time': FUTURE_TS, 'geog': 'cmb', 'guess': 'cmb', 'result': False},
+        {'time': PAST_TS, 'geog': 'cmb', 'guess': 'WRONG', 'result': False},
+        {'time': FUTURE_TS, 'geog': 'cmb', 'guess': 'WRONG', 'result': False},
+        {'time': PAST_TS, 'geog': 'cmb', 'guess': '', 'result': False},
+    ])
+    def test_trigger_time_capsule(self, bus, create_asset_cmd, conditions):
+        # Given
+        release = self.populate_bus_with_release(
+            bus,
+            create_asset_cmd,
+            keep_state=RootAggState.ACTIVE,
+            owner="owner",
+            receiver="receiver",
+            conditions=[
+                model.TimeCondition(release_ts=conditions['time']),
+                model.GeographicalCondition(location=conditions['geog'])
+            ]
+        )
+        # When
+        cmd = TriggerRelease(aggregate_id=release.id.id,
+                             geo_location=conditions['guess'])
+        bus.handle(cmd)
+
+        # Then
+        with bus.uows.get(model.AssetRelease) as uow:
+            r = uow.repo.get(release.id)
+            assert r.is_past() == conditions['result']
+
     def test_transfer_idempotent(self, bus, create_asset_cmd):
         # Given
         self.populate_bus_with_asset_and_keep(
@@ -346,6 +452,7 @@ class TestAssetReleaseVisibility:
         receiver="2",
         release_id="123",
         keep_state: RootAggState = RootAggState.ACTIVE,
+        conditions: List[model.ReleaseCondition] = [model.TrueCondition()]
     ) -> model.AssetRelease:
         # Given
         asset_id = "assetId"
@@ -358,7 +465,7 @@ class TestAssetReleaseVisibility:
             description="",
             owner=UserId(owner),
             receivers=[UserId(receiver)],
-            conditions=[model.TrueCondition()],
+            conditions=conditions,
             release_type="dummy",
             bequest_type=model.BequestType.GIFT,
             assets=[AssetId(asset_id)],

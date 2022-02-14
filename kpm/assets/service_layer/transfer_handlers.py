@@ -103,7 +103,8 @@ def trigger_release(
     """
     with assetrelease_uow as uow, keep_uow as keeps:
         rel: model.AssetRelease = uow.repo.get(DomainId(cmd.aggregate_id))
-        if rel.can_trigger():
+        trigger_context = {'location': cmd.geo_location}
+        if rel.can_trigger(context=trigger_context):
             kr: KeepRepository = keeps.repo
             not_contacts = []
             for reciver in rel.receivers:
@@ -122,7 +123,7 @@ def trigger_release(
                 # Maybe we add a canceling motive/status and send an email?
                 # raise model.ReceiversNotInContacts(not_contacts)
             else:
-                rel.trigger()
+                rel.trigger(context=trigger_context)
                 uow.repo.put(rel)
                 uow.commit()
 

@@ -170,7 +170,9 @@ class ReleaseCondition(ValueObject, ABC):
     type: str
 
     @abstractmethod
-    def is_met(self) -> bool:
+    def is_met(self, context=None) -> bool:
+        if context is None:
+            context = {}
         raise NotImplementedError
 
 
@@ -178,7 +180,7 @@ class ReleaseCondition(ValueObject, ABC):
 class TrueCondition(ReleaseCondition):
     type: str = "true_condition"
 
-    def is_met(self) -> bool:
+    def is_met(self, context=None) -> bool:
         return True
 
 
@@ -187,8 +189,19 @@ class TimeCondition(ReleaseCondition):
     release_ts: int = required_field()
     type: str = "time_condition"
 
-    def is_met(self) -> bool:
+    def is_met(self, context=None) -> bool:
         return self.release_ts < now_utc_millis()
+
+
+@dataclass(frozen=True, eq=True)
+class GeographicalCondition(ReleaseCondition):
+    location: str = required_field()
+    type: str = "geographical_condition"
+
+    def is_met(self, context=None) -> bool:
+        if context is None:
+            context = {}
+        return self.location.lower().replace(' ', '') == context.get('location', '').lower().replace(' ', '')
 
 
 def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
@@ -197,6 +210,8 @@ def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
         return TrueCondition(**condition)
     elif cond_type == "time_condition":
         return TimeCondition(**condition)
+    elif cond_type == "geographical_condition":
+        return GeographicalCondition(**condition)
     else:
         raise TypeError("Condition type not recognized")
 
@@ -262,12 +277,12 @@ class AssetRelease(RootAggregate):
     def is_past(self) -> bool:
         return self.state in [RootAggState.INACTIVE, RootAggState.REMOVED]
 
-    def can_trigger(self) -> bool:
+    def can_trigger(self, context: Dict = None) -> bool:
         """If all the condition are met, returns `True`."""
-        return all([c.is_met() for c in self.conditions])
+        return all([c.is_met(context) for c in self.conditions])
 
-    def trigger(self):
-        if not self.can_trigger():
+    def trigger(self, context: Dict = None):
+        if not self.can_trigger(context):
             raise Exception(f"Release {self.id} not ready to be released.")
         ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.INACTIVE)
