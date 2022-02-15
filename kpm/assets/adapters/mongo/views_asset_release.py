@@ -5,6 +5,7 @@ import flatdict
 
 import kpm.assets.domain.model as model
 from kpm.assets.domain.repositories import AssetReleaseRepository
+from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -59,6 +60,7 @@ def get_releases(
     if not uow:
         uow = bus.uows.get(model.AssetRelease)
     with uow:
+        # TODO implement me with native access??
         repo: AssetReleaseRepository = uow.repo  # type: ignore
         if active:
             releases = repo.user_active_releases(UserId(user))
@@ -71,7 +73,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     return {
         "total": 2,
         "in_a_bottle": 20,
-        "stash": 2,
+        "hide-and-seek": 2,
         "future_self": 7,
         "time_capsule": 3,
     }

@@ -6,15 +6,19 @@ from fastapi.testclient import TestClient
 
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schema
+from kpm.assets.domain import Asset, AssetRelease
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
+from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
+from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
-from tests.assets.infra.fastapi.v1.fixtures import ADMIN_TOKEN
+from tests.assets.infra.fastapi.v1.fixtures import ADMIN_TOKEN, USER_TOKEN
 from tests.assets.utils import bus
+from tests.users.entrypoints.fastapi import ATTACKER_TOKEN
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
 
@@ -22,8 +26,11 @@ ASSET_ID1 = "assetId1"
 ASSET_ID2 = "assetId2"
 ASSET_ID3 = "assetId3"
 ASSET_ID4 = "assetId4"
-OWNER1 = ADMIN_TOKEN.subject
+OWNER1 = USER_TOKEN.subject
 OWNER2 = "OWNER2"
+
+PAST_TS = now_utc_millis() - 100000
+FUTURE_TS = now_utc_millis() + 1000000000
 
 
 @pytest.mark.unit
@@ -81,11 +88,23 @@ class TestReleases:
             ),
             cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id),
             to_trigger,
-            cmds.TriggerRelease(aggregate_id=to_trigger.aggregate_id),
+            cmds.TriggerRelease(by_user=to_trigger.owner,
+                                aggregate_id=to_trigger.aggregate_id),
         ]
         for msg in setup:
             bus.handle(msg)
         yield bus
+
+    @staticmethod
+    @pytest.fixture
+    def admin_client(populated_bus) -> TestClient:
+        app = FastAPI(
+            title="Test",
+        )
+        app.include_router(assets_router)
+        app.dependency_overrides[message_bus] = lambda: populated_bus
+        app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
+        yield TestClient(app)
 
     @staticmethod
     @pytest.fixture
@@ -95,7 +114,7 @@ class TestReleases:
         )
         app.include_router(assets_router)
         app.dependency_overrides[message_bus] = lambda: populated_bus
-        app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
+        app.dependency_overrides[get_access_token] = lambda: USER_TOKEN
         yield TestClient(app)
 
     def test_list_users(self, client, populated_bus):
@@ -107,12 +126,199 @@ class TestReleases:
         assert response.status_code == 200
         assert len(releases["items"]) == 1
 
-    def test_list_all(self, client, populated_bus):
-        response = client.get(s.API_V1.concat(s.API_RELEASE).path())
+    def test_list_all(self, admin_client, client, populated_bus):
+        response = admin_client.get(s.API_V1.concat(s.API_RELEASE).path())
         releases = response.json()
 
         assert response.status_code == 200
         assert len(releases) == 4
+
+        # Users cannot access this endpoint
+        response = client.get(s.API_V1.concat(s.API_RELEASE).path())
+        assert response.status_code == 403
+
+
+@pytest.mark.unit
+class TestTrigger:
+    @staticmethod
+    def client(bus, token=USER_TOKEN) -> TestClient:
+        keep_r = bus.uows.get(Keep).repo
+        keep_r.put(Keep(
+            requester=UserId(id=OWNER1),
+            requested=UserId(id=OWNER2),
+            state=RootAggState.ACTIVE,
+        ))
+        keep_r.put(Keep(
+            requester=UserId(id=OWNER1),
+            requested=UserId(id=ADMIN_TOKEN.subject),
+            state=RootAggState.ACTIVE,
+        ))
+        keep_r.put(Keep(
+            requester=UserId(id=OWNER2),
+            requested=UserId(id=ADMIN_TOKEN.subject),
+            state=RootAggState.ACTIVE,
+        ))
+        keep_r.commit()
+        app = FastAPI(
+            title="Test",
+        )
+        app.include_router(assets_router)
+        app.dependency_overrides[message_bus] = lambda: bus
+        app.dependency_overrides[get_access_token] = lambda: token
+        return TestClient(app)
+
+    @pytest.mark.parametrize("cond", [
+        {'date': PAST_TS, 'r_code': 204},
+        {'date': FUTURE_TS, 'r_code': 403},
+    ])
+    def test_time_release(self, bus, create_asset_cmd, cond):
+        # Given
+        ID = 'future_self'
+        setup = [
+            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]),
+            cmds.CreateAssetToFutureSelf(
+                aggregate_id=ID,
+                assets=[ASSET_ID1],
+                scheduled_date=cond['date'],
+                name="note",
+                owner=OWNER1,
+            ),
+        ]
+        for msg in setup:
+            bus.handle(msg)
+        client = self.client(bus)
+        # When
+        payload = schema.ReleaseTrigger(
+            aggregate_id=ID,
+        )
+        response = client.post(
+            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+        )
+        # Then
+        assert response.status_code == cond['r_code']
+        with bus.uows.get(AssetRelease) as uow:
+            r = uow.repo.get(DomainId(id=ID))
+            assert r
+            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            assert r.is_past() == is_past
+
+    @pytest.mark.parametrize("cond", [
+        {'loc': 'cmb', 'guess': 'cmb', 'r_code': 204},
+        {'loc': 'cmb', 'guess': 'WRONG', 'r_code': 403},
+        {'loc': 'cmb', 'guess': None, 'r_code': 403},
+        {'loc': 'cmb', 'guess': 'WRO  dfd3cNG', 'r_code': 403},
+    ])
+    def test_hide_and_seek_release(self, bus, create_asset_cmd, cond):
+        # Given
+        ID = 'hide_and_seek'
+        setup = [
+            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]),
+            cmds.CreateHideAndSeek(
+                aggregate_id=ID,
+                assets=[ASSET_ID1],
+                location=cond['loc'],
+                name="note",
+                owner=OWNER2,
+                receivers=[OWNER1],
+            ),
+        ]
+        for msg in setup:
+            bus.handle(msg)
+        client = self.client(bus)
+        # When
+        payload = schema.ReleaseTrigger(
+            aggregate_id=ID,
+            geo_location=cond['guess'],
+        )
+        response = client.post(
+            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+        )
+        # Then
+        assert response.status_code == cond['r_code']
+        with bus.uows.get(AssetRelease) as uow:
+            r = uow.repo.get(DomainId(id=ID))
+            assert r
+            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            assert r.is_past() == is_past
+
+    @pytest.mark.parametrize("cond", [
+        {'date': PAST_TS, 'loc': 'cmb', 'guess': 'cmb', 'r_code': 204},
+        {'date': PAST_TS, 'loc': 'cmb', 'guess': 'WRONG', 'r_code': 403},
+        {'date': PAST_TS, 'loc': 'cmb', 'guess': None, 'r_code': 403},
+        {'date': FUTURE_TS, 'loc': 'cmb', 'guess': 'cmb', 'r_code': 403},
+        {'date': FUTURE_TS, 'loc': 'cmb', 'guess': 'WRONG', 'r_code': 403},
+    ])
+    def test_time_capsule(self, bus, create_asset_cmd, cond):
+        # Given
+        ID = 'time_capsule'
+        setup = [
+            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]),
+            cmds.CreateTimeCapsule(
+                aggregate_id=ID,
+                assets=[ASSET_ID1],
+                location=cond['loc'],
+                scheduled_date=cond['date'],
+                name="note",
+                owner=OWNER2,
+                receivers=[OWNER1],
+            )
+        ]
+        for msg in setup:
+            bus.handle(msg)
+        client = self.client(bus)
+        # When
+        payload = schema.ReleaseTrigger(
+            aggregate_id=ID,
+            geo_location=cond['guess'],
+        )
+        response = client.post(
+            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+        )
+        # Then
+        assert response.status_code == cond['r_code']
+        with bus.uows.get(AssetRelease) as uow:
+            r = uow.repo.get(DomainId(id=ID))
+            assert r
+            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            assert r.is_past() == is_past
+
+    @pytest.mark.parametrize("cond", [
+        {'receivers': [OWNER1], 'auth_tok': USER_TOKEN, 'r_code': 204},
+        {'receivers': [OWNER1,
+                       ADMIN_TOKEN.subject], 'auth_tok': ADMIN_TOKEN, 'r_code': 204},
+        {'receivers': [OWNER1], 'auth_tok': ADMIN_TOKEN, 'r_code': 403},
+        {'receivers': [OWNER1], 'auth_tok': ATTACKER_TOKEN, 'r_code': 403},
+    ])
+    def test_triggered_by_receiver(self, bus, create_asset_cmd, cond):
+        # Given
+        ID = 'time_capsule'
+        setup = [
+            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]),
+            cmds.TransferAssets(
+                aggregate_id=ID,
+                assets=[ASSET_ID1],
+                name="note",
+                owner=OWNER2,
+                receivers=cond['receivers'],
+            )
+        ]
+        for msg in setup:
+            bus.handle(msg)
+        client = self.client(bus, token=cond['auth_tok'])
+        # When
+        payload = schema.ReleaseTrigger(
+            aggregate_id=ID,
+        )
+        response = client.post(
+            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+        )
+        # Then
+        assert response.status_code == cond['r_code']
+        with bus.uows.get(AssetRelease) as uow:
+            r = uow.repo.get(DomainId(id=ID))
+            assert r
+            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            assert r.is_past() == is_past
 
 
 @pytest.mark.unit
@@ -146,7 +352,7 @@ class TestAssetReleasesTypes:
         )
         app.include_router(assets_router)
         app.dependency_overrides[message_bus] = lambda: populated_bus
-        app.dependency_overrides[get_access_token] = lambda: ADMIN_TOKEN
+        app.dependency_overrides[get_access_token] = lambda: USER_TOKEN
         yield TestClient(app)
 
     def test_future_self(self, client):
@@ -171,7 +377,7 @@ class TestAssetReleasesTypes:
         assert len(release.get("assets")) == 1
         assert payload.assets[0] in release.get("assets")[0]
         assert len(release.get("receivers")) == 1
-        assert ADMIN_TOKEN.subject in release.get("receivers")[0]
+        assert USER_TOKEN.subject in release.get("receivers")[0]
         assert release.get("release_type") == "asset_future_self"
 
     def test_multiple_owners(self, client):

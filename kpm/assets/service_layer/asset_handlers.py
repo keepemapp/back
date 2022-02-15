@@ -32,7 +32,7 @@ def make_asset_visible(event: Visible, asset_uow: AssetUoW):
 
 
 def change_asset_owner(event: events.AssetReleased, asset_uow: AssetUoW):
-    if event.bequest_type == BequestType.SELF:
+    if event.bequest_type == BequestType.SELF.value:
         return
     with asset_uow as uow:
         for aid in event.assets:

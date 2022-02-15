@@ -201,7 +201,8 @@ class GeographicalCondition(ReleaseCondition):
     def is_met(self, context=None) -> bool:
         if context is None:
             context = {}
-        return self.location.lower().replace(' ', '') == context.get('location', '').lower().replace(' ', '')
+        guess = (context.get('location', '') or '').lower().replace(' ', '')
+        return self.location.lower().replace(' ', '') == guess
 
 
 def dict_to_release_cond(condition: Dict) -> ReleaseCondition:
@@ -279,11 +280,13 @@ class AssetRelease(RootAggregate):
 
     def can_trigger(self, context: Dict = None) -> bool:
         """If all the condition are met, returns `True`."""
+        if not self.is_active():
+            return False
         return all([c.is_met(context) for c in self.conditions])
 
     def trigger(self, context: Dict = None):
         if not self.can_trigger(context):
-            raise Exception(f"Release {self.id} not ready to be released.")
+            raise OperationTriggerException()
         ts = now_utc_millis()
         self._update_field(ts, "state", RootAggState.INACTIVE)
         self.events.append(
@@ -313,6 +316,12 @@ class AssetRelease(RootAggregate):
 
     def __hash__(self):
         return hash(self.id.id)
+
+
+class OperationTriggerException(Exception):
+    def __init__(self):
+        super().__init__()
+        self.msg = "Legacy operation cannot be triggered."
 
 
 class DuplicatedAssetReleaseException(Exception):

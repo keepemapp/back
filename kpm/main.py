@@ -31,7 +31,7 @@ yourself!
 Try to:
 * Send an asset to your future self ✉️🔮
 * Create a time capsule ⏳🎁
-* Stash an asset somewhere to be recovered in the future 🌍
+* Hide an asset somewhere to be recovered in the future 🌍
 * Send it away inside a bottle 🧴🏖️
 * Give it to someone 🤝
 

@@ -71,7 +71,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     return {
         "total": 2,
         "in_a_bottle": 20,
-        "stash": 2,
+        "hide-and-seek": 2,
         "future_self": 7,
         "time_capsule": 3,
     }

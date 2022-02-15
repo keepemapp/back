@@ -8,7 +8,7 @@ from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from tests.assets.utils import bus
 
-ADMIN_TOKEN = AccessToken(subject="uid", scopes=["user", "admin"])
+ADMIN_TOKEN = AccessToken(subject="adminid", scopes=["user", "admin"])
 USER_TOKEN = AccessToken(subject="uid", scopes=["user"])
 
 

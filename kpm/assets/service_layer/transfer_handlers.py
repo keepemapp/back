@@ -2,6 +2,7 @@ import random
 
 import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.model as model
+import kpm.shared.domain.model
 from kpm.assets.domain import events
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain import DomainId
@@ -103,29 +104,34 @@ def trigger_release(
     """
     with assetrelease_uow as uow, keep_uow as keeps:
         rel: model.AssetRelease = uow.repo.get(DomainId(cmd.aggregate_id))
-        trigger_context = {'location': cmd.geo_location}
-        if rel.can_trigger(context=trigger_context):
-            kr: KeepRepository = keeps.repo
-            not_contacts = []
-            for reciver in rel.receivers:
+        if UserId(id=cmd.by_user) not in rel.receivers:
+            raise kpm.shared.domain.model.UserNotAllowedException(
+                "User is not in the receivers list.")
 
-                if not kr.exists(rel.owner, reciver):
-                    not_contacts.append(reciver)
-            if not_contacts:
-                reason = (
-                    "There are receivers not part of your contacts and "
-                    "thus we could not deliver to them."
-                )
-                rel.cancel(reason=reason)
-                uow.repo.put(rel)
-                uow.commit()
-                # FIXME if we raise this, we cannot handle the other events
-                # Maybe we add a canceling motive/status and send an email?
-                # raise model.ReceiversNotInContacts(not_contacts)
-            else:
-                rel.trigger(context=trigger_context)
-                uow.repo.put(rel)
-                uow.commit()
+        trigger_context = {'location': cmd.geo_location}
+
+        kr: KeepRepository = keeps.repo
+        not_contacts = []
+        for reciver in rel.receivers:
+
+            if not kr.exists(rel.owner, reciver):
+                not_contacts.append(reciver)
+        if not_contacts:
+            reason = (
+                "There are receivers not part of your contacts and "
+                "thus we could not deliver to them."
+            )
+            rel.cancel(reason=reason)
+            uow.repo.put(rel)
+            uow.commit()
+            # FIXME if we raise this, we cannot handle the other events
+            # Maybe we add a canceling motive/status and send an email?
+            # raise model.ReceiversNotInContacts(not_contacts)
+        else:
+            # Raises exception if not ready
+            rel.trigger(context=trigger_context)
+            uow.repo.put(rel)
+            uow.commit()
 
 
 def cancel_release(
@@ -139,7 +145,7 @@ def cancel_release(
         uow.commit()
 
 
-def stash_asset(cmd: cmds.Stash, assetrelease_uow: AbstractUnitOfWork):
+def hide_asset(cmd: cmds.CreateHideAndSeek, assetrelease_uow: AbstractUnitOfWork):
     """
     Hide an asset in a geographical location. Once a person gets near it, it
     will discover it and take ownership.
@@ -152,8 +158,22 @@ def stash_asset(cmd: cmds.Stash, assetrelease_uow: AbstractUnitOfWork):
     2. If there are no receivers, it's open to anyone
     3. scheduled date must be in the future
     """
-    # TODO ensure there is no asset release already
-    raise NotImplementedError
+    with assetrelease_uow as uow:
+        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+            raise model.DuplicatedAssetReleaseException()
+        rel = model.AssetRelease(
+            id=DomainId(cmd.aggregate_id),
+            name=cmd.name,
+            description=cmd.description,
+            owner=UserId(cmd.owner),
+            receivers=[UserId(u) for u in cmd.receivers],
+            assets=[AssetId(a) for a in cmd.assets],
+            release_type="hide_and_seek",
+            bequest_type=model.BequestType.GIFT,
+            conditions=[model.GeographicalCondition(location=cmd.location)],
+        )
+        uow.repo.put(rel)
+        uow.commit()
 
 
 def create_time_capsule(
@@ -167,8 +187,23 @@ def create_time_capsule(
     1. The person using it must own the assets
     2. scheduled date must be in the future
     """
-    # TODO ensure there is no asset release already
-    raise NotImplementedError
+    with assetrelease_uow as uow:
+        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+            raise model.DuplicatedAssetReleaseException()
+        rel = model.AssetRelease(
+            id=DomainId(cmd.aggregate_id),
+            name=cmd.name,
+            description=cmd.description,
+            owner=UserId(cmd.owner),
+            receivers=[UserId(u) for u in cmd.receivers],
+            assets=[AssetId(a) for a in cmd.assets],
+            release_type="time_capsule",
+            bequest_type=model.BequestType.GIFT,
+            conditions=[model.GeographicalCondition(location=cmd.location),
+                        model.TimeCondition(release_ts=cmd.scheduled_date)],
+        )
+        uow.repo.put(rel)
+        uow.commit()
 
 
 def transfer_asset(
@@ -197,7 +232,6 @@ def transfer_asset(
             bequest_type=model.BequestType.GIFT,
             conditions=[model.TrueCondition()],
         )
-        rel.trigger()
         ruow.repo.put(rel)
         ruow.commit()
 

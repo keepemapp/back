@@ -253,7 +253,8 @@ class TestAssetReleaseVisibility:
         asset_id = release.assets[0]
         original_owner = release.owner
         # When
-        bus.handle(TriggerRelease(aggregate_id=release_id.id))
+        bus.handle(TriggerRelease(by_user=release.receivers[0].id,
+                                  aggregate_id=release_id.id))
 
         # Then
         with bus.uows.get(model.AssetRelease) as uow:
@@ -273,7 +274,8 @@ class TestAssetReleaseVisibility:
         release_id = release.id
         asset_id = release.assets[0]
         # When
-        bus.handle(TriggerRelease(aggregate_id=release_id.id))
+        bus.handle(TriggerRelease(by_user=release.receivers[0].id,
+                                  aggregate_id=release_id.id))
 
         # Then
         with bus.uows.get(model.AssetRelease) as uow:
@@ -308,7 +310,10 @@ class TestAssetReleaseVisibility:
         # Then
         with bus.uows.get(model.AssetRelease) as uow:
             r = uow.repo.get(DomainId(transfer_cmd.aggregate_id))
-            assert r.is_past()
+            assert not r.is_past()
+
+        bus.handle(TriggerRelease(by_user="receiver",
+                                  aggregate_id=transfer_cmd.aggregate_id))
         with bus.uows.get(model.Asset) as uow:
             a: model.Asset = uow.repo.find_by_id(AssetId(id="aid"))
             assert a.is_visible()
@@ -339,9 +344,14 @@ class TestAssetReleaseVisibility:
             ]
         )
         # When
-        cmd = TriggerRelease(aggregate_id=release.id.id,
+        cmd = TriggerRelease(by_user=release.receivers[0].id,
+                             aggregate_id=release.id.id,
                              geo_location=conditions['guess'])
-        bus.handle(cmd)
+        if conditions['result'] == False:
+            with pytest.raises(model.OperationTriggerException):
+                bus.handle(cmd)
+        else:
+            bus.handle(cmd)
 
         # Then
         with bus.uows.get(model.AssetRelease) as uow:

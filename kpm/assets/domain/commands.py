@@ -73,7 +73,7 @@ class CreateAssetInABottle(Command):
     name: str = required_field()  # type: ignore
     receivers: List[str] = required_field()  # type: ignore
     owner: str = required_field()  # type: ignore
-    description: str = None
+    description: Optional[str] = None
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
     def __post_init__(self):
@@ -94,6 +94,7 @@ class CreateAssetToFutureSelf(Command):
 
 @dataclass(frozen=True)
 class TriggerRelease(Command):
+    by_user: str = required_field()  # type: ignore
     aggregate_id: str = required_field()  # type: ignore
     """Optional field for the geographical conditions."""
     geo_location: Optional[str] = None
@@ -105,14 +106,14 @@ class CancelRelease(Command):
 
 
 @dataclass(frozen=True)
-class Stash(Command):
+class CreateHideAndSeek(Command):
     """ """
 
     assets: List[str] = required_field()  # type: ignore
     # TODO have a good location class
-    location: Dict = required_field()  # type: ignore
+    location: str = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
-    description: str = required_field()  # type: ignore
+    description: Optional[str] = None
     owner: str = required_field()  # type: ignore
     receivers: List[str] = required_field()  # type: ignore
     aggregate_id: str = field(default_factory=lambda: init_id().id)
@@ -122,8 +123,11 @@ class Stash(Command):
 class CreateTimeCapsule(Command):
     assets: List[str] = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
-    description: str = required_field()  # type: ignore
-    owners_id: List[str] = required_field()  # type: ignore
+    location: str = required_field()  # type: ignore
+    scheduled_date: int = required_field()  # type: ignore
+    description: Optional[str] = None
+    owner: str = required_field()  # type: ignore
+    receivers: List[str] = required_field()  # type: ignore
     aggregate_id: str = field(default_factory=lambda: init_id().id)
 
 

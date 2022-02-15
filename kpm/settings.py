@@ -59,7 +59,7 @@ class Settings(BaseSettings):
     API_RELEASE: ApiRoute = ApiRoute(prefix="/releases", tags=["releases"])
     API_ASSET_BOTTLE: ApiRoute = ApiRoute("/in-a-bottle")
     API_FUTURE_SELF = ApiRoute("/to-future-self")
-    API_STASH = ApiRoute("/stash")
+    API_STASH = ApiRoute("/hide-and-seek")
 
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
 

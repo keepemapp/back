@@ -7,6 +7,8 @@ from fastapi_pagination import Page, Params, paginate
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schemas
 import kpm.shared.entrypoints.fastapi.exceptions as ex
+from kpm.assets.domain import OperationTriggerException
+from kpm.shared.domain.model import UserNotAllowedException
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import (
@@ -161,10 +163,10 @@ async def add_asset_bottle(
 @router.post(
     s.API_STASH.path(),
     **BASE_API_POST_DEF,
-    response_description="Stashes a group of assets.\n"
+    response_description="Hides a group of assets.\n"
     + "If successful, redirects to the GET endpoint.",
 )
-async def add_stash(
+async def add_hide_and_seek(
     create: schemas.CreateAssetInABottle,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
@@ -177,6 +179,39 @@ async def add_stash(
         raise error
 
     payload = {k: v for k, v in create.__dict__.items() if v}
-    cmd = cmds.Stash(owner=token.subject, **payload)
+    cmd = cmds.CreateHideAndSeek(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
+
+
+@router.post(
+    s.API_RELEASE.concat('{id}', 'trigger').path(),
+    response_description="Tries to trigger a legacy operation.\n"
+    + "If successful, returns 204. ",
+    status_code=status.HTTP_204_NO_CONTENT,
+    responses={
+        status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
+        status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {
+            'description': 'Returned if trigger is not ready to execute or'
+                           ' the user cannot trigger it.'
+        },
+    }
+)
+async def trigger_legacy_operation(
+    create: schemas.ReleaseTrigger,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    payload = {k: v for k, v in create.__dict__.items() if v}
+    cmd = cmds.TriggerRelease(by_user=token.subject, **payload)
+    try:
+        bus.handle(cmd)
+    except UserNotAllowedException:
+        raise ex.FORBIDDEN_GENERIC
+    except OperationTriggerException:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot be triggered yet.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )

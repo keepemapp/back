@@ -148,13 +148,13 @@ class TestGetAssets:
         response = query_uas(user_client, "")
         assert len(response.json()["items"]) == 3
 
-        response = query_uas(admin_client, "?bookmarked=1")
+        response = query_all(admin_client, "?bookmarked=1")
         assert len(response.json()["items"]) == 1
-        response = query_uas(admin_client, "?bookmarked=true")
+        response = query_all(admin_client, "?bookmarked=true")
         assert len(response.json()["items"]) == 1
-        response = query_uas(admin_client, "?bookmarked=false")
+        response = query_all(admin_client, "?bookmarked=false")
         assert len(response.json()["items"]) == 2
-        response = query_uas(admin_client, "")
+        response = query_all(admin_client, "")
         assert len(response.json()["items"]) == 3
 
     invalid_params = [

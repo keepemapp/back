@@ -13,7 +13,7 @@ This page contains a
 |Yourself
 |You choose
 |N/A
-|Stash
+|HideAndSeek
 |You choose
 |N/A
 |Where you choose

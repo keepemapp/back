@@ -218,3 +218,7 @@ class RootAggregate(Entity):
 @dataclass(frozen=True, eq=True)
 class ValueObject:
     pass
+
+
+class UserNotAllowedException(Exception):
+    pass
