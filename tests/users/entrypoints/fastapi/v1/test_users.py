@@ -112,8 +112,6 @@ class TestRegisterUser:
 
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
     def test_non_allowed_usernames(self, client, wrong_username):
-        # TODO since this has been moved to the use case layer, perhaps
-        # simplify me.
         user = UserCreate(
             username=wrong_username, email="email@correct.com", password="pwd"
         )

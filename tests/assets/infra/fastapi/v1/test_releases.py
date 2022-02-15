@@ -88,8 +88,9 @@ class TestReleases:
             ),
             cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id),
             to_trigger,
-            cmds.TriggerRelease(by_user=to_trigger.owner,
-                                aggregate_id=to_trigger.aggregate_id),
+            cmds.TriggerRelease(
+                by_user=to_trigger.owner, aggregate_id=to_trigger.aggregate_id
+            ),
         ]
         for msg in setup:
             bus.handle(msg)
@@ -143,21 +144,27 @@ class TestTrigger:
     @staticmethod
     def client(bus, token=USER_TOKEN) -> TestClient:
         keep_r = bus.uows.get(Keep).repo
-        keep_r.put(Keep(
-            requester=UserId(id=OWNER1),
-            requested=UserId(id=OWNER2),
-            state=RootAggState.ACTIVE,
-        ))
-        keep_r.put(Keep(
-            requester=UserId(id=OWNER1),
-            requested=UserId(id=ADMIN_TOKEN.subject),
-            state=RootAggState.ACTIVE,
-        ))
-        keep_r.put(Keep(
-            requester=UserId(id=OWNER2),
-            requested=UserId(id=ADMIN_TOKEN.subject),
-            state=RootAggState.ACTIVE,
-        ))
+        keep_r.put(
+            Keep(
+                requester=UserId(id=OWNER1),
+                requested=UserId(id=OWNER2),
+                state=RootAggState.ACTIVE,
+            )
+        )
+        keep_r.put(
+            Keep(
+                requester=UserId(id=OWNER1),
+                requested=UserId(id=ADMIN_TOKEN.subject),
+                state=RootAggState.ACTIVE,
+            )
+        )
+        keep_r.put(
+            Keep(
+                requester=UserId(id=OWNER2),
+                requested=UserId(id=ADMIN_TOKEN.subject),
+                state=RootAggState.ACTIVE,
+            )
+        )
         keep_r.commit()
         app = FastAPI(
             title="Test",
@@ -167,19 +174,24 @@ class TestTrigger:
         app.dependency_overrides[get_access_token] = lambda: token
         return TestClient(app)
 
-    @pytest.mark.parametrize("cond", [
-        {'date': PAST_TS, 'r_code': 204},
-        {'date': FUTURE_TS, 'r_code': 403},
-    ])
+    @pytest.mark.parametrize(
+        "cond",
+        [
+            {"date": PAST_TS, "r_code": 204},
+            {"date": FUTURE_TS, "r_code": 403},
+        ],
+    )
     def test_time_release(self, bus, create_asset_cmd, cond):
         # Given
-        ID = 'future_self'
+        ID = "future_self"
         setup = [
-            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]),
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]
+            ),
             cmds.CreateAssetToFutureSelf(
                 aggregate_id=ID,
                 assets=[ASSET_ID1],
-                scheduled_date=cond['date'],
+                scheduled_date=cond["date"],
                 name="note",
                 owner=OWNER1,
             ),
@@ -192,31 +204,37 @@ class TestTrigger:
             aggregate_id=ID,
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            json=payload.dict(),
         )
         # Then
-        assert response.status_code == cond['r_code']
+        assert response.status_code == cond["r_code"]
         with bus.uows.get(AssetRelease) as uow:
             r = uow.repo.get(DomainId(id=ID))
             assert r
-            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
 
-    @pytest.mark.parametrize("cond", [
-        {'loc': 'cmb', 'guess': 'cmb', 'r_code': 204},
-        {'loc': 'cmb', 'guess': 'WRONG', 'r_code': 403},
-        {'loc': 'cmb', 'guess': None, 'r_code': 403},
-        {'loc': 'cmb', 'guess': 'WRO  dfd3cNG', 'r_code': 403},
-    ])
+    @pytest.mark.parametrize(
+        "cond",
+        [
+            {"loc": "cmb", "guess": "cmb", "r_code": 204},
+            {"loc": "cmb", "guess": "WRONG", "r_code": 403},
+            {"loc": "cmb", "guess": None, "r_code": 403},
+            {"loc": "cmb", "guess": "WRO  dfd3cNG", "r_code": 403},
+        ],
+    )
     def test_hide_and_seek_release(self, bus, create_asset_cmd, cond):
         # Given
-        ID = 'hide_and_seek'
+        ID = "hide_and_seek"
         setup = [
-            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]),
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
+            ),
             cmds.CreateHideAndSeek(
                 aggregate_id=ID,
                 assets=[ASSET_ID1],
-                location=cond['loc'],
+                location=cond["loc"],
                 name="note",
                 owner=OWNER2,
                 receivers=[OWNER1],
@@ -228,40 +246,46 @@ class TestTrigger:
         # When
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
-            geo_location=cond['guess'],
+            geo_location=cond["guess"],
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            json=payload.dict(),
         )
         # Then
-        assert response.status_code == cond['r_code']
+        assert response.status_code == cond["r_code"]
         with bus.uows.get(AssetRelease) as uow:
             r = uow.repo.get(DomainId(id=ID))
             assert r
-            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
 
-    @pytest.mark.parametrize("cond", [
-        {'date': PAST_TS, 'loc': 'cmb', 'guess': 'cmb', 'r_code': 204},
-        {'date': PAST_TS, 'loc': 'cmb', 'guess': 'WRONG', 'r_code': 403},
-        {'date': PAST_TS, 'loc': 'cmb', 'guess': None, 'r_code': 403},
-        {'date': FUTURE_TS, 'loc': 'cmb', 'guess': 'cmb', 'r_code': 403},
-        {'date': FUTURE_TS, 'loc': 'cmb', 'guess': 'WRONG', 'r_code': 403},
-    ])
+    @pytest.mark.parametrize(
+        "cond",
+        [
+            {"date": PAST_TS, "loc": "cmb", "guess": "cmb", "r_code": 204},
+            {"date": PAST_TS, "loc": "cmb", "guess": "WRONG", "r_code": 403},
+            {"date": PAST_TS, "loc": "cmb", "guess": None, "r_code": 403},
+            {"date": FUTURE_TS, "loc": "cmb", "guess": "cmb", "r_code": 403},
+            {"date": FUTURE_TS, "loc": "cmb", "guess": "WRONG", "r_code": 403},
+        ],
+    )
     def test_time_capsule(self, bus, create_asset_cmd, cond):
         # Given
-        ID = 'time_capsule'
+        ID = "time_capsule"
         setup = [
-            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]),
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
+            ),
             cmds.CreateTimeCapsule(
                 aggregate_id=ID,
                 assets=[ASSET_ID1],
-                location=cond['loc'],
-                scheduled_date=cond['date'],
+                location=cond["loc"],
+                scheduled_date=cond["date"],
                 name="note",
                 owner=OWNER2,
                 receivers=[OWNER1],
-            )
+            ),
         ]
         for msg in setup:
             bus.handle(msg)
@@ -269,55 +293,65 @@ class TestTrigger:
         # When
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
-            geo_location=cond['guess'],
+            geo_location=cond["guess"],
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            json=payload.dict(),
         )
         # Then
-        assert response.status_code == cond['r_code']
+        assert response.status_code == cond["r_code"]
         with bus.uows.get(AssetRelease) as uow:
             r = uow.repo.get(DomainId(id=ID))
             assert r
-            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
 
-    @pytest.mark.parametrize("cond", [
-        {'receivers': [OWNER1], 'auth_tok': USER_TOKEN, 'r_code': 204},
-        {'receivers': [OWNER1,
-                       ADMIN_TOKEN.subject], 'auth_tok': ADMIN_TOKEN, 'r_code': 204},
-        {'receivers': [OWNER1], 'auth_tok': ADMIN_TOKEN, 'r_code': 403},
-        {'receivers': [OWNER1], 'auth_tok': ATTACKER_TOKEN, 'r_code': 403},
-    ])
+    @pytest.mark.parametrize(
+        "cond",
+        [
+            {"receivers": [OWNER1], "auth_tok": USER_TOKEN, "r_code": 204},
+            {
+                "receivers": [OWNER1, ADMIN_TOKEN.subject],
+                "auth_tok": ADMIN_TOKEN,
+                "r_code": 204,
+            },
+            {"receivers": [OWNER1], "auth_tok": ADMIN_TOKEN, "r_code": 403},
+            {"receivers": [OWNER1], "auth_tok": ATTACKER_TOKEN, "r_code": 403},
+        ],
+    )
     def test_triggered_by_receiver(self, bus, create_asset_cmd, cond):
         # Given
-        ID = 'time_capsule'
+        ID = "time_capsule"
         setup = [
-            dc.replace(create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]),
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
+            ),
             cmds.TransferAssets(
                 aggregate_id=ID,
                 assets=[ASSET_ID1],
                 name="note",
                 owner=OWNER2,
-                receivers=cond['receivers'],
-            )
+                receivers=cond["receivers"],
+            ),
         ]
         for msg in setup:
             bus.handle(msg)
-        client = self.client(bus, token=cond['auth_tok'])
+        client = self.client(bus, token=cond["auth_tok"])
         # When
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, 'trigger').path(), json=payload.dict()
+            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            json=payload.dict(),
         )
         # Then
-        assert response.status_code == cond['r_code']
+        assert response.status_code == cond["r_code"]
         with bus.uows.get(AssetRelease) as uow:
             r = uow.repo.get(DomainId(id=ID))
             assert r
-            is_past = (cond['r_code'] // 100) == 2  # True for 2XY codes
+            is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
 
 

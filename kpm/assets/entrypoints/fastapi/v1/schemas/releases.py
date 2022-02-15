@@ -66,7 +66,7 @@ class ReleaseConditions(BaseModel):
 
 class ReleaseTrigger(BaseModel):
     aggregate_id: str
-    """Optional field for the geographical conditions. 
+    """Optional field for the geographical conditions.
     Compares lowercase and without spaces"""
     geo_location: str = None
 

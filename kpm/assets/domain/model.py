@@ -201,8 +201,8 @@ class GeographicalCondition(ReleaseCondition):
     def is_met(self, context=None) -> bool:
         if context is None:
             context = {}
-        guess = (context.get('location', '') or '').lower().replace(' ', '')
-        return self.location.lower().replace(' ', '') == guess
+        guess = (context.get("location", "") or "").lower().replace(" ", "")
+        return self.location.lower().replace(" ", "") == guess
 
 
 def dict_to_release_cond(condition: Dict) -> ReleaseCondition:

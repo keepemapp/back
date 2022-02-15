@@ -5,7 +5,6 @@ import flatdict
 
 import kpm.assets.domain.model as model
 from kpm.assets.domain.repositories import AssetReleaseRepository
-from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
 from kpm.shared.service_layer.message_bus import MessageBus

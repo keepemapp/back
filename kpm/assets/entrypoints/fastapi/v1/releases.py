@@ -8,8 +8,8 @@ import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schemas
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.domain import OperationTriggerException
-from kpm.shared.domain.model import UserNotAllowedException
 from kpm.settings import settings as s
+from kpm.shared.domain.model import UserNotAllowedException
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import (
     asset_rel_view,
@@ -185,7 +185,7 @@ async def add_hide_and_seek(
 
 
 @router.post(
-    s.API_RELEASE.concat('{id}', 'trigger').path(),
+    s.API_RELEASE.concat("{id}", "trigger").path(),
     response_description="Tries to trigger a legacy operation.\n"
     + "If successful, returns 204. ",
     status_code=status.HTTP_204_NO_CONTENT,
@@ -193,10 +193,10 @@ async def add_hide_and_seek(
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
         status.HTTP_403_FORBIDDEN: {
-            'description': 'Returned if trigger is not ready to execute or'
-                           ' the user cannot trigger it.'
+            "description": "Returned if trigger is not ready to execute or"
+            " the user cannot trigger it."
         },
-    }
+    },
 )
 async def trigger_legacy_operation(
     create: schemas.ReleaseTrigger,

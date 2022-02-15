@@ -34,13 +34,16 @@ class TestReleaseConditions:
         future_date = to_millis(now_utc() + dt.timedelta(minutes=10))
         assert model.TimeCondition(release_ts=future_date).is_met() is False
 
-    @pytest.mark.parametrize('location_cantrigger', [
-        ("Cambrils", True),
-        ("Ca mbrils", True),
-        ("cAmbrils", True),
-        ("Reus", False),
-        ("Cambrilsss", False),
-    ])
+    @pytest.mark.parametrize(
+        "location_cantrigger",
+        [
+            ("Cambrils", True),
+            ("Ca mbrils", True),
+            ("cAmbrils", True),
+            ("Reus", False),
+            ("Cambrilsss", False),
+        ],
+    )
     def test_geographical_condition(self, location_cantrigger):
         release = model.AssetRelease(
             id=DomainId("123"),
@@ -56,15 +59,18 @@ class TestReleaseConditions:
 
         loc = location_cantrigger[0]
         can = location_cantrigger[1]
-        assert release.can_trigger(context={'location': loc}) == can
+        assert release.can_trigger(context={"location": loc}) == can
 
-    @pytest.mark.parametrize('location_cantrigger', [
-        ("Cambrils", True),
-        ("Ca mbrils", True),
-        ("cAmbrils", True),
-        ("Reus", False),
-        ("Cambrilsss", False),
-    ])
+    @pytest.mark.parametrize(
+        "location_cantrigger",
+        [
+            ("Cambrils", True),
+            ("Ca mbrils", True),
+            ("cAmbrils", True),
+            ("Reus", False),
+            ("Cambrilsss", False),
+        ],
+    )
     def test_geographical_and_time_condition(self, location_cantrigger):
         release = model.AssetRelease(
             id=DomainId("123"),
@@ -72,8 +78,10 @@ class TestReleaseConditions:
             description="",
             owner=UserId("1"),
             receivers=[UserId("2")],
-            conditions=[model.GeographicalCondition(location="Cambrils"),
-                        model.TimeCondition(release_ts=now_utc_millis()-100)],
+            conditions=[
+                model.GeographicalCondition(location="Cambrils"),
+                model.TimeCondition(release_ts=now_utc_millis() - 100),
+            ],
             release_type="dummy",
             bequest_type=model.BequestType.GIFT,
             assets=[AssetId("asset_id")],
@@ -81,15 +89,18 @@ class TestReleaseConditions:
 
         loc = location_cantrigger[0]
         can = location_cantrigger[1]
-        assert release.can_trigger(context={'location': loc}) == can
+        assert release.can_trigger(context={"location": loc}) == can
 
-    @pytest.mark.parametrize('location_cantrigger', [
-        ("Cambrils", False),
-        ("Ca mbrils", False),
-        ("cAmbrils", False),
-        ("Reus", False),
-        ("Cambrilsss", False),
-    ])
+    @pytest.mark.parametrize(
+        "location_cantrigger",
+        [
+            ("Cambrils", False),
+            ("Ca mbrils", False),
+            ("cAmbrils", False),
+            ("Reus", False),
+            ("Cambrilsss", False),
+        ],
+    )
     def test_geographical_and_time_condition_cannot(self, location_cantrigger):
         release = model.AssetRelease(
             id=DomainId("123"),
@@ -97,8 +108,10 @@ class TestReleaseConditions:
             description="",
             owner=UserId("1"),
             receivers=[UserId("2")],
-            conditions=[model.GeographicalCondition(location="Cambrils"),
-                        model.TimeCondition(release_ts=now_utc_millis()+10000)],
+            conditions=[
+                model.GeographicalCondition(location="Cambrils"),
+                model.TimeCondition(release_ts=now_utc_millis() + 10000),
+            ],
             release_type="dummy",
             bequest_type=model.BequestType.GIFT,
             assets=[AssetId("asset_id")],
@@ -106,7 +119,8 @@ class TestReleaseConditions:
 
         loc = location_cantrigger[0]
         can = location_cantrigger[1]
-        assert release.can_trigger(context={'location': loc}) == can
+        assert release.can_trigger(context={"location": loc}) == can
+
 
 @pytest.mark.unit
 class TestRelease:
@@ -253,8 +267,11 @@ class TestAssetReleaseVisibility:
         asset_id = release.assets[0]
         original_owner = release.owner
         # When
-        bus.handle(TriggerRelease(by_user=release.receivers[0].id,
-                                  aggregate_id=release_id.id))
+        bus.handle(
+            TriggerRelease(
+                by_user=release.receivers[0].id, aggregate_id=release_id.id
+            )
+        )
 
         # Then
         with bus.uows.get(model.AssetRelease) as uow:
@@ -274,8 +291,11 @@ class TestAssetReleaseVisibility:
         release_id = release.id
         asset_id = release.assets[0]
         # When
-        bus.handle(TriggerRelease(by_user=release.receivers[0].id,
-                                  aggregate_id=release_id.id))
+        bus.handle(
+            TriggerRelease(
+                by_user=release.receivers[0].id, aggregate_id=release_id.id
+            )
+        )
 
         # Then
         with bus.uows.get(model.AssetRelease) as uow:
@@ -312,8 +332,11 @@ class TestAssetReleaseVisibility:
             r = uow.repo.get(DomainId(transfer_cmd.aggregate_id))
             assert not r.is_past()
 
-        bus.handle(TriggerRelease(by_user="receiver",
-                                  aggregate_id=transfer_cmd.aggregate_id))
+        bus.handle(
+            TriggerRelease(
+                by_user="receiver", aggregate_id=transfer_cmd.aggregate_id
+            )
+        )
         with bus.uows.get(model.Asset) as uow:
             a: model.Asset = uow.repo.find_by_id(AssetId(id="aid"))
             assert a.is_visible()
@@ -323,13 +346,31 @@ class TestAssetReleaseVisibility:
     PAST_TS = now_utc_millis() - 100000
     FUTURE_TS = now_utc_millis() + 1000000000
 
-    @pytest.mark.parametrize("conditions", [
-        {'time': PAST_TS, 'geog': 'cmb', 'guess': 'cmb', 'result': True},
-        {'time': FUTURE_TS, 'geog': 'cmb', 'guess': 'cmb', 'result': False},
-        {'time': PAST_TS, 'geog': 'cmb', 'guess': 'WRONG', 'result': False},
-        {'time': FUTURE_TS, 'geog': 'cmb', 'guess': 'WRONG', 'result': False},
-        {'time': PAST_TS, 'geog': 'cmb', 'guess': '', 'result': False},
-    ])
+    @pytest.mark.parametrize(
+        "conditions",
+        [
+            {"time": PAST_TS, "geog": "cmb", "guess": "cmb", "result": True},
+            {
+                "time": FUTURE_TS,
+                "geog": "cmb",
+                "guess": "cmb",
+                "result": False,
+            },
+            {
+                "time": PAST_TS,
+                "geog": "cmb",
+                "guess": "WRONG",
+                "result": False,
+            },
+            {
+                "time": FUTURE_TS,
+                "geog": "cmb",
+                "guess": "WRONG",
+                "result": False,
+            },
+            {"time": PAST_TS, "geog": "cmb", "guess": "", "result": False},
+        ],
+    )
     def test_trigger_time_capsule(self, bus, create_asset_cmd, conditions):
         # Given
         release = self.populate_bus_with_release(
@@ -339,15 +380,17 @@ class TestAssetReleaseVisibility:
             owner="owner",
             receiver="receiver",
             conditions=[
-                model.TimeCondition(release_ts=conditions['time']),
-                model.GeographicalCondition(location=conditions['geog'])
-            ]
+                model.TimeCondition(release_ts=conditions["time"]),
+                model.GeographicalCondition(location=conditions["geog"]),
+            ],
         )
         # When
-        cmd = TriggerRelease(by_user=release.receivers[0].id,
-                             aggregate_id=release.id.id,
-                             geo_location=conditions['guess'])
-        if conditions['result'] == False:
+        cmd = TriggerRelease(
+            by_user=release.receivers[0].id,
+            aggregate_id=release.id.id,
+            geo_location=conditions["guess"],
+        )
+        if conditions["result"] == False:
             with pytest.raises(model.OperationTriggerException):
                 bus.handle(cmd)
         else:
@@ -356,7 +399,7 @@ class TestAssetReleaseVisibility:
         # Then
         with bus.uows.get(model.AssetRelease) as uow:
             r = uow.repo.get(release.id)
-            assert r.is_past() == conditions['result']
+            assert r.is_past() == conditions["result"]
 
     def test_transfer_idempotent(self, bus, create_asset_cmd):
         # Given
@@ -462,7 +505,7 @@ class TestAssetReleaseVisibility:
         receiver="2",
         release_id="123",
         keep_state: RootAggState = RootAggState.ACTIVE,
-        conditions: List[model.ReleaseCondition] = [model.TrueCondition()]
+        conditions: List[model.ReleaseCondition] = [model.TrueCondition()],
     ) -> model.AssetRelease:
         # Given
         asset_id = "assetId"

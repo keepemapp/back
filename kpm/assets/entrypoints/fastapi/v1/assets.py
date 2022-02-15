@@ -83,7 +83,7 @@ def create_asset_upload_auth_token(asset_id: str, user_id: str) -> str:
     return create_jwt_token(
         auth.dict(),
         expires_delta=timedelta(minutes=s.UPLOAD_AUTH_TOKEN_EXPIRE_SEC),
-    )  # TODO change me to seconds instead of minutes
+    )
 
 
 def create_asset_upload_path(asset_id: str, user_id: str) -> str:

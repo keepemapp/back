@@ -106,9 +106,10 @@ def trigger_release(
         rel: model.AssetRelease = uow.repo.get(DomainId(cmd.aggregate_id))
         if UserId(id=cmd.by_user) not in rel.receivers:
             raise kpm.shared.domain.model.UserNotAllowedException(
-                "User is not in the receivers list.")
+                "User is not in the receivers list."
+            )
 
-        trigger_context = {'location': cmd.geo_location}
+        trigger_context = {"location": cmd.geo_location}
 
         kr: KeepRepository = keeps.repo
         not_contacts = []
@@ -124,9 +125,6 @@ def trigger_release(
             rel.cancel(reason=reason)
             uow.repo.put(rel)
             uow.commit()
-            # FIXME if we raise this, we cannot handle the other events
-            # Maybe we add a canceling motive/status and send an email?
-            # raise model.ReceiversNotInContacts(not_contacts)
         else:
             # Raises exception if not ready
             rel.trigger(context=trigger_context)
@@ -145,7 +143,9 @@ def cancel_release(
         uow.commit()
 
 
-def hide_asset(cmd: cmds.CreateHideAndSeek, assetrelease_uow: AbstractUnitOfWork):
+def hide_asset(
+    cmd: cmds.CreateHideAndSeek, assetrelease_uow: AbstractUnitOfWork
+):
     """
     Hide an asset in a geographical location. Once a person gets near it, it
     will discover it and take ownership.
@@ -199,8 +199,10 @@ def create_time_capsule(
             assets=[AssetId(a) for a in cmd.assets],
             release_type="time_capsule",
             bequest_type=model.BequestType.GIFT,
-            conditions=[model.GeographicalCondition(location=cmd.location),
-                        model.TimeCondition(release_ts=cmd.scheduled_date)],
+            conditions=[
+                model.GeographicalCondition(location=cmd.location),
+                model.TimeCondition(release_ts=cmd.scheduled_date),
+            ],
         )
         uow.repo.put(rel)
         uow.commit()

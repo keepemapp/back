@@ -8,9 +8,6 @@ from kpm.users.domain.model import Keep, User
 
 
 class UserRepository(DomainRepository):
-    # TODO return of users should not have the password and salt
-    # Those should only be returned if you cal a get_credentials() specifically
-
     def __init__(self):
         super(UserRepository, self).__init__()
         self._seen: Set[User] = set()
