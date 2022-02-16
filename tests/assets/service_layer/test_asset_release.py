@@ -9,12 +9,17 @@ import kpm.assets.domain.events as events
 import kpm.assets.domain.model as model
 from kpm.assets.domain.commands import (
     CancelRelease,
-    TransferAssets,
+    CreateTransfer,
     TriggerRelease,
 )
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, RootAggState, UserId
-from kpm.shared.domain.time_utils import now_utc, now_utc_millis, to_millis
+from kpm.shared.domain.time_utils import (
+    from_now_ms,
+    now_utc,
+    now_utc_millis,
+    to_millis,
+)
 from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.utils import bus
@@ -318,12 +323,13 @@ class TestAssetReleaseVisibility:
             receiver="receiver",
         )
         # When
-        transfer_cmd = TransferAssets(
+        transfer_cmd = CreateTransfer(
             assets=["aid"],
             name="Name",
             owner="owner",
             receivers=["receiver"],
             description="Some description",
+            scheduled_date=self.PAST_TS,
         )
         bus.handle(transfer_cmd)
 
@@ -343,8 +349,41 @@ class TestAssetReleaseVisibility:
             assert len(a.owners_id) == 1
             assert a.owners_id[0] == UserId(id="receiver")
 
-    PAST_TS = now_utc_millis() - 100000
-    FUTURE_TS = now_utc_millis() + 1000000000
+    def test_transfers_future(self, bus, create_asset_cmd):
+        # Given
+        self.populate_bus_with_asset_and_keep(
+            bus,
+            create_asset_cmd,
+            keep_state=RootAggState.ACTIVE,
+            asset_id="aid",
+            owner="owner",
+            receiver="receiver",
+        )
+        # When
+        transfer_cmd = CreateTransfer(
+            assets=["aid"],
+            name="Name",
+            owner="owner",
+            receivers=["receiver"],
+            description="Some description",
+            scheduled_date=self.FUTURE_TS,
+        )
+        bus.handle(transfer_cmd)
+
+        # Then
+        with pytest.raises(model.OperationTriggerException):
+            bus.handle(
+                TriggerRelease(
+                    by_user="receiver", aggregate_id=transfer_cmd.aggregate_id
+                )
+            )
+
+        with bus.uows.get(model.AssetRelease) as uow:
+            r = uow.repo.get(DomainId(transfer_cmd.aggregate_id))
+            assert not r.is_past()
+
+    PAST_TS = from_now_ms(hours=-100)
+    FUTURE_TS = from_now_ms(hours=+100)
 
     @pytest.mark.parametrize(
         "conditions",
@@ -411,7 +450,7 @@ class TestAssetReleaseVisibility:
             owner="owner",
             receiver="receiver",
         )
-        transfer_cmd = TransferAssets(
+        transfer_cmd = CreateTransfer(
             assets=["aid"],
             name="Name",
             owner="owner",
@@ -429,7 +468,7 @@ class TestAssetReleaseVisibility:
             assert len(uow.repo.all()) == 1
 
         # When command created twice
-        transfer_cmd2 = TransferAssets(
+        transfer_cmd2 = CreateTransfer(
             assets=["aid"],
             name="Name",
             owner="owner",

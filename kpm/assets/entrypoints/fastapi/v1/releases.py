@@ -24,7 +24,7 @@ from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 
 router = APIRouter(
-    tags=s.API_RELEASE.tags,
+    tags=s.API_LEGACY.tags,
     responses={404: {"description": "Not found"}},
 )
 
@@ -39,7 +39,7 @@ BASE_API_POST_DEF = {
 
 
 def post_response(*args) -> RedirectResponse:
-    uri = s.API_RELEASE
+    uri = s.API_LEGACY
     for r in args:
         uri = uri.concat(r)
     return RedirectResponse(
@@ -71,7 +71,7 @@ def assert_assets_can_be_scheduled(
 
 
 @router.get(
-    s.API_RELEASE.path(),
+    s.API_LEGACY.path(),
     responses={
         status.HTTP_200_OK: {"model": Page[schemas.ReleaseResponse]},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
@@ -88,28 +88,6 @@ async def get_releases(
     return paginate(
         [schemas.ReleaseResponse(**r) for r in views.all(bus=bus)], params
     )
-
-
-@router.get(
-    s.API_RELEASE.path() + "/{release_id}",
-    responses={
-        status.HTTP_200_OK: {"model": schemas.ReleaseResponse},
-        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
-        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
-        status.HTTP_404_NOT_FOUND: {"model": HTTPError},
-    },
-)
-async def get_release(
-    release_id: str,
-    token: AccessToken = Depends(get_access_token),
-    bus: MessageBus = Depends(message_bus),
-    views=Depends(asset_rel_view),
-):
-    release = views.get(release_id, bus=bus)
-    if release and release.get("owner") == token.subject:
-        return schemas.ReleaseResponse(**release)
-    else:
-        raise ex.FORBIDDEN_GENERIC
 
 
 @router.post(
@@ -130,7 +108,9 @@ async def add_asset_future_self(
     if error:
         raise error
 
-    payload = {k: v for k, v in create.__dict__.items() if v}
+    payload = {
+        k: v for k, v in create.__dict__.items() if v
+    }  # Clean None vals
     cmd = cmds.CreateAssetToFutureSelf(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
@@ -154,14 +134,16 @@ async def add_asset_bottle(
     if error:
         raise error
 
-    payload = {k: v for k, v in create.__dict__.items() if v}
+    payload = {
+        k: v for k, v in create.__dict__.items() if v
+    }  # Clean None vals
     cmd = cmds.CreateAssetInABottle(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
 
 
 @router.post(
-    s.API_STASH.path(),
+    s.API_HIDE.path(),
     **BASE_API_POST_DEF,
     response_description="Hides a group of assets.\n"
     + "If successful, redirects to the GET endpoint.",
@@ -178,14 +160,64 @@ async def add_hide_and_seek(
     if error:
         raise error
 
-    payload = {k: v for k, v in create.__dict__.items() if v}
+    payload = {
+        k: v for k, v in create.__dict__.items() if v
+    }  # Clean None vals
     cmd = cmds.CreateHideAndSeek(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
 
 
 @router.post(
-    s.API_RELEASE.concat("{id}", "trigger").path(),
+    s.API_TRANSFER.path(),
+    **BASE_API_POST_DEF,
+    response_description="Schedules an asset transfer.\n"
+    + "If successful, redirects to the GET ENDPOINT",
+)
+async def add_transfer(
+    create: schemas.CreateTransfer,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+    assets=Depends(asset_view),
+):
+    error = assert_assets_can_be_scheduled(
+        bus, create.assets, token.subject, assets
+    )
+    if error:
+        raise error
+
+    payload = {
+        k: v for k, v in create.__dict__.items() if v
+    }  # Clean None vals
+    cmd = cmds.CreateTransfer(owner=token.subject, **payload)
+    bus.handle(cmd)
+    return post_response(cmd.aggregate_id)
+
+
+@router.get(
+    s.API_LEGACY.path() + "/{release_id}",
+    responses={
+        status.HTTP_200_OK: {"model": schemas.ReleaseResponse},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
+        status.HTTP_404_NOT_FOUND: {"model": HTTPError},
+    },
+)
+async def get_release(
+    release_id: str,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_rel_view),
+):
+    release = views.get(release_id, bus=bus)
+    if release and release.get("owner") == token.subject:
+        return schemas.ReleaseResponse(**release)
+    else:
+        raise ex.FORBIDDEN_GENERIC
+
+
+@router.post(
+    s.API_LEGACY.concat("{id}", "trigger").path(),
     response_description="Tries to trigger a legacy operation.\n"
     + "If successful, returns 204. ",
     status_code=status.HTTP_204_NO_CONTENT,

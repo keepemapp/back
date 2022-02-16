@@ -120,7 +120,7 @@ class TestReleases:
 
     def test_list_users(self, client, populated_bus):
         response = client.get(
-            s.API_V1.concat(s.API_USER_PATH, "/me", s.API_RELEASE).path()
+            s.API_V1.concat(s.API_USER_PATH, "/me", s.API_LEGACY).path()
         )
         releases = response.json()
 
@@ -128,14 +128,14 @@ class TestReleases:
         assert len(releases["items"]) == 1
 
     def test_list_all(self, admin_client, client, populated_bus):
-        response = admin_client.get(s.API_V1.concat(s.API_RELEASE).path())
+        response = admin_client.get(s.API_V1.concat(s.API_LEGACY).path())
         releases = response.json()
 
         assert response.status_code == 200
         assert len(releases) == 4
 
         # Users cannot access this endpoint
-        response = client.get(s.API_V1.concat(s.API_RELEASE).path())
+        response = client.get(s.API_V1.concat(s.API_LEGACY).path())
         assert response.status_code == 403
 
 
@@ -183,28 +183,35 @@ class TestTrigger:
     )
     def test_time_release(self, bus, create_asset_cmd, cond):
         # Given
-        ID = "future_self"
         setup = [
             dc.replace(
                 create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]
-            ),
-            cmds.CreateAssetToFutureSelf(
-                aggregate_id=ID,
-                assets=[ASSET_ID1],
-                scheduled_date=cond["date"],
-                name="note",
-                owner=OWNER1,
             ),
         ]
         for msg in setup:
             bus.handle(msg)
         client = self.client(bus)
         # When
+        create_payload = schema.CreateAssetToFutureSelf(
+            assets=[ASSET_ID1],
+            scheduled_date=cond["date"],
+            name="note",
+        )
+        r = client.post(
+            s.API_V1.concat(s.API_FUTURE_SELF).path(),
+            json=create_payload.dict(),
+        )
+        assert r.status_code == 201
+
+        with bus.uows.get(AssetRelease) as uow:
+            rs = uow.repo.all()
+            ID = rs[0].id.id
+
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
         )
         # Then
@@ -244,12 +251,13 @@ class TestTrigger:
             bus.handle(msg)
         client = self.client(bus)
         # When
+        # TODO test creation API
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
             geo_location=cond["guess"],
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
         )
         # Then
@@ -291,12 +299,63 @@ class TestTrigger:
             bus.handle(msg)
         client = self.client(bus)
         # When
+        # TODO test time capsule create API
+
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
             geo_location=cond["guess"],
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
+            json=payload.dict(),
+        )
+        # Then
+        assert response.status_code == cond["r_code"]
+        with bus.uows.get(AssetRelease) as uow:
+            r = uow.repo.get(DomainId(id=ID))
+            assert r
+            is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
+            assert r.is_past() == is_past
+
+    @pytest.mark.parametrize(
+        "cond",
+        [
+            {"date": PAST_TS, "r_code": 204},
+            {"date": FUTURE_TS, "r_code": 403},
+        ],
+    )
+    def test_transfer(self, bus, create_asset_cmd, cond):
+        # Given
+        setup = [
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]
+            ),
+        ]
+        for msg in setup:
+            bus.handle(msg)
+        client = self.client(bus)
+        # When
+        create_payload = schema.CreateTransfer(
+            assets=[ASSET_ID1],
+            scheduled_date=cond["date"],
+            name="note",
+            receivers=[OWNER1],
+        )
+        r = client.post(
+            s.API_V1.concat(s.API_TRANSFER).path(),
+            json=create_payload.dict(),
+        )
+        assert r.status_code == 201
+
+        with bus.uows.get(AssetRelease) as uow:
+            rs = uow.repo.all()
+            ID = rs[0].id.id
+
+        payload = schema.ReleaseTrigger(
+            aggregate_id=ID,
+        )
+        response = client.post(
+            s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
         )
         # Then
@@ -327,7 +386,7 @@ class TestTrigger:
             dc.replace(
                 create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
             ),
-            cmds.TransferAssets(
+            cmds.CreateTransfer(
                 aggregate_id=ID,
                 assets=[ASSET_ID1],
                 name="note",
@@ -343,7 +402,7 @@ class TestTrigger:
             aggregate_id=ID,
         )
         response = client.post(
-            s.API_V1.concat(s.API_RELEASE, ID, "trigger").path(),
+            s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
         )
         # Then

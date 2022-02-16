@@ -6,7 +6,7 @@ from pydantic.dataclasses import dataclass
 from kpm.shared.domain import init_id, required_field
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.model import AssetId
-from kpm.shared.domain.time_utils import from_now_ms
+from kpm.shared.domain.time_utils import from_now_ms, now_utc_millis
 
 
 @dataclass(frozen=True)
@@ -69,7 +69,7 @@ class CreateAssetInABottle(Command):
     """UNIX timestamp in milliseconds"""
     min_date: int = field(default_factory=lambda: from_now_ms(months=1))
     """UNIX timestamp in milliseconds"""
-    max_date: int = field(default_factory=lambda: from_now_ms(years=5))
+    max_date: int = field(default_factory=lambda: from_now_ms(years=1))
     name: str = required_field()  # type: ignore
     receivers: List[str] = required_field()  # type: ignore
     owner: str = required_field()  # type: ignore
@@ -132,12 +132,13 @@ class CreateTimeCapsule(Command):
 
 
 @dataclass(frozen=True)
-class TransferAssets(Command):
+class CreateTransfer(Command):
     """"""
 
     assets: List[str] = required_field()  # type: ignore
     name: str = required_field()  # type: ignore
     owner: str = required_field()  # type: ignore
+    scheduled_date: int = field(default_factory=now_utc_millis)
     receivers: List[str] = required_field()  # type: ignore
     description: Optional[str] = None
     aggregate_id: str = field(default_factory=lambda: init_id().id)

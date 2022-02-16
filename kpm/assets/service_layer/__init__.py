@@ -20,7 +20,7 @@ COMMAND_HANDLERS = {
     cmds.CreateAssetToFutureSelf: th.create_asset_future_self,
     cmds.CreateTimeCapsule: th.create_time_capsule,
     cmds.CreateAssetInABottle: th.create_asset_in_a_bottle,
-    cmds.TransferAssets: th.transfer_asset,
+    cmds.CreateTransfer: th.transfer_asset,
     cmds.CreateHideAndSeek: th.hide_asset,
     cmds.CancelRelease: th.cancel_release,
     cmds.TriggerRelease: th.trigger_release,

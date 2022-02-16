@@ -56,10 +56,14 @@ class Settings(BaseSettings):
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
     API_KEEP_PATH: ApiRoute = ApiRoute(prefix="/me/keeps", tags=["users"])
 
-    API_RELEASE: ApiRoute = ApiRoute(prefix="/releases", tags=["releases"])
+    API_LEGACY: ApiRoute = ApiRoute(
+        prefix="/legacy", tags=["legacy_operations"]
+    )
     API_ASSET_BOTTLE: ApiRoute = ApiRoute("/in-a-bottle")
     API_FUTURE_SELF = ApiRoute("/to-future-self")
-    API_STASH = ApiRoute("/hide-and-seek")
+    API_HIDE = ApiRoute("/hide-and-seek")
+    API_TRANSFER = ApiRoute("/transfer")
+    API_TIME_CAPSULE = ApiRoute("/time-capsule")
 
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
 

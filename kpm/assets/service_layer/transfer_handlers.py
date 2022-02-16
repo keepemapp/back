@@ -209,7 +209,7 @@ def create_time_capsule(
 
 
 def transfer_asset(
-    cmd: cmds.TransferAssets, assetrelease_uow: AbstractUnitOfWork
+    cmd: cmds.CreateTransfer, assetrelease_uow: AbstractUnitOfWork
 ):
     """
     Changes the ownership of a group of assets
@@ -232,7 +232,7 @@ def transfer_asset(
             assets=[AssetId(a) for a in cmd.assets],
             release_type="transfer",
             bequest_type=model.BequestType.GIFT,
-            conditions=[model.TrueCondition()],
+            conditions=[model.TimeCondition(release_ts=cmd.scheduled_date)],
         )
         ruow.repo.put(rel)
         ruow.commit()

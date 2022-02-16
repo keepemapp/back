@@ -103,14 +103,14 @@ async def get_assets_of_the_week(
 
 
 @router.get(
-    s.API_USER_PATH.concat("me", s.API_RELEASE).path(),
+    s.API_USER_PATH.concat("me", s.API_LEGACY).path(),
     deprecated=True,
-    tags=s.API_RELEASE.tags,
+    tags=s.API_LEGACY.tags,
     responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
 )
 @router.get(
-    "/me" + s.API_RELEASE.prefix,
-    tags=s.API_RELEASE.tags,
+    "/me" + s.API_LEGACY.prefix,
+    tags=s.API_LEGACY.tags,
     responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
 )
 async def get_current_user_releases(
@@ -129,8 +129,8 @@ async def get_current_user_releases(
 
 
 @router.get(
-    "/me" + s.API_RELEASE.concat("stats").path(),
-    tags=s.API_RELEASE.tags,
+    "/me" + s.API_LEGACY.concat("stats").path(),
+    tags=s.API_LEGACY.tags,
 )
 async def get_releases_statistics(
     token: AccessToken = Depends(get_access_token),
