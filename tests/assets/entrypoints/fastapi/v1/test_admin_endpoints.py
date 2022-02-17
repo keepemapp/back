@@ -1,7 +1,7 @@
 import pytest
 from fastapi.routing import APIRoute
 
-from tests.assets.infra.fastapi.v1.fixtures import *
+from tests.assets.entrypoints.fastapi.v1.fixtures import *
 
 
 @pytest.mark.unit

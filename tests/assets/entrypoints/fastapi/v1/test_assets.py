@@ -7,7 +7,7 @@ from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetUpdatableFields,
 )
 from kpm.settings import settings as s
-from tests.assets.infra.fastapi.v1.fixtures import *
+from tests.assets.entrypoints.fastapi.v1.fixtures import *
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).path()
 

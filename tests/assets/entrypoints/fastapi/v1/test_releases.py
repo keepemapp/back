@@ -16,7 +16,7 @@ from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
-from tests.assets.infra.fastapi.v1.fixtures import ADMIN_TOKEN, USER_TOKEN
+from tests.assets.entrypoints.fastapi.v1.fixtures import ADMIN_TOKEN, USER_TOKEN
 from tests.assets.utils import bus
 from tests.users.entrypoints.fastapi import ATTACKER_TOKEN
 
