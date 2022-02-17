@@ -92,7 +92,7 @@ async def get_releases(
 
 
 @router.post(
-    s.API_FUTURE_SELF.path(),
+    s.API_LEGACY.concat(s.API_FUTURE_SELF).path(),
     **BASE_API_POST_DEF,
     description="Creates an asset to future self.",
 )
@@ -117,7 +117,7 @@ async def create_asset_to_future_self(
 
 
 @router.post(
-    s.API_ASSET_BOTTLE.path(),
+    s.API_LEGACY.concat(s.API_ASSET_BOTTLE).path(),
     **BASE_API_POST_DEF,
     description="Creates an asset in a bottle.",
 )
@@ -142,7 +142,7 @@ async def create_asset_in_a_bottle(
 
 
 @router.post(
-    s.API_HIDE.path(),
+    s.API_LEGACY.concat(s.API_HIDE).path(),
     **BASE_API_POST_DEF,
     description="Hides a group of assets as legacy operation.",
 )
@@ -167,7 +167,7 @@ async def create_hide_and_seek(
 
 
 @router.post(
-    s.API_TRANSFER.path(),
+    s.API_LEGACY.concat(s.API_TRANSFER).path(),
     **BASE_API_POST_DEF,
     description="Schedules an asset transfer.",
 )
@@ -192,7 +192,7 @@ async def create_transfer(
 
 
 @router.post(
-    s.API_TIME_CAPSULE.path(),
+    s.API_LEGACY.concat(s.API_TIME_CAPSULE).path(),
     **BASE_API_POST_DEF,
     description="Creates a time capsule as a legacy operation.",
 )

@@ -198,7 +198,7 @@ class TestTrigger:
             name="note",
         )
         r = client.post(
-            s.API_V1.concat(s.API_FUTURE_SELF).path(),
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).path(),
             json=create_payload.dict(),
         )
         assert r.status_code == 201
@@ -249,7 +249,7 @@ class TestTrigger:
             receivers=[OWNER1],
         )
         r = client.post(
-            s.API_V1.concat(s.API_HIDE).path(),
+            s.API_V1.concat(s.API_LEGACY, s.API_HIDE).path(),
             json=create_payload.dict(),
         )
         assert r.status_code == 201
@@ -306,7 +306,7 @@ class TestTrigger:
             receivers=[OWNER1],
         )
         r = client.post(
-            s.API_V1.concat(s.API_TIME_CAPSULE).path(),
+            s.API_V1.concat(s.API_LEGACY, s.API_TIME_CAPSULE).path(),
             json=create_payload.dict(),
         )
         assert r.status_code == 201
@@ -359,7 +359,7 @@ class TestTrigger:
             receivers=[OWNER1],
         )
         r = client.post(
-            s.API_V1.concat(s.API_TRANSFER).path(),
+            s.API_V1.concat(s.API_LEGACY, s.API_TRANSFER).path(),
             json=create_payload.dict(),
         )
         assert r.status_code == 201
@@ -475,7 +475,7 @@ class TestAssetReleasesTypes:
         )
 
         response = client.post(
-            s.API_V1.concat(s.API_FUTURE_SELF).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).path(), json=payload.dict()
         )
 
         assert response.status_code == 201
@@ -499,7 +499,7 @@ class TestAssetReleasesTypes:
             scheduled_date=123223,
         )
         response = client.post(
-            s.API_V1.concat(s.API_FUTURE_SELF).prefix, json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).prefix, json=payload.dict()
         )
         assert response.status_code == 201
 
@@ -510,7 +510,7 @@ class TestAssetReleasesTypes:
             scheduled_date=123223,
         )
         response = client.post(
-            s.API_V1.concat(s.API_FUTURE_SELF).prefix, json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).prefix, json=payload.dict()
         )
         assert response.status_code == 403
 
@@ -522,7 +522,7 @@ class TestAssetReleasesTypes:
         )
         # When
         response = client.post(
-            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload.dict()
         )
         # Then
         assert response.status_code == 201
@@ -550,7 +550,7 @@ class TestAssetReleasesTypes:
         )
         # When
         response = client.post(
-            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload.dict()
         )
         # Then
         my_releases = client.get(
@@ -568,7 +568,7 @@ class TestAssetReleasesTypes:
         }
         # When
         response = client.post(
-            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload
         )
         # Then
         assert response.status_code == 422
@@ -581,7 +581,7 @@ class TestAssetReleasesTypes:
         )
         # When
         response = client.post(
-            s.API_V1.concat(s.API_ASSET_BOTTLE).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload.dict()
         )
         # Then
         my_releases = client.get(
