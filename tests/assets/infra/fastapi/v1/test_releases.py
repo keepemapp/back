@@ -10,7 +10,7 @@ from kpm.assets.domain import Asset, AssetRelease
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import RootAggState, UserId
+from kpm.shared.domain.model import AssetId, RootAggState, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
@@ -233,25 +233,34 @@ class TestTrigger:
     )
     def test_hide_and_seek_release(self, bus, create_asset_cmd, cond):
         # Given
-        ID = "hide_and_seek"
         setup = [
             dc.replace(
-                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
-            ),
-            cmds.CreateHideAndSeek(
-                aggregate_id=ID,
-                assets=[ASSET_ID1],
-                location=cond["loc"],
-                name="note",
-                owner=OWNER2,
-                receivers=[OWNER1],
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]
             ),
         ]
         for msg in setup:
             bus.handle(msg)
         client = self.client(bus)
-        # When
-        # TODO test creation API
+        # When create
+        create_payload = schema.CreateHideAndSeek(
+            assets=[ASSET_ID1],
+            location=cond["loc"],
+            name="note",
+            receivers=[OWNER1],
+        )
+        r = client.post(
+            s.API_V1.concat(s.API_HIDE).path(),
+            json=create_payload.dict(),
+        )
+        assert r.status_code == 201
+
+        # Then we can get the result
+        with bus.uows.get(AssetRelease) as uow:
+            rs = uow.repo.all()
+            ID = rs[0].id.id
+            assert rs[0].name == "note"
+            assert rs[0].assets == [AssetId(ASSET_ID1)]
+        # When triggering
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
             geo_location=cond["guess"],
@@ -280,27 +289,35 @@ class TestTrigger:
     )
     def test_time_capsule(self, bus, create_asset_cmd, cond):
         # Given
-        ID = "time_capsule"
         setup = [
             dc.replace(
-                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
-            ),
-            cmds.CreateTimeCapsule(
-                aggregate_id=ID,
-                assets=[ASSET_ID1],
-                location=cond["loc"],
-                scheduled_date=cond["date"],
-                name="note",
-                owner=OWNER2,
-                receivers=[OWNER1],
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER1]
             ),
         ]
         for msg in setup:
             bus.handle(msg)
         client = self.client(bus)
-        # When
-        # TODO test time capsule create API
+        # When create
+        create_payload = schema.CreateTimeCapsule(
+            assets=[ASSET_ID1],
+            location=cond["loc"],
+            scheduled_date=cond["date"],
+            name="note",
+            receivers=[OWNER1],
+        )
+        r = client.post(
+            s.API_V1.concat(s.API_TIME_CAPSULE).path(),
+            json=create_payload.dict(),
+        )
+        assert r.status_code == 201
 
+        # Then we can get the result
+        with bus.uows.get(AssetRelease) as uow:
+            rs = uow.repo.all()
+            ID = rs[0].id.id
+            assert rs[0].name == "note"
+            assert rs[0].assets == [AssetId(ASSET_ID1)]
+        # When triggering
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,
             geo_location=cond["guess"],
@@ -350,6 +367,8 @@ class TestTrigger:
         with bus.uows.get(AssetRelease) as uow:
             rs = uow.repo.all()
             ID = rs[0].id.id
+            assert rs[0].name == "note"
+            assert rs[0].assets == [AssetId(ASSET_ID1)]
 
         payload = schema.ReleaseTrigger(
             aggregate_id=ID,

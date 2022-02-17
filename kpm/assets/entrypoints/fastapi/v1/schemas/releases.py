@@ -30,11 +30,11 @@ class _Receivers(BaseModel):
         return settings.API_USER_PATH.remove_from(v)
 
 
-class _GeographicalCondition(BaseModel):
+class _Geolocation(BaseModel):
     """Base mixin adding scheduled date in ms"""
 
-    """UNIX timestamp in milliseconds"""
-    scheduled_date: int
+    """String that will be compared as is"""
+    location: str
 
 
 class CreateTransfer(LegacyOperationBase, _Receivers):
@@ -46,6 +46,19 @@ class CreateTransfer(LegacyOperationBase, _Receivers):
 
 class CreateAssetToFutureSelf(LegacyOperationBase):
     """Structure to create an asset to future self legacy operation"""
+
+    """UNIX timestamp in milliseconds"""
+    scheduled_date: int
+
+
+class CreateHideAndSeek(LegacyOperationBase, _Receivers, _Geolocation):
+    """Structure to create a Hide and Seek legacy operation"""
+
+    pass
+
+
+class CreateTimeCapsule(LegacyOperationBase, _Receivers, _Geolocation):
+    """Structure to create a Time Capsule legacy operation"""
 
     """UNIX timestamp in milliseconds"""
     scheduled_date: int

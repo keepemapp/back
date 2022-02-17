@@ -35,6 +35,7 @@ BASE_API_POST_DEF = {
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
     },
+    "response_description": "If successful, redirects to the GET ENDPOINT",
 }
 
 
@@ -93,10 +94,9 @@ async def get_releases(
 @router.post(
     s.API_FUTURE_SELF.path(),
     **BASE_API_POST_DEF,
-    response_description="Creates an asset to future self.\n"
-    + "If successful, redirects to the GET ENDPOINT",
+    description="Creates an asset to future self.",
 )
-async def add_asset_future_self(
+async def create_asset_to_future_self(
     create: schemas.CreateAssetToFutureSelf,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
@@ -119,10 +119,9 @@ async def add_asset_future_self(
 @router.post(
     s.API_ASSET_BOTTLE.path(),
     **BASE_API_POST_DEF,
-    response_description="Creates an asset in a bottle.\n"
-    + "If successful, redirects to the GET endpoint.",
+    description="Creates an asset in a bottle.",
 )
-async def add_asset_bottle(
+async def create_asset_in_a_bottle(
     create: schemas.CreateAssetInABottle,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
@@ -145,11 +144,10 @@ async def add_asset_bottle(
 @router.post(
     s.API_HIDE.path(),
     **BASE_API_POST_DEF,
-    response_description="Hides a group of assets.\n"
-    + "If successful, redirects to the GET endpoint.",
+    description="Hides a group of assets as legacy operation.",
 )
-async def add_hide_and_seek(
-    create: schemas.CreateAssetInABottle,
+async def create_hide_and_seek(
+    create: schemas.CreateHideAndSeek,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
     assets=Depends(asset_view),
@@ -171,10 +169,9 @@ async def add_hide_and_seek(
 @router.post(
     s.API_TRANSFER.path(),
     **BASE_API_POST_DEF,
-    response_description="Schedules an asset transfer.\n"
-    + "If successful, redirects to the GET ENDPOINT",
+    description="Schedules an asset transfer.",
 )
-async def add_transfer(
+async def create_transfer(
     create: schemas.CreateTransfer,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
@@ -190,6 +187,31 @@ async def add_transfer(
         k: v for k, v in create.__dict__.items() if v
     }  # Clean None vals
     cmd = cmds.CreateTransfer(owner=token.subject, **payload)
+    bus.handle(cmd)
+    return post_response(cmd.aggregate_id)
+
+
+@router.post(
+    s.API_TIME_CAPSULE.path(),
+    **BASE_API_POST_DEF,
+    description="Creates a time capsule as a legacy operation.",
+)
+async def create_time_capsule(
+    create: schemas.CreateTimeCapsule,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+    assets=Depends(asset_view),
+):
+    error = assert_assets_can_be_scheduled(
+        bus, create.assets, token.subject, assets
+    )
+    if error:
+        raise error
+
+    payload = {
+        k: v for k, v in create.__dict__.items() if v
+    }  # Clean None vals
+    cmd = cmds.CreateTimeCapsule(owner=token.subject, **payload)
     bus.handle(cmd)
     return post_response(cmd.aggregate_id)
 
@@ -218,8 +240,16 @@ async def get_release(
 
 @router.post(
     s.API_LEGACY.concat("{id}", "trigger").path(),
-    response_description="Tries to trigger a legacy operation.\n"
-    + "If successful, returns 204. ",
+    description="""
+    Tries to trigger a legacy operation.
+
+    To be successful, the following conditions must be met:
+
+    * The user executing this request is a receiver of the legacy op
+    * Current server time (UTC) is after the specified schedule_date (UTC)
+    * Matches the geographical location passed (lowecased string comparison)
+    """,
+    response_description="204 if successful, 403 if could not be triggered.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
