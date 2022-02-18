@@ -4,9 +4,13 @@ from typing import Dict, List, Optional
 import flatdict
 
 import kpm.assets.domain.model as model
+from kpm.assets.adapters.mongo.repository import AssetReleaseMongoRepo
 from kpm.assets.domain.repositories import AssetReleaseRepository
+from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import UserId
+from kpm.shared.domain.model import RootAggState, UserId
+from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
@@ -28,6 +32,8 @@ def to_flat_dict(a: model.AssetRelease):
             d["conditions"]["immediate"] = True
         elif isinstance(c, model.TimeCondition):
             d["conditions"]["release_time"] = c.release_ts
+        elif isinstance(c, model.GeographicalCondition):
+            d["conditions"]["location"] = c.location
     d["modified_ts"] = a.last_modified()
     return d
 
@@ -68,11 +74,32 @@ def get_releases(
         return [to_flat_dict(r) for r in releases]
 
 
+def get_incoming_releases(
+    user: str,
+    uow: AbstractUnitOfWork = None,
+    bus: MessageBus = None,
+) -> List[Dict]:
+    extra_cond = {"$or": [
+            {"conditions.release_ts": {"$lt": now_utc_millis()}},
+            {"conditions.type": {"$ne": "time_condition"}}
+        ]}
+    if not uow:
+        uow = bus.uows.get(model.AssetRelease)
+    with uow:
+        repo: AssetReleaseMongoRepo = uow.repo  # type: ignore
+        releases = [
+            to_flat_dict(r) for r in repo.all(receiver=user, pending=True,
+                                              extra_conditions=extra_cond)
+
+        ]
+    return releases
+
+
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     return {
         "total": 2,
         "in_a_bottle": 20,
-        "hide-and-seek": 2,
+        "hide_and_seek": 2,
         "future_self": 7,
         "time_capsule": 3,
     }

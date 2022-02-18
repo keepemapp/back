@@ -67,6 +67,29 @@ def get_releases(
         return [to_flat_dict(r) for r in releases]
 
 
+def get_incoming_releases(
+    user: str,
+    uow: AbstractUnitOfWork = None,
+    bus: MessageBus = None,
+) -> List[Dict]:
+    if not uow:
+        uow = bus.uows.get(model.AssetRelease)
+    with uow:
+        repo: AssetReleaseRepository = uow.repo  # type: ignore
+        releases = [
+            r for r in repo.all()
+            if UserId(id=user) in r.receivers
+            and r.is_active()
+        ]
+    incoming = []
+    # Keep just where the scheduled time is in the past so they can trigger
+    for r in releases:
+        for c in r.conditions:
+            if isinstance(c, model.TimeCondition) and c.is_met():
+                incoming.append(r)
+    return [to_flat_dict(r) for r in incoming]
+
+
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     return {
         "total": 2,

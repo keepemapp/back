@@ -109,23 +109,41 @@ async def get_assets_of_the_week(
     responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
 )
 @router.get(
-    "/me" + s.API_LEGACY.prefix,
+    "/me" + s.API_LEGACY.path(),
     tags=s.API_LEGACY.tags,
     responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
 )
-async def get_current_user_releases(
+async def get_current_user_programmed_legacy(
     params: Params = Depends(),
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
     views_releases=Depends(asset_rel_view),
 ):
-    return paginate(
-        [
-            ReleaseResponse(**r)
-            for r in views_releases.get_releases(token.subject, bus=bus)
-        ],
-        params,
-    )
+    rs = views_releases.get_releases(token.subject, bus=bus)
+    return paginate([ReleaseResponse(**r) for r in rs], params)
+
+
+@router.get(
+    "/me" + s.API_LEGACY.concat("incoming").path(),
+    tags=s.API_LEGACY.tags,
+    responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
+    description="""
+    Returns the user operations incoming for the given user that can be 
+     triggered time-wise. 
+     
+    **WARNING**: Clients must ensure the geographical conditions are met for
+    an operation of type *time_capsule* or *hide_and_seek* BEFORE showing it 
+    to the end user.
+    """
+)
+async def get_incoming_user_legacy_operations(
+    params: Params = Depends(),
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+    views_releases=Depends(asset_rel_view),
+):
+    rs = views_releases.get_incoming_releases(token.subject, bus=bus)
+    return paginate([ReleaseResponse(**r) for r in rs], params)
 
 
 @router.get(

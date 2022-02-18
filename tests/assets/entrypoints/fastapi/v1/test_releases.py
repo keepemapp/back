@@ -6,12 +6,12 @@ from fastapi.testclient import TestClient
 
 import kpm.assets.domain.commands as cmds
 import kpm.assets.entrypoints.fastapi.v1.schemas.releases as schema
-from kpm.assets.domain import Asset, AssetRelease
+from kpm.assets.domain import AssetRelease
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, RootAggState, UserId
-from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.shared.domain.time_utils import from_now_ms
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.domain.model import Keep
@@ -26,11 +26,12 @@ ASSET_ID1 = "assetId1"
 ASSET_ID2 = "assetId2"
 ASSET_ID3 = "assetId3"
 ASSET_ID4 = "assetId4"
+ASSET_ID5 = "assetId5"
 OWNER1 = USER_TOKEN.subject
 OWNER2 = "OWNER2"
 
-PAST_TS = now_utc_millis() - 100000
-FUTURE_TS = now_utc_millis() + 1000000000
+PAST_TS = from_now_ms(days=-3)
+FUTURE_TS = from_now_ms(days=20)
 
 
 @pytest.mark.unit
@@ -49,13 +50,13 @@ class TestReleases:
         keep_r.commit()
         to_cancel = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
-            scheduled_date=123232,
+            scheduled_date=PAST_TS,
             name="note_cancel",
             owner=OWNER1,
         )
         to_trigger = cmds.CreateAssetToFutureSelf(
             assets=[ASSET_ID1],
-            scheduled_date=123232,
+            scheduled_date=PAST_TS,
             name="note_trigger",
             owner=OWNER1,
         )
@@ -73,18 +74,40 @@ class TestReleases:
                 asset_id=ASSET_ID3,
                 owners_id=[OWNER1, OWNER2],
             ),
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID4, owners_id=[OWNER2]
+            ),
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID5, owners_id=[OWNER2]
+            ),
             to_cancel,
             cmds.CreateAssetToFutureSelf(
                 assets=[ASSET_ID2],
-                scheduled_date=123232,
+                scheduled_date=PAST_TS,
                 name="note",
                 owner=OWNER2,
             ),
             cmds.CreateAssetToFutureSelf(
                 assets=[ASSET_ID3],
-                scheduled_date=123232,
+                scheduled_date=PAST_TS,
                 name="note",
                 owner=OWNER1,
+            ),
+            cmds.CreateTimeCapsule(
+                assets=[ASSET_ID4],
+                scheduled_date=PAST_TS,
+                name="time_calsule_past",
+                location="cmb",
+                owner=OWNER2,
+                receivers=[OWNER1],
+            ),
+            cmds.CreateTimeCapsule(
+                assets=[ASSET_ID5],
+                scheduled_date=FUTURE_TS,
+                name="time_calsule_future",
+                location="cmb",
+                owner=OWNER2,
+                receivers=[OWNER1],
             ),
             cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id),
             to_trigger,
@@ -120,7 +143,7 @@ class TestReleases:
 
     def test_list_users(self, client, populated_bus):
         response = client.get(
-            s.API_V1.concat(s.API_USER_PATH, "/me", s.API_LEGACY).path()
+            s.API_V1.concat("me", s.API_LEGACY).path()
         )
         releases = response.json()
 
@@ -137,6 +160,14 @@ class TestReleases:
         # Users cannot access this endpoint
         response = client.get(s.API_V1.concat(s.API_LEGACY).path())
         assert response.status_code == 403
+
+    def test_incoming(self, client, populated_bus):
+        response = client.get(
+            s.API_V1.concat("me", s.API_LEGACY, "incoming").path()
+        )
+        assert response.status_code == 200
+        releases = response.json()
+        assert len(releases["items"]) == 2
 
 
 @pytest.mark.unit

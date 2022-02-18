@@ -237,7 +237,7 @@ class TestMongoAssetReleaseRepo:
         db, repo = arrepo
         repo.put(release1)
 
-        collection = mongo_client[db]["releases"]
+        collection = mongo_client[db]["legacy"]
         assert collection.count_documents({}) == 0
         # If no commit
 
@@ -251,7 +251,7 @@ class TestMongoAssetReleaseRepo:
         repo.put(release1)
         repo.commit()
 
-        collection = mongo_client[db]["releases"]
+        collection = mongo_client[db]["legacy"]
         assert collection.count_documents({}) == 1
 
         release1.remove(mod_ts=None)

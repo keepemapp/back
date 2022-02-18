@@ -19,7 +19,7 @@ from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import (
-    VISIBLE_STATES,
+    FINAL_STATES, VISIBLE_STATES,
     AssetId,
     RootAggState,
     UserId,
@@ -124,7 +124,7 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         mongo_url: str = s.MONGODB_URL,
     ):
         super().__init__(mongo_url=mongo_url)
-        self._releases = self._client[mongo_db].releases
+        self._legacy = self._client[mongo_db].legacy
 
     def _to_bson(self, agg: AssetRelease) -> Dict:
         bson = asdict(agg)
@@ -149,16 +149,16 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
 
     def put(self, release: AssetRelease):
         bson = self._to_bson(release)
-        self._update(self._releases, {"_id": bson["_id"]}, bson)
+        self._update(self._legacy, {"_id": bson["_id"]}, bson)
         self._seen.add(release)
 
     def exists(self, owner: UserId, name: str) -> bool:
         find_dict = {"owner": owner.id, "name": name}
-        return self._releases.count_documents(find_dict) > 0
+        return self._legacy.count_documents(find_dict) > 0
 
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         find_dict = {"_id": release_id.id}
-        resp = self._releases.find_one(find_dict)
+        resp = self._legacy.find_one(find_dict)
         if resp:
             return self._from_bson(resp)
 
@@ -168,10 +168,24 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
     def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
         pass
 
-    def all(self) -> List[AssetRelease]:
+    def all(self, owner: str = None, receiver: str = None,
+            extra_conditions: Dict = None, pending: bool = None
+            ) -> List[AssetRelease]:
         find_dict = {}
+        if owner:
+            find_dict['owner'] = owner
+        if receiver:
+            find_dict['receiver'] = receiver
+        if extra_conditions:
+            find_dict.update(extra_conditions)
+        if pending is not None:
+            if pending:
+                find_dict['status'] = RootAggState.ACTIVE.value
+            else:
+                find_dict['status'] = {"$in": [st.value for st in FINAL_STATES]}
+
         logger.info(f"Mongo query filters {find_dict}")
-        resps = self._releases.find(find_dict)
+        resps = self._legacy.find(find_dict)
         res = []
         for a in resps:
             res.append(self._from_bson(a))
