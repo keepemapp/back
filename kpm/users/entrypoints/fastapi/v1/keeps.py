@@ -48,14 +48,19 @@ async def new_keep(
     bus: MessageBus = Depends(message_bus),
     views=Depends(user_view),
 ):
-    target_user = views.by_id(request.to_user, bus)
-    if not target_user:
+    found_value = None
+    if request.to_id:
+        found_value = views.by_id(request.to_id, bus)
+        user_id = request.to_id
+    elif request.to_code:
+        found_value = user_id = views.id_from_referral(request.to_code, bus)
+    if not found_value:
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
             detail="Requested user does not exist",
             headers={"WWW-Authenticate": "Bearer"},
         )
-    cmd = cmds.RequestKeep(requester=token.subject, requested=request.to_user)
+    cmd = cmds.RequestKeep(requester=token.subject, requested=user_id)
     bus.handle(cmd)
 
 

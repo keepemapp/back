@@ -21,19 +21,21 @@ def init_users(bus, active_user):
         repo: UserRepository = uow.repo
         active_user["id"] = UserId(ADMIN_TOKEN.subject)
         active_user["email"] = f"{ADMIN_TOKEN.subject}@email.com"
-        repo.create(User(**active_user))
+        admin = User(**active_user)
+        repo.create(admin)
 
         active_user["id"] = UserId(USER_TOKEN.subject)
         active_user["email"] = f"{USER_TOKEN.subject}@email.com"
-        repo.create(User(**active_user))
+        user = User(**active_user)
+        repo.create(user)
 
         uow.commit()
-    return True
+    return admin, user
 
 
 @pytest.mark.unit
 class TestKeepsApi:
-    def test_request_keep(self, init_users, admin_client, user_client):
+    def test_request_keep_by_id(self, init_users, admin_client, user_client):
         for client in (user_client, admin_client):
             start_resp = client.get(KEEP_ROUTE.path())
             assert start_resp.status_code == 200
@@ -41,7 +43,62 @@ class TestKeepsApi:
 
         new_keep = user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
+        )
+        assert new_keep.status_code == 201
+
+        for client in (user_client, admin_client):
+            keep_resp = client.get(KEEP_ROUTE.path())
+            assert keep_resp.json()["total"] == 1
+            assert keep_resp.json()["items"][0]["state"] == "pending"
+            assert (
+                ADMIN_TOKEN.subject
+                in keep_resp.json()["items"][0]["requested"]
+            )
+            assert (
+                USER_TOKEN.subject in keep_resp.json()["items"][0]["requester"]
+            )
+            assert keep_resp.json()["items"][0]["id"]
+
+    def test_request_keep_by_id_noexists(self, user_client):
+        new_keep = user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_id="idonotexistascode").dict(),
+        )
+        assert new_keep.status_code == 422
+
+    def test_request_keep_malformed(self, user_client):
+        with pytest.raises(ValueError):
+            RequestKeep()
+
+        with pytest.raises(ValueError):
+            RequestKeep(to_id="sdsd", to_code="asdsd")
+
+        test_empty = user_client.post(
+            KEEP_ROUTE.path(),
+            json={},
+        )
+        assert test_empty.status_code == 422
+
+        test_both = user_client.post(
+            KEEP_ROUTE.path(),
+            json={"to_id": "sdsd", "to_code": "asdsd"},
+        )
+        assert test_both.status_code == 422
+
+    def test_request_keep_by_code_noexists(self, user_client):
+        new_keep = user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_code="idonotexistascode").dict(),
+        )
+        assert new_keep.status_code == 422
+
+    def test_request_keep_by_code(self, init_users, admin_client, user_client):
+        admin, _ = init_users
+
+        new_keep = user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_code=admin.referral_code).dict(),
         )
         assert new_keep.status_code == 201
 
@@ -61,7 +118,7 @@ class TestKeepsApi:
     def test_attacker(self, init_users, user_client, attacker_client):
         user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
@@ -79,7 +136,7 @@ class TestKeepsApi:
     def test_accept_requester(self, init_users, user_client):
         user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
@@ -97,7 +154,7 @@ class TestKeepsApi:
     def test_accept(self, init_users, admin_client, user_client):
         user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
@@ -115,7 +172,7 @@ class TestKeepsApi:
     def test_decline_attacker(self, init_users, attacker_client, user_client):
         user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
@@ -134,7 +191,7 @@ class TestKeepsApi:
     def test_decline_d(self, init_users, admin_client, user_client):
         user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 
@@ -152,7 +209,7 @@ class TestKeepsApi:
     def test_decline_r(self, init_users, user_client):
         user_client.post(
             KEEP_ROUTE.path(),
-            json=RequestKeep(to_user=ADMIN_TOKEN.subject).dict(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
         )
         keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
 

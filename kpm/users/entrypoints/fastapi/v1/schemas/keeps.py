@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Optional
 
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, validator, root_validator
 
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.fastapi.schemas import Links
@@ -29,11 +29,29 @@ class KeepResponse(BaseModel):
 
 
 class RequestKeep(BaseModel):
-    to_user: str
+    """"Friend" (keep) request by user ID or code.
+    Just one at the same time is accepted
+    """
 
-    @validator("to_user", always=True)
-    def clean_to_user(cls, v):
-        return s.API_USER_PATH.remove_from(v)
+    to_id: Optional[str] = None
+    """User's referral code"""
+    to_code: Optional[str] = None
+
+    @validator("to_id", always=True)
+    def clean_to_id(cls, v):
+        if v:
+            return s.API_USER_PATH.remove_from(v)
+        return v
+
+    @root_validator
+    def only_one_set(cls, values):
+        id, code = values.get('to_id'), values.get("to_code")
+        if id is not None and code is not None:
+            raise ValueError("Just one value can be set at the same time.")
+        elif id is None and code is None:
+            raise ValueError("Unset values")
+        else:
+            return values
 
 
 class AcceptKeep(BaseModel):
