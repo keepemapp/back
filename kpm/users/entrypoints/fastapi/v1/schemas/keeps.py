@@ -53,6 +53,13 @@ class RequestKeep(BaseModel):
         else:
             return values
 
+    class Config:
+        schema_extra = {
+            "example": {
+                "to_code": "skwe8c",
+            }
+        }
+
 
 class AcceptKeep(BaseModel):
     keep_id: str
