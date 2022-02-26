@@ -113,9 +113,9 @@ def register_user(
     )
     try:
         bus.handle(cmd)
-    except (Exception, ValueError) as e:
+    except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(type(e))
         )
     except (EmailAlreadyExistsException, UsernameAlreadyExistsException) as e:
         raise HTTPException(
@@ -124,7 +124,7 @@ def register_user(
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail=str(type(e)),
         )
     return to_pydantic_model(
         views.by_id(cmd.user_id, bus), schemas.UserResponse

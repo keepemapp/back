@@ -134,6 +134,7 @@ class TestRegisterUser:
         )
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
+        assert response.json()["detail"]  # We return some error message
 
     EQUIVALENT_EMAILS = [
         ("valid@gmail.com", "valid@gmail.com"),
@@ -154,6 +155,7 @@ class TestRegisterUser:
         )
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
+        assert response.json()["detail"]  # We return some error message
 
     DIFFERENT_EMAILS = [
         ("valid@hotmail.com", "va.lid@hotmail.com"),
