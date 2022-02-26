@@ -9,6 +9,7 @@ from starlette.requests import Request
 
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
+from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.log import logger
 from kpm.users.entrypoints.fastapi.v1 import users_router
 
@@ -63,6 +64,18 @@ app.logger = logger
 @app.on_event("startup")
 async def startup_event():
     logger.info("Application startup")
+    if s.MONGODB_URL:
+        # TODO create indexes
+        with mongo_client() as client:
+            assets_db = client["assets"]
+            assets_db.assets.create_index("owners_id")
+            assets_db.releases.create_index("owner")
+            assets_db.releases.create_index("receiver")
+            users_db = client["users"]
+            users_db.users.create_index("referral_code")
+            users_db.keeps.create_index("requester")
+            users_db.keeps.create_index("requested")
+            logger.info(f"Created Mongo indexes")
 
 
 @app.on_event("shutdown")

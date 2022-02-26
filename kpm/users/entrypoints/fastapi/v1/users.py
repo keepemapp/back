@@ -41,6 +41,7 @@ router = APIRouter(
     },
 )
 async def my_user(current_user: User = Depends(get_current_active_user)):
+    """Returns user information"""
     return to_pydantic_model(current_user, schemas.UserResponse)
 
 
@@ -55,6 +56,7 @@ async def get_all_users(
     _: AccessToken = Depends(get_admin_token),
     views=Depends(user_view),
 ):
+    """Returns all users"""
     return paginate(
         [
             to_pydantic_model(u, schemas.UserResponse)
@@ -164,7 +166,7 @@ async def update_user_attributes(
     bus: MessageBus = Depends(message_bus),
     token: AccessToken = Depends(get_admin_token),
 ):
-    """Endpoint to activate a user. If user is already active does nothing."""
+    """Updates user attributes."""
 
     try:
         bus.handle(cmds.UpdateUser(user_id=token.subject, **updates.dict()))

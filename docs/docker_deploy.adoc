@@ -48,11 +48,24 @@ Keep in mind that in your hosts file you will need to map `kpm_mongo` to `127.0.
 [source,python]
 ----
 from pymongo import MongoClient
-db = MongoClient("mongodb://kpm_mongo:27017/?replicaSet=rs0").assets
-list(db.list_collections())
+client = MongoClient("mongodb://kpm_mongo:27017/?replicaSet=rs0")
+assets_db = client.assets
+list(assets_db.list_collections())
+
+# Modify a user properties
+users = client.users.users
+us = users.find_one({"email": "your@email.com"})
+print(us)
+us['referral_code'] = 'XYZKL'
+us['roles'] = ['user', 'admin']
+repl = users.replace_one({"_id": us.pop('_id')}, us)
 ----
 
 == API
+
+WARNING: Only use this image if you are running in plain docker and not in
+k8s-like system See
+https://github.com/tiangolo/uvicorn-gunicorn-fastapi-docker#when-to-use-this-docker-image[uvicorn-gunicorn-fastapi-docker/When to use this docker image]
 
 Create a `.env`  file with:
 

@@ -114,12 +114,17 @@ class KeepMongoRepo(MongoBase, KeepRepository):
 
     def all(self, user: UserId = None) -> List[Keep]:
         find_dict = {}
-        logger.info(f"Mongo query filters {find_dict}")
+        if user:
+            find_dict = {"$or": [
+                {"requester": user.id},
+                {"requested": user.id}
+            ]}
+        logger.debug(f"Mongo query filters {find_dict}")
         resps = self._coll.find(find_dict)
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.info(f"Mongo response count: {len(res)}")
+        logger.debug(f"Mongo response count: {len(res)}")
         return res
 
     def get(self, kid: DomainId) -> Keep:
@@ -133,15 +138,14 @@ class KeepMongoRepo(MongoBase, KeepRepository):
     ) -> bool:
         if user1.id == user2.id:
             return True
-        queries = [
+        find_dict = {"$or": [
             {"requester": user1.id, "requested": user2.id},
             {"requester": user2.id, "requested": user1.id},
-        ]
+        ]}
         if not all_states:
-            queries = [
-                {"state": RootAggState.ACTIVE.value, **q} for q in queries
-            ]
-        return any(self._coll.count_documents(q) != 0 for q in queries)
+            find_dict["state"] = RootAggState.ACTIVE.value
+        logger.debug(f"Mongo query filters {find_dict}")
+        return self._coll.count_documents(find_dict) != 0
 
     @staticmethod
     def _to_bson(agg: RootAggregate) -> Dict:
