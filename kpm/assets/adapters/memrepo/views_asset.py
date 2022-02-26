@@ -1,4 +1,5 @@
 import random
+from collections import Counter
 from dataclasses import asdict
 from typing import Dict, List, Optional
 
@@ -117,3 +118,12 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
         "others": 0,
         "visible": 28,
     }
+
+
+def tag_cloud(user_id: str, bus: MessageBus) -> Dict:
+    tags = []
+    with bus.uows.get(Asset) as uow:
+        assets = uow.repo.find_by_ownerid(UserId(user_id))
+        for a in assets:
+            tags.extend(a.tags)
+    return {tag: count for tag, count in Counter(tags).most_common(8)}

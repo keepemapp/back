@@ -2,6 +2,7 @@ import pathlib
 from os.path import join
 from typing import List
 
+from kpm.assets.domain.commands import CreateAsset
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetCreate,
     AssetUpdatableFields,
@@ -10,6 +11,7 @@ from kpm.settings import settings as s
 from tests.assets.entrypoints.fastapi.v1.fixtures import *
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).path()
+ASSET_ME_PATH: str = s.API_V1.concat("me", s.API_ASSET_PATH).path()
 
 
 def create_asset(
@@ -332,3 +334,34 @@ class TestUploadAsset:
         with open(self.GOOD_ASSET, "rb") as f:
             upload = client.post(upload_loc, files={"file": f})
         assert upload.status_code == 400
+
+
+class TestSummaryEndpoints:
+    @staticmethod
+    def create_asset(owners, tags=None):
+        if tags is None:
+            tags = list()
+
+        return CreateAsset(title="1", owners_id=owners, file_type="",
+                           file_name="", file_size_bytes=1, tags=tags)
+
+    def test_tag_cloud(self, bus, user_client):
+        ows = [USER_TOKEN.subject]
+
+        setup = [
+            self.create_asset(owners=ows, tags=["pizza", "with", "pineapple"]),
+            self.create_asset(owners=ows, tags=["pizza", "pineapple", "good"]),
+            self.create_asset(owners=ows, tags=["cheese", "pizza"]),
+            self.create_asset(owners=["bruh"], tags=["vegan", "pizza"]),
+        ]
+        for cmd in setup:
+            bus.handle(cmd)
+
+        resp = user_client.get(ASSET_ME_PATH + "/tag-cloud")
+        assert resp.status_code == 200
+        tags_freq = resp.json()
+        assert "vegan" not in tags_freq.keys()
+        assert tags_freq["pizza"] == 3
+        assert tags_freq["pineapple"] == 2
+        for t in ["cheese", "with", "good"]:
+            assert tags_freq[t] == 1

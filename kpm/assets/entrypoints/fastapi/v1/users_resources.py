@@ -158,3 +158,17 @@ async def get_releases_statistics(
     """Returns statistics regarding releases assets."""
     stats = views_releases.user_stats(token.subject, bus=bus)
     return stats
+
+
+@router.get(
+    "/me" + s.API_ASSET_PATH.concat("tag-cloud").path(),
+    tags=s.API_ASSET_PATH.tags,
+)
+async def get_asset_tag_cloud(
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+    views=Depends(asset_view),
+):
+    """Returns a dict {tag: count] for the most common tags in assets"""
+    return views.tag_cloud(token.subject, bus=bus)
+
