@@ -36,6 +36,7 @@ def init_users(bus, active_user):
 @pytest.mark.unit
 class TestKeepsApi:
     def test_request_keep_by_id(self, init_users, admin_client, user_client):
+        admin, user = init_users
         for client in (user_client, admin_client):
             start_resp = client.get(KEEP_ROUTE.path())
             assert start_resp.status_code == 200
@@ -50,15 +51,15 @@ class TestKeepsApi:
         for client in (user_client, admin_client):
             keep_resp = client.get(KEEP_ROUTE.path())
             assert keep_resp.json()["total"] == 1
-            assert keep_resp.json()["items"][0]["state"] == "pending"
-            assert (
-                ADMIN_TOKEN.subject
-                in keep_resp.json()["items"][0]["requested"]
-            )
-            assert (
-                USER_TOKEN.subject in keep_resp.json()["items"][0]["requester"]
-            )
-            assert keep_resp.json()["items"][0]["id"]
+            keep = keep_resp.json()["items"][0]
+            assert keep["state"] == "pending"
+            assert ADMIN_TOKEN.subject in keep["requested"]["id"]
+            assert USER_TOKEN.subject in keep["requester"]["id"]
+            assert keep["id"]
+            assert keep["requested"]["public_name"] == admin.public_name
+            assert keep["requester"]["public_name"] == user.public_name
+            assert keep["requested"]["referral_code"] == admin.referral_code
+            assert keep["requester"]["referral_code"] == user.referral_code
 
     def test_request_keep_by_id_noexists(self, user_client):
         new_keep = user_client.post(
@@ -105,15 +106,11 @@ class TestKeepsApi:
         for client in (user_client, admin_client):
             keep_resp = client.get(KEEP_ROUTE.path())
             assert keep_resp.json()["total"] == 1
-            assert keep_resp.json()["items"][0]["state"] == "pending"
-            assert (
-                ADMIN_TOKEN.subject
-                in keep_resp.json()["items"][0]["requested"]
-            )
-            assert (
-                USER_TOKEN.subject in keep_resp.json()["items"][0]["requester"]
-            )
-            assert keep_resp.json()["items"][0]["id"]
+            keep = keep_resp.json()["items"][0]
+            assert keep["state"] == "pending"
+            assert ADMIN_TOKEN.subject in keep["requested"]["id"]
+            assert USER_TOKEN.subject in keep["requester"]["id"]
+            assert keep["id"]
 
     def test_attacker(self, init_users, user_client, attacker_client):
         user_client.post(

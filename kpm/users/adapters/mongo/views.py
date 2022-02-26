@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import flatdict
 
@@ -22,6 +22,21 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
         return user.erase_sensitive_data()
     else:
         return None
+
+
+def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
+    filter = {"_id": {"$in": users}}
+    fields = {"_id": 0, "id": "$_id", "public_name": 1, "referral_code": 1}
+    with mongo_client() as client:
+        col = client.users.users
+        res = col.aggregate(
+            [
+                {"$match": filter},
+                {"$project": fields},
+            ]
+        )
+        results = list(res)
+    return results
 
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:

@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
@@ -12,6 +14,7 @@ from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain import commands as cmds
 from kpm.users.domain.model import KeepActionError, KeepAlreadyDeclined
 from kpm.users.entrypoints.fastapi.v1.schemas import keeps as schemas
+from kpm.users.entrypoints.fastapi.v1.schemas.users import UserPublic
 
 router = APIRouter(
     responses={
@@ -35,10 +38,17 @@ async def list_keeps(
     bus: MessageBus = Depends(message_bus),
     views=Depends(user_view),
 ):
-    keeps = views.user_keeps(bus, token.subject, order_by, order, state)
-    return paginate(
-        [schemas.KeepResponse(**k) for k in keeps], paginate_params
-    )
+    keeps_raw = views.user_keeps(bus, token.subject, order_by, order, state)
+    users = set([k["requester"] for k in keeps_raw] + [k["requested"] for k in keeps_raw])
+    user_lookup = {u["id"]: u for u in views.users_public_info(list(users), bus)}
+
+    keeps = list()
+    for k in keeps_raw:
+        k["requester"] = UserPublic(**user_lookup[k.pop("requester")])
+        k["requested"] = UserPublic(**user_lookup[k.pop("requested")])
+        keeps.append(schemas.KeepResponse(**k))
+
+    return paginate(keeps, paginate_params)
 
 
 @router.post("", status_code=status.HTTP_201_CREATED)

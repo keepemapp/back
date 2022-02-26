@@ -5,7 +5,7 @@ from typing import Optional
 from pydantic import BaseModel, validator, root_validator
 
 from kpm.settings import settings as s
-from kpm.shared.entrypoints.fastapi.schemas import Links
+from kpm.users.entrypoints.fastapi.v1.schemas.users import UserPublic
 
 
 class KeepResponse(BaseModel):
@@ -15,17 +15,9 @@ class KeepResponse(BaseModel):
     """UNIX timestamp in milliseconds"""
     modified_ts: Optional[int]
     state: str
-    requester: str
-    requested: str
+    requester: UserPublic
+    requested: UserPublic
     declined_by: Optional[str] = None
-
-    @validator("requester")
-    def populate_requester(cls, uid: str) -> Links:
-        return s.API_USER_PATH.concat(uid).path()
-
-    @validator("requested")
-    def populate_requested(cls, uid: str) -> Links:
-        return s.API_USER_PATH.concat(uid).path()
 
 
 class RequestKeep(BaseModel):

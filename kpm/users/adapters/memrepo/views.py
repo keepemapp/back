@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 import flatdict
 
@@ -21,6 +21,15 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
         return user.erase_sensitive_data()
     else:
         return None
+
+
+def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
+    with bus.uows.get(User) as uow:
+        all_u = uow.repo.all()
+        results = [{"id": u.id.id, "public_name": u.public_name,
+                    "referral_code": u.referral_code}
+                   for u in all_u if u.id.id in users]
+    return results
 
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
