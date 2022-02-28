@@ -14,6 +14,10 @@ from kpm.users.domain.repositories import UserRepository
 
 def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
     salt = generate_salt()
+    if len(cmd.password) < 8:
+        raise ValueError("Password too short. Minimum 8 is characters.")
+    if 96 < len(cmd.password):
+        raise ValueError("Password too long. Maximum of 96 allowed.")
 
     with user_uow as uow:
         repo: UserRepository = uow.repo

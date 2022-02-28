@@ -40,7 +40,7 @@ typecheck:
 
 .PHONY: test-only
 test-only:
-	$(BIN)/pytest
+	$(BIN)/pytest -n 8
 
 .PHONY: test
 test: lint test-only

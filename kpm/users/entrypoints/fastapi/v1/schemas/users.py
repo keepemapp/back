@@ -54,10 +54,13 @@ class UserPublic(BaseModel):
     id: str
     referral_code: str
     public_name: Optional[str]
+    links: Optional[Links]
 
-    @validator("id")
-    def populate_requester(cls, uid: str) -> Links:
-        return settings.API_USER_PATH.concat(uid).path()
+    @validator("links", always=True)
+    def populate_links(cls, _, values):
+        return Links(
+            self=settings.API_USER_PATH.concat(values.get("id")).path()
+        )
 
 
 # Properties to receive via API on update

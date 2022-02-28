@@ -115,7 +115,7 @@ def register_user(
         bus.handle(cmd)
     except ValueError as e:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(type(e))
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         )
     except (EmailAlreadyExistsException, UsernameAlreadyExistsException) as e:
         raise HTTPException(

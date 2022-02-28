@@ -15,7 +15,7 @@ ME_PATH = s.API_V1.concat("/me")
 me_route = ME_PATH.path()
 user_route: str = USER_PATH.path()
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix
-USER_PWD = "pwd"
+USER_PWD = "THIS_IS_AN_ALLOWED_PASSWORD_LETS_SAY"
 
 
 def create_direct_user(client, username, email):
@@ -42,7 +42,7 @@ def create_active_user(client, user_num: int = 0):
 class TestRegisterUser:
     def test_create(self, client):
         user = UserCreate(
-            username="user", email="valid@email.com", password="pwd"
+            username="user", email="valid@email.com", password=USER_PWD
         )
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 200
@@ -61,7 +61,7 @@ class TestRegisterUser:
         user = UserCreate(
             username="user",
             email="valid@email.com",
-            password="pwd",
+            password=USER_PWD,
             referral_code=referral_code,
         )
         response = client.post(user_route, json=user.dict())
@@ -76,7 +76,7 @@ class TestRegisterUser:
         user = UserCreate(
             username="user2",
             email="valid2@email.com",
-            password="pwd2",
+            password=USER_PWD,
             referral_code="does not exist",
         )
         response = client.post(user_route, json=user.dict())
@@ -108,29 +108,59 @@ class TestRegisterUser:
         "s",
         "#2sd",
         "so 2s",
+        "CAPS",
     ]
 
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
     def test_non_allowed_usernames(self, client, wrong_username):
         user = UserCreate(
-            username=wrong_username, email="email@correct.com", password="pwd"
+            username=wrong_username, email="email@correct.com", password=USER_PWD
         )
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 400
         assert response.json().get("detail") == INVALID_USERNAME
 
-    def test_wrong_email(self, client):
-        user = UserCreate(username="user", email="noemail", password="pwd")
+    not_allowed_emails = [
+        "noemail",
+        "noemail@sds",
+        "@asdsd.com",
+        "CAPSHERE@asdsd.com",
+        "",
+    ]
+
+    @pytest.mark.parametrize("wrong_email", not_allowed_emails)
+    def test_wrong_email(self, client, wrong_email):
+        user = UserCreate(username="user", email=wrong_email, password=USER_PWD)
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 400
 
+    not_allowed_passwords = [
+        "1234567",
+        "",
+        "1",
+    ]
+
+    @pytest.mark.parametrize("wrong_pwd", not_allowed_passwords)
+    def test_invalid_password(self, client, wrong_pwd):
+        error_messages = [
+            "Password too short. Minimum 8 is characters.",
+            "Password too long. Maximum of 96 allowed.",
+        ]
+
+        user = UserCreate(
+            username="user", email="some@email.com", password=wrong_pwd
+        )
+        response = client.post(user_route, json=user.dict())
+        assert response.status_code == 400
+        assert response.json().get("detail") in error_messages
+
     def test_existing_username(self, client):
         user = UserCreate(
-            username="user", email="valid@email.com", password="pwd"
+            username="user", email="valid@email.com", password=USER_PWD
         )
         client.post(user_route, json=user.dict())
         user2 = UserCreate(
-            username="user", email="valid2@email.com", password="pwd"
+            username="user", email="valid2@email.com", password=USER_PWD
         )
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
@@ -147,11 +177,11 @@ class TestRegisterUser:
     @pytest.mark.parametrize("email_pairs", EQUIVALENT_EMAILS)
     def test_existing_email(self, client, email_pairs):
         user = UserCreate(
-            username="user", email=email_pairs[0], password="pwd"
+            username="user", email=email_pairs[0], password=USER_PWD
         )
         client.post(user_route, json=user.dict())
         user2 = UserCreate(
-            username="user2", email=email_pairs[1], password="pwd"
+            username="user2", email=email_pairs[1], password=USER_PWD
         )
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 400
@@ -166,11 +196,11 @@ class TestRegisterUser:
     @pytest.mark.parametrize("email_pairs", DIFFERENT_EMAILS)
     def test_different_email(self, client, email_pairs):
         user = UserCreate(
-            username="user", email=email_pairs[0], password="pwd"
+            username="user", email=email_pairs[0], password=USER_PWD
         )
         client.post(user_route, json=user.dict())
         user2 = UserCreate(
-            username="user2", email=email_pairs[1], password="pwd"
+            username="user2", email=email_pairs[1], password=USER_PWD
         )
         response = client.post(user_route, json=user2.dict())
         assert response.status_code == 200
