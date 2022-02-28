@@ -91,6 +91,7 @@ async def activate_user(
         status.HTTP_400_BAD_REQUEST: {"model": HTTPError},
         status.HTTP_500_INTERNAL_SERVER_ERROR: {"model": HTTPError},
     },
+    status_code=201,
 )
 def register_user(
     new_user: schemas.UserCreate,

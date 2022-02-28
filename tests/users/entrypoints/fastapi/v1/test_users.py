@@ -21,7 +21,7 @@ USER_PWD = "THIS_IS_AN_ALLOWED_PASSWORD_LETS_SAY"
 def create_direct_user(client, username, email):
     user = UserCreate(username=username, email=email, password=USER_PWD)
     response = client.post(user_route, json=user.dict())
-    assert response.status_code == 200
+    assert response.status_code == 201
     return user, response
 
 
@@ -34,7 +34,7 @@ def create_user(client, user_num: int = 0):
 def create_active_user(client, user_num: int = 0):
     # activate_route = USER_PATH.concat(create_resp.json()["id"], "/activate")
     # activ_res = client.put(activate_route.path())
-    # assert activ_res.status_code == 200
+    # assert activ_res.status_code == 201
     return create_user(client, user_num)
 
 
@@ -45,7 +45,7 @@ class TestRegisterUser:
             username="user", email="valid@email.com", password=USER_PWD
         )
         response = client.post(user_route, json=user.dict())
-        assert response.status_code == 200
+        assert response.status_code == 201
         user_resp = response.json()
         assert user_resp.get("username") == user.username
         assert user_resp.get("email") == user.email
@@ -65,7 +65,7 @@ class TestRegisterUser:
             referral_code=referral_code,
         )
         response = client.post(user_route, json=user.dict())
-        assert response.status_code == 200
+        assert response.status_code == 201
         user_resp = response.json()
         assert user_resp.get("referred_by") == referrer_id
         # the created user gets a new referral code different from the original
@@ -203,12 +203,12 @@ class TestRegisterUser:
             username="user2", email=email_pairs[1], password=USER_PWD
         )
         response = client.post(user_route, json=user2.dict())
-        assert response.status_code == 200
+        assert response.status_code == 201
 
     def test_create_multiple(self, client):
         for i in range(10):
             user, response = create_active_user(client, i)
-            assert response.status_code == 200
+            assert response.status_code == 201
             user_resp = response.json()
             assert user_resp.get("username") == user.username
             assert user_resp.get("email") == user.email
