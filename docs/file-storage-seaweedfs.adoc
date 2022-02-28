@@ -1,0 +1,77 @@
+= Seaweed File System usage and setup
+:toc:
+:author: Marti Segarra <marti@keepem.app>
+:docdate: 2022-02-27
+
+https://github.com/chrislusf/seaweedfs[SeaweedFS] is the chosen distributed file system
+to keep our user's most precious files safe.
+It has several features requiring us to have different seaweed services running:
+
+* Master
+* Server
+* Filer
+* S3 API (optional)
+
+== Dev Setup
+https://github.com/chrislusf/seaweedfs/releases[Download] the correct installation four your OS.
+In most intel/AMD processors, it's `linux_amd64`
+
+[source,bash]
+----
+mkdir $HOME/seaweed_data
+# Starts master, 1 server and filer
+weed server -dir=$HOME/seaweed_data -filer=true -filer.encryptVolumeData
+----
+
+[source,bash]
+.Example usage
+----
+# Upload a file inside webs folder (end / REQUIRED!)
+curl -I -F file=@bookmarks.html "http://localhost:8888/webs/"
+# Returns {"name":"bookmarks.html","size":38838}
+
+# Lists files under directory
+# https://github.com/chrislusf/seaweedfs/wiki/Filer-Server-API#list-files-under-a-directory
+curl -H "Accept: application/json" \
+"http://localhost:8888/webs/?pretty=y"
+
+
+# Get response headers
+curl -I "http://localhost:8888/webs/bookmarks.html"
+# Get file
+curl "http://localhost:8888/webs/bookmarks.html"
+
+curl -i -X DELETE "http://localhost:8888/webs/bookmarks.html"
+----
+
+
+== Production Deployment
+
+https://github.com/chrislusf/seaweedfs/wiki/System-Metrics
+https://github.com/chrislusf/seaweedfs/wiki/Async-Backup
+https://github.com/chrislusf/seaweedfs/wiki/Async-Filer-Metadata-Backup
+
+
+== Useful commands
+
+
+=== Volumes
+
+sometimes one of your volume server may go down, and a new volume server is added. Here is the command you can run to fix volumes that are under replicated:
+
+WARNING: This Locks the cluster for write and read (??) and it costs some time. Use with caution
+
+[source,bash]
+----
+# check any volume that are under replicated, and there are servers that meet the replica placement requirement
+$ echo "lock; volume.fix.replication -n ; unlock" | weed shell
+replicating volume 241 001 from localhost:8080 to dataNode 127.0.0.1:7823 ...
+
+# found one, let's really do it
+$ echo "lock; volume.fix.replication ; unlock" | weed shell
+replicating volume 241 001 from localhost:8080 to dataNode 127.0.0.1:7823 ...
+
+# all volumes are replicated now
+$ echo "lock; volume.fix.replication -n ; unlock" | weed shell
+no under replicated volumes
+----

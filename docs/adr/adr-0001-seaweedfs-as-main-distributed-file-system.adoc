@@ -1,0 +1,189 @@
+= Use SeaweedFS as the main distributed file system
+:author: Marti Segarra Casas <marti@keepem.app>
+
+
+=== Prologue (Summary)
+
+Part of the services we are offering consist of storing files in a secure and potentially massive scale. We will write the files once and as of now, they will not have to change, so the access pattern will be write once and read 0-10 times a month.
+
+=== Discussion (Context)
+
+There are several options available in the market for object/blob storage,
+and given the huge popularity of the s3 standard,
+we should strive for it.
+It’s important those files are stored encrypted.
+
+[options="header, footer"]
+.Comparison matrix
+|===
+|&nbsp; |MinIO |seaweedfs |S3 |Ceph |GlusterFS
+|Not only SaaS
+|Yes
+|Yes
+|No
+|Yes
+|Yes
+
+|S3 standard API
+|100%
+|https://github.com/chrislusf/seaweedfs/wiki/Async-Backup[90%]
+|100%
+|0%
+|0%
+
+|Encryption at Rest
+|https://docs.min.io/docs/minio-security-overview.html[100%]
+|https://github.com/chrislusf/seaweedfs/wiki/Filer-Data-Encryption[100%] file level
+|100%
+|
+|https://github.com/gluster/glusterfs-specs/blob/master/done/GlusterFS%203.5/Disk%20Encryption.md[99%] volume level
+
+|Encryption transit
+|https://docs.min.io/docs/how-to-secure-access-to-minio-server-with-tls.html[90%]
+|https://github.com/chrislusf/seaweedfs/wiki/Run-Blob-Storage-on-Public-Internet[50% via nginx]/mutual TLS in grpc
+|100%
+|&nbsp;
+|https://www.cyberciti.biz/faq/how-to-enable-tlsssl-encryption-with-glusterfs-storage-cluster-on-linux/[100%]
+
+|Access auth
+|https://docs.min.io/minio/baremetal/security/minio-identity-management/basic-authentication-with-minio-identity-provider.html[90%]
+|https://github.com/chrislusf/seaweedfs/wiki/Security-Overview[60%]
+|100%
+|&nbsp;
+|&nbsp;
+
+|Replication(dedundancy) 2-3
+|https://blog.min.io/configurable-data-and-parity-drives-on-minio-server/[100%] parity blocks
+|https://github.com/chrislusf/seaweedfs/wiki/Replication[100%] configurable, rack and dc aware for HOT and parity for warm
+|100%
+|100%
+|100%
+
+|Easy to backup
+|https://github.com/minio/minio/issues/4135#issuecomment-642718894[50%]
+|https://github.com/chrislusf/seaweedfs/wiki/Data-Backup[70%] and https://github.com/chrislusf/seaweedfs/wiki/Async-Backup[async backup]
+|10%
+|https://storware.eu/blog/backup-strategies-for-ceph/[50%]
+|No
+
+|Commodity Hardware
+|100% (JABOD)
+|100% (JABOD)
+|N/A
+|&nbsp;
+|Fast network required
+
+|Horizontal scaling
+|90%
+|100%
+|100%
+|&nbsp;
+|https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.0/html/deploying_an_overcloud_with_containerized_red_hat_ceph/scaling_the_ceph_storage_cluster[90%] lots of manual tasks
+
+|Free
+|No
+|Yes
+|No
+|Yes
+|Yes?
+
+|Subscr. Price
+|$10 per TiB per Month
+|&nbsp;
+|$25/month + network costs
+|&nbsp;
+|&nbsp;
+
+|Community
+|Good
+|Fair
+|Excellent
+|Excellent
+|Good
+
+|Maturity
+|Good
+|Good
+|Good
+|Excellent
+|Excellent
+
+|Comments
+|Bad for small files
+|https://github.com/chrislusf/seaweedfs/wiki/Production-Setup[Prod Setup] https://news.ycombinator.com/item?id=24716319[Criticism]
+|&nbsp;
+|Complex&nbsp;
+a|https://www.ionos.com/digitalguide/server/know-how/glusterfs-vs-ceph/[Complex]
+Designed for posix storage
+Fast network required
+|===
+
+=== Decision
+
+Since we want to have control of our own storage, we will not use S3 or
+any SaaS solution for now.
+
+Our current access pattern uses keys to store and retrieve the files,
+so any object storage would suffice and we do not need POSIX storage.
+Since we are the only ones reading and writing to the storage
+(auth happens in the API as of now), we only require simple authorization to put and read objects.
+
+Furthermore it would be ideal to use an s3 compatible API,
+which means *Cepth and GlusterFS are not an option*.
+
+Given that we expect many small files (< 3MB),
+the cost of MinIO and the easiness of backup,
+*we decide to use seaweedFS* as our main file storage.
+
+Additionally, SeaweedFS uses replication is for hot data and
+erasure coding is for warm data (reducing storage cost).
+Although mitigation actions when loosing a node do not happen automatically,
+they can be automated via cron job.
+Another good point in favor of Seaweed is that the set-up and
+administration is one of the simplest across the distributed fs space.
+
+> We are running SeaweedFS successfully in production for a few years.
+> We are serving and storing mostly user-uploaded images (around 100TB).
+> It works surprisingly stable and the maintainer is usually responsive when we encounter issues.
+> We are slowly approaching 100 seaweed nodesRemoving and adding volume servers is pretty simple.
+>
+> You can manually fix replication via a cli command after adding/removing a node
+> -- https://news.ycombinator.com/item?id=24729873
+
+> We've been running SeaweedFS in production serving images and other small files. We're not using Filer functionality just the underlying volume storage. We wrote our own asynchronous replication on top of the volume servers since we couldn't rely on synchronous replication across datacenters. The maintainer is super responsive and is quick to review our PRs. Happy to answer any questions.
+> -- https://news.ycombinator.com/item?id=24730368
+
+> From a user who worked in Apple as a contractor, they have used SeaweedFS object storage to store build artifacts, grown to about 200 nodes. There are a few other companies, but not as famous as Apple. :)
+> -- https://news.ycombinator.com/item?id=24731510
+
+> In DiDi, it has been storing and serving 10 billions of files.
+> -- https://news.ycombinator.com/item?id=24736445
+
+
+== Consequences (Results)
+
+[none]
+.Positive
+* + Architecture based on Facebook’s HayStack
+* + Handles well many files
+* + Easy backup to s3 glacier or to local offline storage
+* + Files stored can be easily encrypted (one key per file)
+* + Works well with HDD and is SSD friendly
+* + Erasing a file is as simple as removing the encryption key. Can leave compaction for later and avoid costs in backups
+* + Easy set-up and admin
+
+[none]
+.Neutral
+* ~ We could use the native API if its simple
+* ~ We will need to rent and administer underlying servers
+
+[none]
+.Negative
+* - We will have to implement firewalls to only allow access from our machines
+* - Not a big community, but the main developer is very involved
+* - No automatic repair right away if replica is missing!!!!! → *Need to be automated via cron job in each master server*
+* - Need for external metastore for filler service (but it’s portable). Default filer store would be enough for millions of files
+
+
+
+NOTE: This decision can be revisited when seaweedfs does not fit our operative requirements and due to market innovations
