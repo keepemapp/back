@@ -64,9 +64,11 @@ async def new_keep(
         user_id = request.to_id
     elif request.to_code:
         found_value = user_id = views.id_from_referral(request.to_code, bus)
+    elif request.to_email:
+        found_value = user_id = views.id_from_email(request.to_email, bus)
     if not found_value:
         raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            status_code=status.HTTP_404_NOT_FOUND,
             detail="Requested user does not exist",
             headers={"WWW-Authenticate": "Bearer"},
         )

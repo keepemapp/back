@@ -66,7 +66,7 @@ class TestKeepsApi:
             KEEP_ROUTE.path(),
             json=RequestKeep(to_id="idonotexistascode").dict(),
         )
-        assert new_keep.status_code == 422
+        assert new_keep.status_code == 404
 
     def test_request_keep_malformed(self, user_client):
         with pytest.raises(ValueError):
@@ -74,6 +74,15 @@ class TestKeepsApi:
 
         with pytest.raises(ValueError):
             RequestKeep(to_id="sdsd", to_code="asdsd")
+
+        with pytest.raises(ValueError):
+            RequestKeep(to_id="sdsd", to_email="asdsd@email.com")
+
+        with pytest.raises(ValueError):
+            RequestKeep(to_email="sdsd@email.com", to_code="asdsd")
+
+        with pytest.raises(ValueError):
+            RequestKeep(to_id="sdsd", to_code="asdsd", to_email="some@ema.il")
 
         test_empty = user_client.post(
             KEEP_ROUTE.path(),
@@ -92,7 +101,7 @@ class TestKeepsApi:
             KEEP_ROUTE.path(),
             json=RequestKeep(to_code="idonotexistascode").dict(),
         )
-        assert new_keep.status_code == 422
+        assert new_keep.status_code == 404
 
     def test_request_keep_by_code(self, init_users, admin_client, user_client):
         admin, _ = init_users
@@ -100,6 +109,24 @@ class TestKeepsApi:
         new_keep = user_client.post(
             KEEP_ROUTE.path(),
             json=RequestKeep(to_code=admin.referral_code).dict(),
+        )
+        assert new_keep.status_code == 201
+
+        for client in (user_client, admin_client):
+            keep_resp = client.get(KEEP_ROUTE.path())
+            assert keep_resp.json()["total"] == 1
+            keep = keep_resp.json()["items"][0]
+            assert keep["state"] == "pending"
+            assert ADMIN_TOKEN.subject in keep["requested"]["id"]
+            assert USER_TOKEN.subject in keep["requester"]["id"]
+            assert keep["id"]
+
+    def test_request_keep_by_email(self, init_users, admin_client, user_client):
+        admin, _ = init_users
+
+        new_keep = user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_email=admin.email).dict(),
         )
         assert new_keep.status_code == 201
 

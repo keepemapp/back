@@ -28,6 +28,7 @@ class RequestKeep(BaseModel):
     to_id: Optional[str] = None
     """User's referral code"""
     to_code: Optional[str] = None
+    to_email: Optional[str] = None
 
     @validator("to_id", always=True)
     def clean_to_id(cls, v):
@@ -38,9 +39,11 @@ class RequestKeep(BaseModel):
     @root_validator
     def only_one_set(cls, values):
         id, code = values.get('to_id'), values.get("to_code")
-        if id is not None and code is not None:
+        email = values.get('to_email')
+        num_set = len([v for v in [id, code, email] if v])
+        if num_set > 1:
             raise ValueError("Just one value can be set at the same time.")
-        elif id is None and code is None:
+        elif num_set == 0:
             raise ValueError("Unset values")
         else:
             return values
