@@ -18,6 +18,7 @@ from kpm.users.domain.model import (
     UserNotFound,
 )
 from kpm.users.entrypoints.fastapi.v1.schemas import users as schemas
+from kpm.users.entrypoints.fastapi.v1.schemas.users import UserRemoval
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -174,3 +175,25 @@ async def update_user_attributes(
     except UserNotFound:
         raise ex.NOT_FOUND
     return
+
+
+@router.delete(
+    s.API_USER_PATH.concat("{user_id}").path(),
+    responses={status.HTTP_200_OK: {}},
+    tags=["admin"],
+)
+async def remove_user(
+    user_id: str,
+    reason: UserRemoval,
+    bus: MessageBus = Depends(message_bus),
+    token: AccessToken = Depends(get_admin_token),
+):
+    """Endpoint to remove an user and all of its items"""
+    try:
+        bus.handle(cmds.RemoveUser(
+            user_id=user_id, deleted_by=token.subject, reason=reason.reason
+        ))
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return
+

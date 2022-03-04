@@ -1,13 +1,15 @@
 import pytest
 
 from kpm.settings import settings as s
-from kpm.shared.domain.model import RootAggState
-from kpm.users.domain.model import INVALID_USERNAME
+from kpm.shared.domain.model import RootAggState, UserId
+from kpm.users.domain.model import INVALID_USERNAME, User
+from kpm.users.domain.repositories import UserRepository
 from kpm.users.entrypoints.fastapi.v1.schemas.users import (
     PasswordUpdate,
     UserCreate,
-    UserUpdate,
+    UserRemoval, UserUpdate,
 )
+from tests.users.domain import active_user, valid_user
 from tests.users.entrypoints.fastapi import *
 
 USER_PATH = s.API_V1.concat(s.API_USER_PATH)
@@ -36,6 +38,24 @@ def create_active_user(client, user_num: int = 0):
     # activ_res = client.put(activate_route.path())
     # assert activ_res.status_code == 201
     return create_user(client, user_num)
+
+
+@pytest.fixture
+def init_users(bus, active_user):
+    with bus.uows.get(User) as uow:
+        repo: UserRepository = uow.repo
+        active_user["id"] = UserId(ADMIN_TOKEN.subject)
+        active_user["email"] = f"{ADMIN_TOKEN.subject}@email.com"
+        admin = User(**active_user)
+        repo.create(admin)
+
+        active_user["id"] = UserId(USER_TOKEN.subject)
+        active_user["email"] = f"{USER_TOKEN.subject}@email.com"
+        user = User(**active_user)
+        repo.create(user)
+
+        uow.commit()
+    return admin, user
 
 
 @pytest.mark.unit
@@ -372,7 +392,8 @@ class TestUserUpdates:
             assert me[f] == v
 
     OLD_NEW_PASSWORDS = [
-        (USER_PWD, "kasdjkns92mls-klñasd"),
+        (USER_PWD, "kasdjkns92mls-klñasd", 200),
+        (USER_PWD, "kasd", 422),
     ]
 
     @pytest.mark.parametrize("passwords", OLD_NEW_PASSWORDS)
@@ -391,7 +412,7 @@ class TestUserUpdates:
             ).dict(),
             headers={"Accept": "application/json", "Authorization": token},
         )
-        assert response.status_code == 200
+        assert response.status_code == passwords[2]
 
         login_old = client.post(
             login_route,
@@ -404,3 +425,44 @@ class TestUserUpdates:
             data={"username": user.email, "password": passwords[1]},
         )
         assert login_new.status_code == 200
+
+    def test_remove_user_no_exists(self, bus, admin_client):
+        user_path = USER_PATH.concat("idonotexist").path()
+
+        # When
+        req = admin_client.delete(user_path, json=UserRemoval(reason="").dict())
+
+        # Then
+        assert req.status_code == 404
+
+    def test_remove_user_requires_reason(self, bus, init_users, admin_client):
+        admin, user = init_users
+        user_path = USER_PATH.concat(user.id.id).path()
+
+        # When
+        req = admin_client.delete(user_path)
+
+        # Then
+        assert req.status_code == 422
+
+    def test_remove_user_by_admin(self, bus, init_users, admin_client):
+        admin, user = init_users
+        user_path = USER_PATH.concat(user.id.id).path()
+
+        # When
+        req = admin_client.delete(user_path, json=UserRemoval(reason="").dict())
+
+        # Then
+        assert req.status_code == 200
+
+        with bus.uows.get(User) as uow:
+            repo: UserRepository = uow.repo
+            u = repo.get(user.id)
+            assert u.state == RootAggState.REMOVED
+
+    def test_remove_user_by_user(self, init_users, user_client):
+        admin, user = init_users
+        user_path = USER_PATH.concat(user.id.id).path()
+
+        req = user_client.delete(user_path, json=UserRemoval(reason="").dict())
+        assert req.status_code == 403

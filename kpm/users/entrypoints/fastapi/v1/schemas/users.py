@@ -73,3 +73,7 @@ class PasswordUpdate(BaseModel):
 # Properties to receive via API on update
 class UserUpdate(BaseModel):
     public_name: Optional[str]
+
+
+class UserRemoval(BaseModel):
+    reason: str
