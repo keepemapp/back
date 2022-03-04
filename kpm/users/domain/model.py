@@ -8,7 +8,11 @@ from typing import List, Optional
 from pydantic.dataclasses import dataclass
 
 import kpm.users.domain.commands as cmds
-from kpm.shared.domain import required_field, updatable_field
+from kpm.shared.domain import (
+    required_field,
+    required_updatable_field,
+    updatable_field,
+)
 from kpm.shared.domain.model import (
     FINAL_STATES,
     RootAggregate,
@@ -40,12 +44,12 @@ def generate_referral_code() -> str:
 @dataclass
 class User(RootAggregate):
     id: UserId = required_field()  # type: ignore
-    username: str = required_field()  # type: ignore
+    username: str = required_updatable_field()  # type: ignore
     """Name to be shown to other users"""
     public_name: Optional[str] = updatable_field(default=None)  # type: ignore
     salt: str = field(default="", repr=False)
     password_hash: str = field(default="", repr=False)
-    email: str = required_field()  # type: ignore
+    email: str = required_updatable_field()  # type: ignore
     state: RootAggState = field(default=RootAggState.PENDING)
     roles: List[str] = field(default_factory=lambda: ["user"])
     referral_code: str = field(default_factory=generate_referral_code)
@@ -98,7 +102,14 @@ class User(RootAggregate):
             if by is None or reason is None:
                 raise ValueError("'by' and 'reason' must be set")
             self.update_fields(
-                mod_ts, {"removed_by": by, "removed_reason": reason}
+                mod_ts,
+                {
+                    "removed_by": by,
+                    "removed_reason": reason,
+                    "email": "",
+                    "username": "",
+                    "public_name": None,
+                },
             )
             self.events.append(
                 events.UserRemoved(

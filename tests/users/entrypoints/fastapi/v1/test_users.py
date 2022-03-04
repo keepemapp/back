@@ -474,6 +474,8 @@ class TestUserUpdates:
             repo: UserRepository = uow.repo
             u = repo.get(user.id)
             assert u.state == RootAggState.REMOVED
+            assert not u.public_name
+            assert not u.email
 
     def test_remove_user_by_user(self, init_users, user_client):
         admin, user = init_users
