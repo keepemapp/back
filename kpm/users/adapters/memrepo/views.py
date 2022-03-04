@@ -26,10 +26,16 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
 def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
     with bus.uows.get(User) as uow:
         all_u = uow.repo.all()
-        results = [{"id": u.id.id, "email": u.email,
-                   "public_name": u.public_name,
-                    "referral_code": u.referral_code}
-                   for u in all_u if u.id.id in users]
+        results = [
+            {
+                "id": u.id.id,
+                "email": u.email,
+                "public_name": u.public_name,
+                "referral_code": u.referral_code,
+            }
+            for u in all_u
+            if u.id.id in users
+        ]
     return results
 
 

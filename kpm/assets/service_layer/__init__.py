@@ -12,7 +12,7 @@ EVENT_HANDLERS = {
     ],
     events.AssetReleased: [ah.change_asset_owner, ah.make_asset_visible],
     events.AssetOwnershipChanged: [],
-    UserRemoved: [th.remove_user_releases, ah.remove_user_assets]
+    UserRemoved: [th.remove_user_releases, ah.remove_user_assets],
 }
 COMMAND_HANDLERS = {
     cmds.CreateAsset: ah.create_asset,

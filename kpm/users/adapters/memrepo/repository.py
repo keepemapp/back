@@ -84,7 +84,8 @@ class KeepMemoryRepository(KeepRepository):
         if user:
             return list(
                 filter(
-                    lambda k: user in (k.requester, k.requested), self._keeps.values()
+                    lambda k: user in (k.requester, k.requested),
+                    self._keeps.values(),
                 )
             )
         else:

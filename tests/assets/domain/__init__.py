@@ -65,7 +65,7 @@ def release1() -> model.AssetRelease:
         conditions=[
             model.TrueCondition(),
             model.TimeCondition(release_ts=future),
-            model.GeographicalCondition(location="cmb")
+            model.GeographicalCondition(location="cmb"),
         ],
     )
 

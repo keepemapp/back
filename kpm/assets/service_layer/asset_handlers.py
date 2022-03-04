@@ -114,9 +114,7 @@ def asset_file_upload(cmd: cmds.UploadAssetFile, asset_uow: AssetUoW):
         uow.commit()
 
 
-def remove_user_assets(
-        event: UserRemoved, asset_uow: AssetUoW
-):
+def remove_user_assets(event: UserRemoved, asset_uow: AssetUoW):
     """Removes all the releases of a removed user
 
     TO THINK: should we instead trigger the commands RemoveAsset?

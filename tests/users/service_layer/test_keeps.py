@@ -10,8 +10,10 @@ from tests.users.fixtures import bus
 
 def create_user_cmd(uid: str = "1"):
     return cmds.RegisterUser(
-        username=uid, password="THIS_IS_AN_ALLOWED_PASSWORD_LETS_SAY",
-        email=f"{uid}@emailtest.com", user_id=uid
+        username=uid,
+        password="THIS_IS_AN_ALLOWED_PASSWORD_LETS_SAY",
+        email=f"{uid}@emailtest.com",
+        user_id=uid,
     )
 
 

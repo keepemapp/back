@@ -24,7 +24,7 @@ from kpm.users.service_layer import EVENT_HANDLERS as u_evs
 
 
 def _append_event_handlers(
-        handler1: Dict[Event, List], handler2: Dict[Event, List]
+    handler1: Dict[Event, List], handler2: Dict[Event, List]
 ) -> Dict[Event, List]:
     """Merges event handlers by appending values"""
     res = handler1.copy()

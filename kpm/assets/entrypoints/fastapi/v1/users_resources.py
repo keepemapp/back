@@ -128,13 +128,13 @@ async def get_current_user_programmed_legacy(
     tags=s.API_LEGACY.tags,
     responses={status.HTTP_200_OK: {"model": Page[ReleaseResponse]}},
     description="""
-    Returns the user operations incoming for the given user that can be 
-     triggered time-wise. 
-     
+    Returns the user operations incoming for the given user that can be
+     triggered time-wise.
+
     **WARNING**: Clients must ensure the geographical conditions are met for
-    an operation of type *time_capsule* or *hide_and_seek* BEFORE showing it 
+    an operation of type *time_capsule* or *hide_and_seek* BEFORE showing it
     to the end user.
-    """
+    """,
 )
 async def get_incoming_user_legacy_operations(
     params: Params = Depends(),
@@ -171,4 +171,3 @@ async def get_asset_tag_cloud(
 ):
     """Returns a dict {tag: count] for the most common tags in assets"""
     return views.tag_cloud(token.subject, bus=bus)
-

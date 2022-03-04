@@ -342,8 +342,14 @@ class TestSummaryEndpoints:
         if tags is None:
             tags = list()
 
-        return CreateAsset(title="1", owners_id=owners, file_type="",
-                           file_name="", file_size_bytes=1, tags=tags)
+        return CreateAsset(
+            title="1",
+            owners_id=owners,
+            file_type="",
+            file_name="",
+            file_size_bytes=1,
+            tags=tags,
+        )
 
     def test_tag_cloud(self, bus, user_client):
         ows = [USER_TOKEN.subject]

@@ -194,10 +194,11 @@ async def remove_user(
 ):
     """Endpoint to remove an user and all of its items"""
     try:
-        bus.handle(cmds.RemoveUser(
-            user_id=user_id, deleted_by=token.subject, reason=reason.reason
-        ))
+        bus.handle(
+            cmds.RemoveUser(
+                user_id=user_id, deleted_by=token.subject, reason=reason.reason
+            )
+        )
     except UserNotFound:
         raise ex.NOT_FOUND
     return
-

@@ -1,6 +1,6 @@
 import kpm.users.domain.commands as cmds
-import kpm.users.domain.model as model
 import kpm.users.domain.events as events
+import kpm.users.domain.model as model
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
@@ -47,8 +47,9 @@ def decline_keep(cmd: cmds.DeclineKeep, keep_uow: AbstractUnitOfWork):
         uow.commit()
 
 
-def remove_all_keeps_of_user(event: events.UserRemoved,
-                             keep_uow: AbstractUnitOfWork):
+def remove_all_keeps_of_user(
+    event: events.UserRemoved, keep_uow: AbstractUnitOfWork
+):
     user = UserId(id=event.aggregate_id)
     reason = "User has been removed."
     with keep_uow as uow:

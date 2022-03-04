@@ -121,7 +121,9 @@ class TestKeepsApi:
             assert USER_TOKEN.subject in keep["requester"]["id"]
             assert keep["id"]
 
-    def test_request_keep_by_email(self, init_users, admin_client, user_client):
+    def test_request_keep_by_email(
+        self, init_users, admin_client, user_client
+    ):
         admin, _ = init_users
 
         new_keep = user_client.post(

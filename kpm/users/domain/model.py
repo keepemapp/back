@@ -9,8 +9,12 @@ from pydantic.dataclasses import dataclass
 
 import kpm.users.domain.commands as cmds
 from kpm.shared.domain import required_field, updatable_field
-from kpm.shared.domain.model import FINAL_STATES, RootAggregate, RootAggState, \
-    UserId
+from kpm.shared.domain.model import (
+    FINAL_STATES,
+    RootAggregate,
+    RootAggState,
+    UserId,
+)
 from kpm.shared.log import logger
 from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain import events
@@ -93,11 +97,14 @@ class User(RootAggregate):
             reason = kwargs.get("reason")
             if by is None or reason is None:
                 raise ValueError("'by' and 'reason' must be set")
-            self.update_fields(mod_ts, {"removed_by": by,
-                                        "removed_reason": reason})
-            self.events.append(events.UserRemoved(aggregate_id=self.id.id,
-                                                  by=by.id,
-                                                  reason=reason))
+            self.update_fields(
+                mod_ts, {"removed_by": by, "removed_reason": reason}
+            )
+            self.events.append(
+                events.UserRemoved(
+                    aggregate_id=self.id.id, by=by.id, reason=reason
+                )
+            )
             self._update_field(mod_ts, "state", RootAggState.REMOVED)
 
     def is_disabled(self) -> bool:

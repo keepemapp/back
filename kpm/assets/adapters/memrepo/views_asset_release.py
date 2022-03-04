@@ -77,9 +77,9 @@ def get_incoming_releases(
     with uow:
         repo: AssetReleaseRepository = uow.repo  # type: ignore
         releases = [
-            r for r in repo.all()
-            if UserId(id=user) in r.receivers
-            and r.is_active()
+            r
+            for r in repo.all()
+            if UserId(id=user) in r.receivers and r.is_active()
         ]
     incoming = []
     # Keep just where the scheduled time is in the past so they can trigger

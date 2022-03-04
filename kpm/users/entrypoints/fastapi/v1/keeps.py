@@ -1,5 +1,3 @@
-from typing import List
-
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
@@ -39,8 +37,13 @@ async def list_keeps(
     views=Depends(user_view),
 ):
     keeps_raw = views.user_keeps(bus, token.subject, order_by, order, state)
-    users = set([k["requester"] for k in keeps_raw] + [k["requested"] for k in keeps_raw])
-    user_lookup = {u["id"]: u for u in views.users_public_info(list(users), bus)}
+    users = set(
+        [k["requester"] for k in keeps_raw]
+        + [k["requested"] for k in keeps_raw]
+    )
+    user_lookup = {
+        u["id"]: u for u in views.users_public_info(list(users), bus)
+    }
 
     keeps = list()
     for k in keeps_raw:

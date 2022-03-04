@@ -16,7 +16,10 @@ from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
-from tests.assets.entrypoints.fastapi.v1.fixtures import ADMIN_TOKEN, USER_TOKEN
+from tests.assets.entrypoints.fastapi.v1.fixtures import (
+    ADMIN_TOKEN,
+    USER_TOKEN,
+)
 from tests.assets.utils import bus
 from tests.users.entrypoints.fastapi import ATTACKER_TOKEN
 
@@ -142,9 +145,7 @@ class TestReleases:
         yield TestClient(app)
 
     def test_list_users(self, client, populated_bus):
-        response = client.get(
-            s.API_V1.concat("me", s.API_LEGACY).path()
-        )
+        response = client.get(s.API_V1.concat("me", s.API_LEGACY).path())
         releases = response.json()
 
         assert response.status_code == 200
@@ -506,7 +507,8 @@ class TestAssetReleasesTypes:
         )
 
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).path(),
+            json=payload.dict(),
         )
 
         assert response.status_code == 201
@@ -530,7 +532,8 @@ class TestAssetReleasesTypes:
             scheduled_date=123223,
         )
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).prefix, json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).prefix,
+            json=payload.dict(),
         )
         assert response.status_code == 201
 
@@ -541,7 +544,8 @@ class TestAssetReleasesTypes:
             scheduled_date=123223,
         )
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).prefix, json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_FUTURE_SELF).prefix,
+            json=payload.dict(),
         )
         assert response.status_code == 403
 
@@ -553,7 +557,8 @@ class TestAssetReleasesTypes:
         )
         # When
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(),
+            json=payload.dict(),
         )
         # Then
         assert response.status_code == 201
@@ -581,7 +586,8 @@ class TestAssetReleasesTypes:
         )
         # When
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(),
+            json=payload.dict(),
         )
         # Then
         my_releases = client.get(
@@ -599,7 +605,8 @@ class TestAssetReleasesTypes:
         }
         # When
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(),
+            json=payload,
         )
         # Then
         assert response.status_code == 422
@@ -612,7 +619,8 @@ class TestAssetReleasesTypes:
         )
         # When
         response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(), json=payload.dict()
+            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(),
+            json=payload.dict(),
         )
         # Then
         my_releases = client.get(

@@ -115,10 +115,9 @@ class KeepMongoRepo(MongoBase, KeepRepository):
     def all(self, user: UserId = None) -> List[Keep]:
         find_dict = {}
         if user:
-            find_dict = {"$or": [
-                {"requester": user.id},
-                {"requested": user.id}
-            ]}
+            find_dict = {
+                "$or": [{"requester": user.id}, {"requested": user.id}]
+            }
         logger.debug(f"Mongo query filters {find_dict}")
         resps = self._coll.find(find_dict)
         res = []
@@ -138,10 +137,12 @@ class KeepMongoRepo(MongoBase, KeepRepository):
     ) -> bool:
         if user1.id == user2.id:
             return True
-        find_dict = {"$or": [
-            {"requester": user1.id, "requested": user2.id},
-            {"requester": user2.id, "requested": user1.id},
-        ]}
+        find_dict = {
+            "$or": [
+                {"requester": user1.id, "requested": user2.id},
+                {"requester": user2.id, "requested": user1.id},
+            ]
+        }
         if not all_states:
             find_dict["state"] = RootAggState.ACTIVE.value
         logger.debug(f"Mongo query filters {find_dict}")

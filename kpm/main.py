@@ -75,7 +75,7 @@ async def startup_event():
             users_db.users.create_index("referral_code")
             users_db.keeps.create_index("requester")
             users_db.keeps.create_index("requested")
-            logger.info(f"Created Mongo indexes")
+            logger.info("Created Mongo indexes")
 
 
 @app.on_event("shutdown")

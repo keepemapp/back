@@ -26,8 +26,13 @@ def by_id(user_id: str, bus: MessageBus) -> Optional[User]:
 
 def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
     filter = {"_id": {"$in": users}}
-    fields = {"_id": 0, "id": "$_id", "public_name": 1,
-              "referral_code": 1, "email": 1}
+    fields = {
+        "_id": 0,
+        "id": "$_id",
+        "public_name": 1,
+        "referral_code": 1,
+        "email": 1,
+    }
     with mongo_client() as client:
         col = client.users.users
         res = col.aggregate(
@@ -53,9 +58,7 @@ def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
 def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
     with mongo_client() as client:
         col = client["users"].user
-        res = col.find_one(
-            filter={"email": email}, projection=["_id"]
-        )
+        res = col.find_one(filter={"email": email}, projection=["_id"])
 
     return res.get("_id", None) if res else None
 

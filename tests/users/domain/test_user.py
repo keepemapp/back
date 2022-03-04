@@ -53,7 +53,9 @@ class TestUser:
             assert not u.is_disabled()
             u.remove(by=UserId(id="sdsds"), reason="GDPR")
             assert u.state == RootAggState.REMOVED
-            removal_events = [e for e in u.events if isinstance(e, UserRemoved)]
+            removal_events = [
+                e for e in u.events if isinstance(e, UserRemoved)
+            ]
             assert len(removal_events) == 1
             ev = removal_events[0]
             assert ev.aggregate_id == u.id.id
@@ -78,4 +80,3 @@ class TestUser:
 
             with pytest.raises(ValueError):
                 u.remove(by="sdsds")
-

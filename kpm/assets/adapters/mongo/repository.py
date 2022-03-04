@@ -19,7 +19,8 @@ from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import (
-    FINAL_STATES, VISIBLE_STATES,
+    FINAL_STATES,
+    VISIBLE_STATES,
     AssetId,
     RootAggState,
     UserId,
@@ -168,21 +169,27 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
     def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
         return self.all(owner=user_id.id, pending=False)
 
-    def all(self, owner: str = None, receiver: str = None,
-            extra_conditions: Dict = None, pending: bool = None
-            ) -> List[AssetRelease]:
+    def all(
+        self,
+        owner: str = None,
+        receiver: str = None,
+        extra_conditions: Dict = None,
+        pending: bool = None,
+    ) -> List[AssetRelease]:
         find_dict = {}
         if owner:
-            find_dict['owner'] = owner
+            find_dict["owner"] = owner
         if receiver:
-            find_dict['receiver'] = receiver
+            find_dict["receiver"] = receiver
         if extra_conditions:
             find_dict.update(extra_conditions)
         if pending is not None:
             if pending:
-                find_dict['status'] = RootAggState.ACTIVE.value
+                find_dict["status"] = RootAggState.ACTIVE.value
             else:
-                find_dict['status'] = {"$in": [st.value for st in FINAL_STATES]}
+                find_dict["status"] = {
+                    "$in": [st.value for st in FINAL_STATES]
+                }
 
         logger.info(f"Mongo query filters {find_dict}")
         resps = self._legacy.find(find_dict)

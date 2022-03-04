@@ -251,7 +251,7 @@ def notify_transfer_cancellation(
 
 
 def remove_user_releases(
-        event: UserRemoved, assetrelease_uow: AbstractUnitOfWork
+    event: UserRemoved, assetrelease_uow: AbstractUnitOfWork
 ):
     """Removes all the releases of a removed user"""
     with assetrelease_uow as uow:

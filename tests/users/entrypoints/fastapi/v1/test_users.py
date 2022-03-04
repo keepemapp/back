@@ -7,7 +7,8 @@ from kpm.users.domain.repositories import UserRepository
 from kpm.users.entrypoints.fastapi.v1.schemas.users import (
     PasswordUpdate,
     UserCreate,
-    UserRemoval, UserUpdate,
+    UserRemoval,
+    UserUpdate,
 )
 from tests.users.domain import active_user, valid_user
 from tests.users.entrypoints.fastapi import *
@@ -134,7 +135,9 @@ class TestRegisterUser:
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
     def test_non_allowed_usernames(self, client, wrong_username):
         user = UserCreate(
-            username=wrong_username, email="email@correct.com", password=USER_PWD
+            username=wrong_username,
+            email="email@correct.com",
+            password=USER_PWD,
         )
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 400
@@ -150,7 +153,9 @@ class TestRegisterUser:
 
     @pytest.mark.parametrize("wrong_email", not_allowed_emails)
     def test_wrong_email(self, client, wrong_email):
-        user = UserCreate(username="user", email=wrong_email, password=USER_PWD)
+        user = UserCreate(
+            username="user", email=wrong_email, password=USER_PWD
+        )
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 400
 
@@ -436,7 +441,9 @@ class TestUserUpdates:
         user_path = USER_PATH.concat("idonotexist").path()
 
         # When
-        req = admin_client.delete(user_path, json=UserRemoval(reason="").dict())
+        req = admin_client.delete(
+            user_path, json=UserRemoval(reason="").dict()
+        )
 
         # Then
         assert req.status_code == 404
@@ -456,7 +463,9 @@ class TestUserUpdates:
         user_path = USER_PATH.concat(user.id.id).path()
 
         # When
-        req = admin_client.delete(user_path, json=UserRemoval(reason="").dict())
+        req = admin_client.delete(
+            user_path, json=UserRemoval(reason="").dict()
+        )
 
         # Then
         assert req.status_code == 200

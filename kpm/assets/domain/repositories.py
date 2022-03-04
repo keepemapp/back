@@ -24,7 +24,7 @@ class AssetRepository(DomainRepository):
         order: str = "asc",
         visible_only: bool = True,
         asset_types: List[str] = None,
-        bookmarked: Optional[bool] = None
+        bookmarked: Optional[bool] = None,
     ) -> List[Asset]:
         raise NotImplementedError
 
