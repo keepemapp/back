@@ -1,3 +1,5 @@
+from typing import Dict, List
+
 from fastapi import Depends
 
 import kpm.assets.adapters.memrepo.views_asset as av_mem
@@ -12,6 +14,7 @@ from kpm.assets.service_layer import COMMAND_HANDLERS as a_cmds
 from kpm.assets.service_layer import EVENT_HANDLERS as a_evs
 from kpm.shared.adapters.mongo import MongoUoW
 from kpm.shared.adapters.notifications import NoNotifications
+from kpm.shared.domain.events import Event
 from kpm.shared.entrypoints.bootstrap import bootstrap
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs
 from kpm.users.domain.model import User
@@ -20,12 +23,25 @@ from kpm.users.service_layer import COMMAND_HANDLERS as u_cmds
 from kpm.users.service_layer import EVENT_HANDLERS as u_evs
 
 
+def _append_event_handlers(
+        handler1: Dict[Event, List], handler2: Dict[Event, List]
+) -> Dict[Event, List]:
+    """Merges event handlers by appending values"""
+    res = handler1.copy()
+    for key, value in handler2.items():
+        if key in res:
+            res[key].extend(value)
+        else:
+            res[key] = value
+    return res
+
+
 def message_bus(
     asset_uows: UoWs = Depends(a_uows),
     user_uows: UoWs = Depends(u_uows),
 ) -> MessageBus:
     asset_uows.update(user_uows)
-    events = {**a_evs, **u_evs}
+    events = _append_event_handlers(a_evs, u_evs)
     commands = {**a_cmds, **u_cmds}
 
     email_notifications = NoNotifications()

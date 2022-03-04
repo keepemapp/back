@@ -5,9 +5,11 @@ from typing import Union
 import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.events as events
 from kpm.assets.domain.model import Asset, BequestType, FileData
+from kpm.assets.domain.repositories import AssetRepository
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain.model import AssetId, RemovalNotPossible, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.users.domain.events import UserRemoved
 
 
 def hide_asset(event: events.AssetReleaseScheduled, asset_uow: AssetUoW):
@@ -89,6 +91,8 @@ def update_asset_fields(cmd: cmds.UpdateAssetFields, asset_uow: AssetUoW):
 
 
 def remove_asset(cmd: cmds.RemoveAsset, asset_uow: AssetUoW):
+    # TODO remove file
+    # TODO handle what happens if there are multiple owners involved
     with asset_uow as uow:
         a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=True)
         if isinstance(a, Asset):
@@ -107,4 +111,25 @@ def asset_file_upload(cmd: cmds.UploadAssetFile, asset_uow: AssetUoW):
         ts = now_utc_millis()
         a.upload_file(ts)
         uow.repo.update(a)
+        uow.commit()
+
+
+def remove_user_assets(
+        event: UserRemoved, asset_uow: AssetUoW
+):
+    """Removes all the releases of a removed user
+
+    TO THINK: should we instead trigger the commands RemoveAsset?
+    """
+    uid = UserId(id=event.aggregate_id)
+    with asset_uow as uow:
+        repo: AssetRepository = uow.repo
+        assets = repo.find_by_ownerid(uid=uid)
+        for a in assets:
+            if len(a.owners_id) == 1:
+                # TODO remove file
+                a.remove(mod_ts=event.timestamp)
+            else:
+                a.change_owner(mod_ts=event.timestamp, transferor=uid, new=[])
+            uow.repo.update(a)
         uow.commit()

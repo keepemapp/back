@@ -2,6 +2,7 @@ import kpm.assets.domain.events as events
 from kpm.assets.domain import commands as cmds
 from kpm.assets.service_layer import asset_handlers as ah
 from kpm.assets.service_layer import transfer_handlers as th
+from kpm.users.domain.events import UserRemoved
 
 EVENT_HANDLERS = {
     events.AssetReleaseScheduled: [ah.hide_asset],
@@ -11,6 +12,7 @@ EVENT_HANDLERS = {
     ],
     events.AssetReleased: [ah.change_asset_owner, ah.make_asset_visible],
     events.AssetOwnershipChanged: [],
+    UserRemoved: [th.remove_user_releases, ah.remove_user_assets]
 }
 COMMAND_HANDLERS = {
     cmds.CreateAsset: ah.create_asset,

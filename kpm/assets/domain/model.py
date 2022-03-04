@@ -301,14 +301,15 @@ class AssetRelease(RootAggregate):
             )
         )
 
-    def cancel(self, reason: str = None):
+    def cancel(self, mod_ts: Optional[int] = None, reason: str = None):
         """Cancels the event."""
-        ts = now_utc_millis()
-        self._update_field(ts, "state", RootAggState.REMOVED)
+        if not mod_ts:
+            mod_ts = now_utc_millis()
+        self._update_field(mod_ts, "state", RootAggState.REMOVED)
         self.events.append(
             AssetReleaseCanceled(
                 aggregate_id=self.id.id,
-                timestamp=ts,
+                timestamp=mod_ts,
                 assets=[a.id for a in self.assets],
                 reason=reason,
             )

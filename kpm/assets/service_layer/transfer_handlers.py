@@ -4,10 +4,12 @@ import kpm.assets.domain.commands as cmds
 import kpm.assets.domain.model as model
 import kpm.shared.domain.model
 from kpm.assets.domain import events
+from kpm.assets.domain.repositories import AssetReleaseRepository
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
+from kpm.users.domain.events import UserRemoved
 from kpm.users.domain.repositories import KeepRepository
 
 
@@ -246,3 +248,16 @@ def notify_transfer_cancellation(
 ):
     # TODO implement me
     pass
+
+
+def remove_user_releases(
+        event: UserRemoved, assetrelease_uow: AbstractUnitOfWork
+):
+    """Removes all the releases of a removed user"""
+    with assetrelease_uow as uow:
+        repo: AssetReleaseRepository = uow.repo
+        rs = repo.user_active_releases(user_id=UserId(id=event.aggregate_id))
+        for r in rs:
+            r.remove(mod_ts=event.timestamp, reason=event.reason)
+            repo.put(r)
+        uow.commit()

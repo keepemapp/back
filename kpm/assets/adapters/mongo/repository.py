@@ -163,10 +163,10 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
             return self._from_bson(resp)
 
     def user_active_releases(self, user_id: UserId) -> List[AssetRelease]:
-        pass
+        return self.all(owner=user_id.id, pending=True)
 
     def user_past_releases(self, user_id: UserId) -> List[AssetRelease]:
-        pass
+        return self.all(owner=user_id.id, pending=False)
 
     def all(self, owner: str = None, receiver: str = None,
             extra_conditions: Dict = None, pending: bool = None
