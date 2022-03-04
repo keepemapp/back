@@ -52,6 +52,11 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
 def update_password(
     cmd: cmds.UpdateUserPassword, user_uow: AbstractUnitOfWork
 ):
+    if len(cmd.new_password) < 8:
+        raise ValueError("Password too short. Minimum 8 is characters.")
+    if 96 < len(cmd.new_password):
+        raise ValueError("Password too long. Maximum of 96 allowed.")
+
     with user_uow as uow:
         repo: UserRepository = uow.repo
         user: model.User = repo.get(UserId(cmd.user_id))
@@ -60,10 +65,6 @@ def update_password(
         user.change_password_hash(cmd)
         repo.update(user)
         uow.commit()
-
-    with user_uow as uow:
-        repo: UserRepository = uow.repo
-        user: model.User = repo.get(UserId(cmd.user_id))
 
 
 def update_user_attributes(cmd: cmds.UpdateUser, user_uow: AbstractUnitOfWork):

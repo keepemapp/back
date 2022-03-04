@@ -393,7 +393,7 @@ class TestUserUpdates:
 
     OLD_NEW_PASSWORDS = [
         (USER_PWD, "kasdjkns92mls-klñasd", 200),
-        (USER_PWD, "kasd", 422),
+        (USER_PWD, "kasd", 400),
     ]
 
     @pytest.mark.parametrize("passwords", OLD_NEW_PASSWORDS)
@@ -414,17 +414,23 @@ class TestUserUpdates:
         )
         assert response.status_code == passwords[2]
 
+        old_pwd_login_code = 401
+        new_pwd_login_code = 200
+        if passwords[2] != 200:
+            old_pwd_login_code = 200
+            new_pwd_login_code = 401
+
         login_old = client.post(
             login_route,
             data={"username": user.email, "password": passwords[0]},
         )
-        assert login_old.status_code == 401
+        assert login_old.status_code == old_pwd_login_code
 
         login_new = client.post(
             login_route,
             data={"username": user.email, "password": passwords[1]},
         )
-        assert login_new.status_code == 200
+        assert login_new.status_code == new_pwd_login_code
 
     def test_remove_user_no_exists(self, bus, admin_client):
         user_path = USER_PATH.concat("idonotexist").path()
