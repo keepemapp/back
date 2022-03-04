@@ -52,30 +52,31 @@ class MemoryUserRepository(UserRepository):
 class TestKeepRepository(KeepRepository):
     def __init__(self):
         super().__init__()
-        self._keeps: List[Keep] = []
+        self._keeps: Dict[str, Keep] = {}
 
     def all(self, user: UserId = None) -> List[Keep]:
         if user:
             return list(
                 filter(
-                    lambda k: user in (k.requester, k.requested), self._keeps
+                    lambda k: user in (k.requester, k.requested), self._keeps.values()
                 )
             )
         else:
-            return self._keeps
+            return list(self._keeps.values())
 
     def get(self, kid: DomainId) -> Keep:
-        return next(filter(lambda k: k.id == kid, self._keeps), None)
+        return self._keeps[kid.id]
 
     def put(self, k: Keep):
-        self._keeps.append(k)
+        print("adding keep", k)
+        self._keeps[k.id.id] = k
 
     def exists(
         self, user1: UserId, user2: UserId, all_states: bool = False
     ) -> bool:
         if user1.id == user2.id:
             return True
-        for k in self._keeps:
+        for k in self._keeps.values():
             cond1 = k.requester in (user1, user2)
             cond2 = k.requested in (user1, user2)
             cond3 = all_states or k.state == RootAggState.ACTIVE

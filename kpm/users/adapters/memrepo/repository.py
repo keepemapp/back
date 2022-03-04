@@ -78,40 +78,43 @@ class KeepMemoryRepository(KeepRepository):
     ):
         super().__init__()
         self.DB_FILE = dbfile
-        self._keeps: List[Keep] = self.__startup_db()
+        self._keeps: Dict[str, Keep] = self.__startup_db()
 
     def all(self, user: UserId = None) -> List[Keep]:
         if user:
             return list(
                 filter(
-                    lambda k: user in (k.requester, k.requested), self._keeps
+                    lambda k: user in (k.requester, k.requested), self._keeps.values()
                 )
             )
         else:
-            return self._keeps
+            return list(self._keeps.values())
 
     def get(self, kid: DomainId) -> Keep:
-        return next(filter(lambda k: k.id == kid, self._keeps), None)
+        return next(filter(lambda k: k.id == kid, self._keeps.values()), None)
 
     def put(self, k: Keep):
-        self._keeps.append(k)
+        self._keeps[k.id.id] = k
 
     def commit(self):
         self.__write_file()
 
-    def __startup_db(self) -> List[Keep]:
+    def __startup_db(self) -> Dict[str, Keep]:
         if os.path.exists(self.DB_FILE):
             with open(self.DB_FILE, "rb") as f:
                 r = pickle.load(f)
-            return r
-        return []
+            if isinstance(r, dict):
+                return r
+            else:
+                return {k.id.id: k for k in r}
+        return {}
 
     def exists(
         self, user1: UserId, user2: UserId, all_states: bool = False
     ) -> bool:
         if user1.id == user2.id:
             return True
-        for k in self._keeps:
+        for k in self._keeps.values():
             cond1 = k.requester in (user1, user2)
             cond2 = k.requested in (user1, user2)
             cond3 = all_states or k.state == RootAggState.ACTIVE

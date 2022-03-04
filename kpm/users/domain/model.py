@@ -9,7 +9,8 @@ from pydantic.dataclasses import dataclass
 
 import kpm.users.domain.commands as cmds
 from kpm.shared.domain import required_field, updatable_field
-from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
+from kpm.shared.domain.model import FINAL_STATES, RootAggregate, RootAggState, \
+    UserId
 from kpm.shared.log import logger
 from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain import events
@@ -45,6 +46,8 @@ class User(RootAggregate):
     roles: List[str] = field(default_factory=lambda: ["user"])
     referral_code: str = field(default_factory=generate_referral_code)
     referred_by: Optional[str] = field(default=None)
+    removed_by: Optional[UserId] = updatable_field(default=None)
+    removed_reason: Optional[str] = updatable_field(default=None)
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:
@@ -79,7 +82,23 @@ class User(RootAggregate):
             self.events.append(events.UserActivated(aggregate_id=self.id.id))
 
     def disable(self, mod_ts: int = None):
-        self._update_field(mod_ts, "state", RootAggState.INACTIVE)
+        if self.state not in FINAL_STATES:
+            self._update_field(mod_ts, "state", RootAggState.INACTIVE)
+
+    def remove(self, mod_ts: Optional[int] = None, **kwargs):
+        if self.state != RootAggState.REMOVED:
+            by = kwargs.get("by")
+            if isinstance(by, str):
+                by = UserId(id=by)
+            reason = kwargs.get("reason")
+            if by is None or reason is None:
+                raise ValueError("'by' and 'reason' must be set")
+            self.update_fields(mod_ts, {"removed_by": by,
+                                        "removed_reason": reason})
+            self.events.append(events.UserRemoved(aggregate_id=self.id.id,
+                                                  by=by.id,
+                                                  reason=reason))
+            self._update_field(mod_ts, "state", RootAggState.REMOVED)
 
     def is_disabled(self) -> bool:
         return self.state not in [RootAggState.ACTIVE]

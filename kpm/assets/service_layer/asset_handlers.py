@@ -90,7 +90,7 @@ def update_asset_fields(cmd: cmds.UpdateAssetFields, asset_uow: AssetUoW):
 
 def remove_asset(cmd: cmds.RemoveAsset, asset_uow: AssetUoW):
     with asset_uow as uow:
-        a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=False)
+        a = uow.repo.find_by_id(AssetId(cmd.asset_id), visible_only=True)
         if isinstance(a, Asset):
             a.remove(mod_ts=cmd.timestamp)
             uow.repo.update(a)

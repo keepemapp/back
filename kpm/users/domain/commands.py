@@ -3,7 +3,7 @@ from typing import Optional
 
 from pydantic.dataclasses import dataclass
 
-from kpm.shared.domain import init_id, required_field
+from kpm.shared.domain import DomainId, init_id, required_field
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.model import UserId
 
@@ -33,6 +33,13 @@ class UpdateUser(Command):
 
 
 @dataclass(frozen=True)
+class RemoveUser(Command):
+    user_id: str = required_field()  # type: ignore
+    reason: str = required_field()  # type: ignore
+    deleted_by: str = required_field()  # type: ignore
+
+
+@dataclass(frozen=True)
 class UpdateUserPassword(Command):
     user_id: str = required_field()  # type: ignore
     old_password: str = required_field(repr=False)  # type: ignore
@@ -44,6 +51,7 @@ class RequestKeep(Command):
     requester: str = required_field()  # type: ignore
     name_by_requester: Optional[str] = None
     requested: str = required_field()  # type: ignore
+    id: Optional[str] = field(default_factory=lambda: init_id(DomainId).id)
 
 
 @dataclass(frozen=True)

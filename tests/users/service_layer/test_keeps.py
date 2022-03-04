@@ -3,6 +3,7 @@ import pytest
 import kpm.users.domain.model as model
 from kpm.shared.domain.model import RootAggState
 from kpm.users.domain import commands as cmds
+from kpm.users.domain.events import UserRemoved
 from kpm.users.domain.repositories import KeepRepository
 from tests.users.fixtures import bus
 
@@ -36,7 +37,7 @@ class TestKeepHandlers:
             assert repo.all()[0].state == RootAggState.PENDING
 
     def test_can_only_accept_existing(self, bus):
-        with pytest.raises(AttributeError):
+        with pytest.raises(KeyError):
             cmd = cmds.AcceptKeep(keep_id="notexists", by="")
             bus.handle(cmd)
 
@@ -75,6 +76,7 @@ class TestKeepHandlers:
             bus.handle(msg)
         with bus.uows.get(model.Keep) as uow:
             kid = uow.repo.all()[0].id.id
+            print(uow.repo.all())
 
         # When
         cmd = cmds.AcceptKeep(keep_id=kid, by=uid2)
@@ -83,6 +85,7 @@ class TestKeepHandlers:
         # Then
         with bus.uows.get(model.Keep) as uow:
             repo: KeepRepository = uow.repo
+            print(repo.all())
             assert len(repo.all()) == 1
             assert repo.all()[0].state == RootAggState.ACTIVE
 
@@ -156,3 +159,28 @@ class TestKeepHandlers:
         with bus.uows.get(model.Keep) as uow:
             repo: KeepRepository = uow.repo
             assert repo.all()[0].state == RootAggState.REMOVED
+
+    def test_keeps_are_removed_when_user_deleted(self, bus):
+        uid1 = "uid1"
+        uid2 = "uid2"
+        uid3 = "uid3"
+        accepted = cmds.RequestKeep(requester=uid1, requested=uid2)
+        pending = cmds.RequestKeep(requester=uid1, requested=uid3)
+        history = [
+            create_user_cmd(uid1),
+            create_user_cmd(uid2),
+            accepted,
+            pending,
+            cmds.AcceptKeep(keep_id=accepted.id, by=uid2),
+        ]
+        for msg in history:
+            bus.handle(msg)
+
+        # When
+        bus.handle(UserRemoved(aggregate_id=uid1, by="", reason="reason"))
+
+        # Then
+        with bus.uows.get(model.Keep) as uow:
+            repo: KeepRepository = uow.repo
+            for k in repo.all():
+                assert k.state == RootAggState.REMOVED

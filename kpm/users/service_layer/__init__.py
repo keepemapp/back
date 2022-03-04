@@ -6,6 +6,7 @@ from kpm.users.service_layer import user_handler as uh
 EVENT_HANDLERS = {
     events.UserRegistered: [uh.send_welcome_email],
     events.UserActivated: [],
+    events.UserRemoved: [kh.remove_all_keeps_of_user],
     events.KeepRequested: [],
     events.KeepAccepted: [],
     events.KeepDeclined: [],
@@ -17,6 +18,7 @@ COMMAND_HANDLERS = {
     cmds.ActivateUser: uh.activate,
     cmds.UpdateUser: uh.update_user_attributes,
     cmds.UpdateUserPassword: uh.update_password,
+    cmds.RemoveUser: uh.remove_user,
     # Keeps
     cmds.RequestKeep: kh.new_keep,
     cmds.AcceptKeep: kh.accept_keep,

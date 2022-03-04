@@ -102,3 +102,15 @@ def send_welcome_email(
     output = template.render(name=event.username)
 
     email_notifications.send(event.email, "Welcome to Keepem!", output)
+
+
+def remove_user(cmd: cmds.RemoveUser, user_uow: AbstractUnitOfWork):
+    with user_uow as uow:
+        repo: UserRepository = uow.repo
+        user: model.User = repo.get(UserId(cmd.user_id))
+        if not user:
+            raise model.UserNotFound()
+        user.remove(mod_ts=cmd.timestamp, reason=cmd.reason,
+                    by=UserId(id=cmd.deleted_by))
+        repo.update(user)
+        uow.commit()

@@ -210,7 +210,7 @@ class RootAggregate(Entity):
     def is_visible(self):
         return self.state not in NOT_VISIBLE_STATES
 
-    def remove(self, mod_ts: Optional[int]):
+    def remove(self, mod_ts: Optional[int], **kwargs):
         if self.state != FINAL_STATES:
             self._update_field(mod_ts, "state", RootAggState.REMOVED)
 

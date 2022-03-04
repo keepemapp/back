@@ -21,6 +21,13 @@ class UserActivated(Event):
 
 
 @dataclass(frozen=True)
+class UserRemoved(Event):
+    eventType: str = "user_removed"
+    by: str = required_field()  # type: ignore
+    reason: str = required_field()  # type: ignore
+
+
+@dataclass(frozen=True)
 class KeepRequested(Event):
     eventType: str = "keep_requested"
     requester: str = required_field()  # type: ignore
