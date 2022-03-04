@@ -10,6 +10,7 @@ from starlette.requests import Request
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import mongo_client
+from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
 from kpm.shared.log import logger
 from kpm.users.entrypoints.fastapi.v1 import users_router
 
@@ -56,6 +57,7 @@ app = FastAPI(
 
 app.include_router(users_router)
 app.include_router(assets_router)
+app.include_router(common_endpoints.router)
 
 
 app.logger = logger
