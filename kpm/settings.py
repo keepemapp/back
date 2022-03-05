@@ -55,6 +55,7 @@ class Settings(BaseSettings):
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
     API_KEEP_PATH: ApiRoute = ApiRoute(prefix="/me/keeps", tags=["users"])
+    API_FEEDBACK: ApiRoute = ApiRoute(prefix="/feedback")
 
     API_LEGACY: ApiRoute = ApiRoute(
         prefix="/legacy", tags=["legacy_operations"]
