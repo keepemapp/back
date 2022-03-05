@@ -21,14 +21,18 @@ class BooleanFeedbackQuestion(BaseModel):
 class RatingFeedbackQuestion(BaseModel):
     type: str = "rating"
     values_min: int = 1
-    name_min: str = "Strongly Disagree"
+    name_min: Dict[str, str] = {
+        "en": "Strongly Disagree",
+    }
     values_max: int = 4
-    name_max: str = "Strongly Agree"
+    name_max: Dict[str, str] = {
+        "en": "Strongly Agree",
+    }
 
 
 class FeedbackForm(BaseModel):
     id: str
-    title: str
+    title: Dict[str, str]
     created_ts: int
     questions: List[FeedbackQuestion]
 

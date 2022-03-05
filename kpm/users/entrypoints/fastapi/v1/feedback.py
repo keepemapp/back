@@ -24,11 +24,18 @@ router = APIRouter(
 @router.get(
     "", responses={status.HTTP_200_OK: {"model": Page[sch.FeedbackForm]}}
 )
-async def list_feedback_forms(paginate_params: Params = Depends()):
+async def list_feedback_forms(
+    paginate_params: Params = Depends(),
+    _: AccessToken = Depends(get_access_token),
+):
     forms = [
         sch.FeedbackForm(
             id="1",
-            title="main_feedback",
+            title={
+                "en": "Feedback",
+                "ca": "Comentaris",
+                "es": "Comentarios",
+            },
             created_ts=to_millis(datetime.datetime(2022, 3, 5)),
             questions=[
                 sch.BooleanFeedbackQuestion(
@@ -45,10 +52,9 @@ async def list_feedback_forms(paginate_params: Params = Depends()):
                 sch.TextFeedbackQuestion(
                     order=2,
                     question={
-                        "en": "Do you think it solves a need?",
-                        "ca": "Creus que l'aplicació resol una necessitat?",
-                        "es": 
-                            "¿Crees que la aplicación soluciona una nacesidad?",
+                        "en": "Do you think it solves a need?",  # noqa:E501
+                        "ca": "Creus que l'aplicació resol una necessitat?",  # noqa:E501
+                        "es": "¿Crees que la aplicación soluciona una nacesidad?",  # noqa:E501
                     },
                 ),
                 sch.TextFeedbackQuestion(
@@ -67,7 +73,34 @@ async def list_feedback_forms(paginate_params: Params = Depends()):
                         "es": "¿Pagarías por usarla? ¿Cuánto?",
                     },
                 ),
+                sch.TextFeedbackQuestion(
+                    order=5,
+                    question={
+                        "en": "Do you want to tell us something else?",
+                        "ca": "Vols fir-nos alguna cosa més?",
+                        "es": "¿Quieres añadir algún comentario más?",
+                    },
+                ),
             ],
+        ),
+        sch.FeedbackForm(
+            id="19e613d8-81b1-49f6-9e7e-296a2733bab4",
+            title={
+                "en": "Report bugs",
+                "ca": "Comunica'ns errors",
+                "es": "Reporta errores",
+            },
+            created_ts=to_millis(datetime.datetime(2022, 3, 5)),
+            questions=[
+                sch.TextFeedbackQuestion(
+                    order=1,
+                    question={
+                        "en": "Please describe what happened and what were the actions you were doing in the app so we can check it out.",  # noqa:E501
+                        "ca": "Siusplau descriu què ha passat i quines accions has fet perquè puguem revisar-ho més fàcilment.",  # noqa:E501
+                        "es": "Por favor describa qué ha pasado y qué acciones has hecho para que podamos revisarlo más facilmente.",  # noqa:E501
+                    },
+                ),
+            ]
         )
     ]
 
