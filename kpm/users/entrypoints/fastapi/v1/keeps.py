@@ -8,6 +8,7 @@ from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.exceptions import FORBIDDEN_GENERIC
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain import commands as cmds
 from kpm.users.domain.model import KeepActionError, KeepAlreadyDeclined
@@ -61,6 +62,7 @@ async def new_keep(
     bus: MessageBus = Depends(message_bus),
     views=Depends(user_view),
 ):
+    logger.info(f"'{token.subject}' requesting new keep to {request.dict()}")
     found_value = None
     if request.to_id:
         found_value = views.by_id(request.to_id, bus)
