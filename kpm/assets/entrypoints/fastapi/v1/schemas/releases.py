@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, validator
 
@@ -121,6 +121,7 @@ class ReleaseResponse(ReleaseBase):
     links: Optional[Links]
     release_type: str
     name: str
+    conditions: Dict[str, Any]
     receivers: List[str]
     assets: List[str]
     # conditions: ReleaseConditions

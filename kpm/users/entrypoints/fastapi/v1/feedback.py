@@ -42,11 +42,11 @@ async def list_feedback_forms(
                     order=1,
                     question={
                         "en": """Twit length twit decription
-                        Did you understood what the app is about?""",
+Did you understood what the app is about?""",
                         "ca": """Descripció de l'aplicació
-                        Has entès de què va?""",
+Has entès de què va?""",
                         "es": """Descripción
-                        ¿Entendiste en qué consiste nuestra aplicación?""",
+¿Entendiste en qué consiste nuestra aplicación?""",
                     },
                 ),
                 sch.TextFeedbackQuestion(

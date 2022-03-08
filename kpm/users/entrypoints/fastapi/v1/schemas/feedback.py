@@ -10,15 +10,15 @@ class FeedbackQuestion(BaseModel):
     type: str
 
 
-class TextFeedbackQuestion(BaseModel):
+class TextFeedbackQuestion(FeedbackQuestion):
     type: str = "text"
 
 
-class BooleanFeedbackQuestion(BaseModel):
+class BooleanFeedbackQuestion(FeedbackQuestion):
     type: str = "boolean"
 
 
-class RatingFeedbackQuestion(BaseModel):
+class RatingFeedbackQuestion(FeedbackQuestion):
     type: str = "rating"
     values_min: int = 1
     name_min: Dict[str, str] = {
