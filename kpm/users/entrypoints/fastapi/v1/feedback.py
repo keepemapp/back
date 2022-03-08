@@ -46,7 +46,7 @@ async def list_feedback_forms(
                         "ca": """Descripció de l'aplicació
                         Has entès de què va?""",
                         "es": """Descripción
-                        ¿Entendiste de qué va?""",
+                        ¿Entendiste en qué consiste nuestra aplicación?""",
                     },
                 ),
                 sch.TextFeedbackQuestion(
@@ -54,7 +54,7 @@ async def list_feedback_forms(
                     question={
                         "en": "Do you think it solves a need?",  # noqa:E501
                         "ca": "Creus que l'aplicació resol una necessitat?",  # noqa:E501
-                        "es": "¿Crees que la aplicación soluciona una nacesidad?",  # noqa:E501
+                        "es": "¿Crees que la aplicación soluciona una necesidad?",  # noqa:E501
                     },
                 ),
                 sch.TextFeedbackQuestion(
@@ -62,7 +62,7 @@ async def list_feedback_forms(
                     question={
                         "en": "Would you use it? How often?",
                         "ca": "La utilitzaries? Cada quant?",
-                        "es": "¿La usarías? ¿Cada cuanto?",
+                        "es": "¿La usarías? ¿Con qué frecuencia?",
                     },
                 ),
                 sch.TextFeedbackQuestion(
@@ -95,9 +95,9 @@ async def list_feedback_forms(
                 sch.TextFeedbackQuestion(
                     order=1,
                     question={
-                        "en": "Please describe what happened and what were the actions you were doing in the app so we can check it out.",  # noqa:E501
-                        "ca": "Siusplau descriu què ha passat i quines accions has fet perquè puguem revisar-ho més fàcilment.",  # noqa:E501
-                        "es": "Por favor describa qué ha pasado y qué acciones has hecho para que podamos revisarlo más facilmente.",  # noqa:E501
+                        "en": "Please, describe what happened and what were the actions you were doing in the app so we can check it out.",  # noqa:E501
+                        "ca": "Siusplau, descriu què ha passat i quines accions has fet perquè puguem revisar-ho més fàcilment.",  # noqa:E501
+                        "es": "Por favor, describa qué ha pasado y qué acciones has hecho para que podamos revisarlo más facilmente.",  # noqa:E501
                     },
                 ),
             ]
