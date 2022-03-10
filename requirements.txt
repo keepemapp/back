@@ -16,3 +16,4 @@ flatdict
 gitpython
 pymongo
 pyinstrument
+boto3=1.20.24

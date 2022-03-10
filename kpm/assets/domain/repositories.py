@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from tempfile import TemporaryFile
 from typing import List, Optional, Set
 
 from kpm.assets.domain.model import Asset, AssetRelease
@@ -136,4 +137,18 @@ class AssetReleaseRepository(DomainRepository):
 
     @abstractmethod
     def all(self) -> List[AssetRelease]:
+        raise NotImplementedError
+
+
+class AssetFileRepository:
+    @abstractmethod
+    def create(self, location: str, file: TemporaryFile):
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, location: str):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(self, location: str) -> TemporaryFile:
         raise NotImplementedError

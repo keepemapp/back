@@ -5,10 +5,11 @@ from typing import Union
 
 import aiofiles
 
+from kpm.assets.domain.repositories import AssetFileRepository
 from kpm.settings import settings
 
 
-class AssetFileRepository:
+class AssetFileLocalRepository(AssetFileRepository):
     def __init__(
         self,
         base_path: Union[Path, str] = Path(

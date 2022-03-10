@@ -9,7 +9,7 @@ from jose import JWTError
 
 import kpm.assets.domain.commands as cmds
 import kpm.shared.entrypoints.fastapi.exceptions as ex
-from kpm.assets.adapters.filestorage import AssetFileRepository
+from kpm.assets.adapters.filestorage import AssetFileLocalRepository
 from kpm.assets.entrypoints.fastapi.dependencies import asset_file_repository
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetCreate,
@@ -122,7 +122,7 @@ async def add_asset_file(
     asset_id: str,
     authorizer_token: str,
     token: AccessToken = Depends(get_access_token),
-    file_repo: AssetFileRepository = Depends(asset_file_repository),
+    file_repo: AssetFileLocalRepository = Depends(asset_file_repository),
     bus: MessageBus = Depends(message_bus),
     views=Depends(asset_view),
     file: UploadFile = File(...),
@@ -268,7 +268,7 @@ async def remove_asset_fields(
     asset_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
-    file_repo: AssetFileRepository = Depends(asset_file_repository),
+    file_repo: AssetFileLocalRepository = Depends(asset_file_repository),
     views=Depends(asset_view),
 ):
     """
@@ -297,7 +297,7 @@ async def get_asset_file(
     asset_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
-    file_repo: AssetFileRepository = Depends(asset_file_repository),
+    file_repo: AssetFileLocalRepository = Depends(asset_file_repository),
     views=Depends(asset_view),
 ):
     """Returns the asset's binary file"""
@@ -313,6 +313,6 @@ async def get_asset_file(
                 },
             )
         except RuntimeError as e:
-            raise HTTPException(detail=e.msg)
+            raise HTTPException(detail=str(e), status_code=500)
     else:
         raise ex.FORBIDDEN_GENERIC

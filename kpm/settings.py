@@ -92,6 +92,11 @@ class Settings(BaseSettings):
     MONGODB_USER: str = ""
     MONGODB_PWD: str = ""
 
+    ASSET_S3_URL: str = "https://eu2.contabostorage.com"
+    ASSET_S3_BUCKET: str = "kpm-dev"
+    ASSET_S3_ACCESS: str = None
+    ASSET_S3_SECRET: str = None
+
     class Config:
         env_file = ".env"
 

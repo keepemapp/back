@@ -1,3 +1,3 @@
 from kpm.assets.adapters.filestorage.local_filesystem import (
-    AssetFileRepository,
+    AssetFileLocalRepository,
 )
