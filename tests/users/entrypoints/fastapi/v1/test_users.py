@@ -382,13 +382,16 @@ class TestGetUsers:
 
 @pytest.mark.unit
 class TestUserUpdates:
-    ATTR_UPDATES = [{"public_name": "new_public_name"}]
+    ATTR_UPDATES = [
+        {"public_name": "new_public_name"}
+    ]
 
     @pytest.mark.parametrize("updates", ATTR_UPDATES)
-    def test_update(self, client, updates):
+    def test_update(self, client, user_client, updates):
         user, create_resp = create_active_user(client, 343)
-        tok_log = client.post(
-            login_route, data={"username": user.email, "password": USER_PWD}
+        tok_log = user_client.post(
+            login_route,
+            data={"username": user.email, "password": user.password},
         )
         token = "Bearer " + str(tok_log.json().get("access_token"))
 
@@ -397,6 +400,7 @@ class TestUserUpdates:
             json=UserUpdate(**updates).dict(),
             headers={"Accept": "application/json", "Authorization": token},
         )
+        print(response.text)
         assert response.status_code == 200
 
         me = client.get(
@@ -411,15 +415,19 @@ class TestUserUpdates:
         (USER_PWD, "kasdjkns92mls-klñasd", 200),
         (USER_PWD, "kasd", 400),
         (USER_PWD, "", 400),
+        ("", "", 400),
+        ("", "thisisagoodpasswordhere23+", 401),
+        ("wrong-password", "thisisagoodpasswordhere23+", 401),
     ]
 
     @pytest.mark.parametrize("passwords", OLD_NEW_PASSWORDS)
-    def test_update_password(self, client, user_client, passwords):
-        user, create_resp = create_active_user(client, 343, username=USER_TOKEN.subject)
+    def test_update_password(self, client, passwords):
+        user, create_resp = create_active_user(client, 343)
         tok_log = client.post(
             login_route,
-            data={"username": user.email, "password": passwords[0]},
+            data={"username": user.email, "password": USER_PWD},
         )
+        assert tok_log.status_code == 200
         token = "Bearer " + str(tok_log.json().get("access_token"))
 
         response = client.patch(
@@ -429,6 +437,7 @@ class TestUserUpdates:
             ).dict(),
             headers={"Accept": "application/json", "Authorization": token},
         )
+        print(response.text)
         assert response.status_code == passwords[2]
 
         old_pwd_login_code = 401
@@ -439,7 +448,7 @@ class TestUserUpdates:
 
         login_old = client.post(
             login_route,
-            data={"username": user.email, "password": passwords[0]},
+            data={"username": user.email, "password": USER_PWD},
         )
         assert login_old.status_code == old_pwd_login_code
 

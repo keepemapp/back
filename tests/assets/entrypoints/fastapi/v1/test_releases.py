@@ -611,20 +611,3 @@ class TestAssetReleasesTypes:
         # Then
         assert response.status_code == 422
 
-    def test_bottle_not_returns_conditions(self, client):
-        payload = schema.CreateAssetInABottle(
-            assets=[ASSET_ID1],
-            name="Bottle",
-            receivers=["/users/user1", "/users/user2"],
-        )
-        # When
-        response = client.post(
-            s.API_V1.concat(s.API_LEGACY, s.API_ASSET_BOTTLE).path(),
-            json=payload.dict(),
-        )
-        # Then
-        my_releases = client.get(
-            s.API_V1.concat(response.headers["location"]).path()
-        )
-        release = my_releases.json()
-        assert "conditions" not in release.keys()

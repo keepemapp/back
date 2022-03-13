@@ -53,6 +53,5 @@ class TestCreateAsset:
 
         first_owner = create_asset_cmd.owners_id[0]
         asset_id = a.id.id
-        assert first_owner in a.file.location
         assert asset_id in a.file.location
         assert ".enc" in a.file.location

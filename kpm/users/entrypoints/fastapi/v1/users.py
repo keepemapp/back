@@ -7,14 +7,14 @@ from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token, \
-    get_admin_token
+    get_admin_token, get_fresh_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.dependencies import get_current_active_user
 from kpm.users.domain.model import (
     EmailAlreadyExistsException,
-    User,
+    MissmatchPasswordException, User,
     UsernameAlreadyExistsException,
     UserNotFound,
 )
@@ -151,7 +151,7 @@ def register_user(
 async def change_password(
     pwd_change: schemas.PasswordUpdate,
     bus: MessageBus = Depends(message_bus),
-    token: AccessToken = Depends(get_access_token),
+    token: AccessToken = Depends(get_fresh_token),
 ):
     """Endpoint to change password of the user."""
 
@@ -161,6 +161,8 @@ async def change_password(
         )
     except UserNotFound:
         raise ex.NOT_FOUND
+    except MissmatchPasswordException:
+        raise ex.USER_CREDENTIALS_ER
     except ValueError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
@@ -178,7 +180,7 @@ async def change_password(
 async def update_user_attributes(
     updates: schemas.UserUpdate,
     bus: MessageBus = Depends(message_bus),
-    token: AccessToken = Depends(get_admin_token),
+    token: AccessToken = Depends(get_fresh_token),
 ):
     """Updates user attributes."""
 

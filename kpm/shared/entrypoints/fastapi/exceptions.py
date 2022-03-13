@@ -17,6 +17,12 @@ TOKEN_ER = HTTPException(
     headers={"WWW-Authenticate": "Bearer"},
 )
 
+TOKEN_STALE = HTTPException(
+    status_code=status.HTTP_401_UNAUTHORIZED,
+    detail="Token not fresh. Please log in again",
+    headers={"WWW-Authenticate": "Bearer"},
+)
+
 AUTH_SCOPE_MISMATCH = HTTPException(
     status_code=status.HTTP_400_BAD_REQUEST,
     detail="Incorrect auth scope",

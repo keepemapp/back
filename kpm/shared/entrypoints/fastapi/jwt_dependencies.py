@@ -42,6 +42,13 @@ async def get_access_token(t: str = Depends(oauth2_scheme)) -> AccessToken:
     raise ex.TOKEN_ER
 
 
+async def get_fresh_token(token: AccessToken = Depends(get_access_token)) -> AccessToken:
+    if token.is_fresh():
+        return token
+    else:
+        raise ex.TOKEN_STALE
+
+
 async def get_admin_token(
     t: AccessToken = Depends(get_access_token),
 ) -> AccessToken:
