@@ -47,7 +47,7 @@ def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
     with mongo_client() as client:
-        col = client["users"].user
+        col = client["users"].users
         res = col.find_one(
             filter={"referral_code": referral_code}, projection=["_id"]
         )
@@ -57,7 +57,7 @@ def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
 
 def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
     with mongo_client() as client:
-        col = client["users"].user
+        col = client["users"].users
         res = col.find_one(filter={"email": email}, projection=["_id"])
 
     return res.get("_id", None) if res else None

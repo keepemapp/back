@@ -59,6 +59,8 @@ class FileData(ValueObject):
     type: str
     "Size of the data in BYTES. It will get double checked"
     size_bytes: int
+    encryption_type: Optional[str] = None
+    encryption_key: Optional[str] = None
 
 
 UIDT = Union[UserId, str]

@@ -53,8 +53,8 @@ def change_asset_owner(event: events.AssetReleased, asset_uow: AssetUoW):
         uow.commit()
 
 
-def _compute_location(owner_id: str, asset_id: str) -> str:
-    return path.join(owner_id, asset_id + ".enc")
+def _compute_location(asset_id: str) -> str:
+    return path.join(asset_id[:4], asset_id + ".enc")
 
 
 def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
@@ -72,7 +72,7 @@ def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
     dic["file"] = FileData(
         type=dic.pop("file_type"),
         name=dic.pop("file_name"),
-        location=_compute_location(cmd.owners_id[0], cmd.asset_id),
+        location=_compute_location(cmd.asset_id),
         size_bytes=dic.pop("file_size_bytes"),
     )
     dic["created_ts"] = dic.pop("timestamp")

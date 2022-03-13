@@ -28,17 +28,19 @@ def create_direct_user(client, username, email):
     return user, response
 
 
-def create_user(client, user_num: int = 0):
+def create_user(client, user_num: int = 0, username=None):
+    if not username:
+        username = f"user{user_num}"
     return create_direct_user(
-        client, f"user{user_num}", f"valid{user_num}@email.com"
+        client, username, f"valid{user_num}@email.com"
     )
 
 
-def create_active_user(client, user_num: int = 0):
+def create_active_user(client, user_num: int = 0, username=None):
     # activate_route = USER_PATH.concat(create_resp.json()["id"], "/activate")
     # activ_res = client.put(activate_route.path())
     # assert activ_res.status_code == 201
-    return create_user(client, user_num)
+    return create_user(client, user_num, username)
 
 
 @pytest.fixture
@@ -73,6 +75,15 @@ class TestRegisterUser:
         assert user_resp.get("id")
         assert user_resp.get("id") in user_resp.get("links").get("self")
         assert user_resp.get("referral_code")
+
+    def test_create_noemail(self, client):
+        user = UserCreate(
+            username="user", email="", password=USER_PWD
+        )
+        response = client.post(user_route, json=user.dict())
+        assert response.status_code == 400
+        user_resp = response.json()
+        assert user_resp.get("detail") == "Email is not valid"
 
     def test_referral(self, client):
         _, create_resp = create_user(client)
@@ -399,11 +410,12 @@ class TestUserUpdates:
     OLD_NEW_PASSWORDS = [
         (USER_PWD, "kasdjkns92mls-klñasd", 200),
         (USER_PWD, "kasd", 400),
+        (USER_PWD, "", 400),
     ]
 
     @pytest.mark.parametrize("passwords", OLD_NEW_PASSWORDS)
-    def test_update_password(self, client, passwords):
-        user, create_resp = create_active_user(client, 343)
+    def test_update_password(self, client, user_client, passwords):
+        user, create_resp = create_active_user(client, 343, username=USER_TOKEN.subject)
         tok_log = client.post(
             login_route,
             data={"username": user.email, "password": passwords[0]},
@@ -420,10 +432,10 @@ class TestUserUpdates:
         assert response.status_code == passwords[2]
 
         old_pwd_login_code = 401
-        new_pwd_login_code = 200
+        new_pwd_login_code = 2
         if passwords[2] != 200:
             old_pwd_login_code = 200
-            new_pwd_login_code = 401
+            new_pwd_login_code = 4
 
         login_old = client.post(
             login_route,
@@ -435,7 +447,7 @@ class TestUserUpdates:
             login_route,
             data={"username": user.email, "password": passwords[1]},
         )
-        assert login_new.status_code == new_pwd_login_code
+        assert login_new.status_code // 100 == new_pwd_login_code
 
     def test_remove_user_no_exists(self, bus, admin_client):
         user_path = USER_PATH.concat("idonotexist").path()

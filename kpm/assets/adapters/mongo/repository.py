@@ -185,9 +185,9 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
             find_dict.update(extra_conditions)
         if pending is not None:
             if pending:
-                find_dict["status"] = RootAggState.ACTIVE.value
+                find_dict["state"] = RootAggState.ACTIVE.value
             else:
-                find_dict["status"] = {
+                find_dict["state"] = {
                     "$in": [st.value for st in FINAL_STATES]
                 }
 

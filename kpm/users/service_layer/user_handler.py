@@ -33,10 +33,6 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
                 referred_by=cmd.referred_by,
             )
         else:
-            if repo.exists_email(cmd.email):
-                raise model.EmailAlreadyExistsException()
-            if repo.exists_username(cmd.username):
-                raise model.UsernameAlreadyExistsException()
             user = model.User(
                 username=cmd.username,
                 salt=salt,
@@ -45,6 +41,10 @@ def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
                 id=UserId(cmd.user_id),
                 referred_by=cmd.referred_by,
             )
+            if repo.exists_email(user.email):
+                raise model.EmailAlreadyExistsException()
+            if repo.exists_username(user.username):
+                raise model.UsernameAlreadyExistsException()
         repo.create(user)
         uow.commit()
 

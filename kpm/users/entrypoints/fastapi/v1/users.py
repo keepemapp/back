@@ -6,7 +6,8 @@ import kpm.users.domain.commands as cmds
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_admin_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token, \
+    get_admin_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -58,13 +59,19 @@ async def get_all_users(
     views=Depends(user_view),
 ):
     """Returns all users"""
-    return paginate(
-        [
-            to_pydantic_model(u, schemas.UserResponse)
-            for u in views.all_users(bus)
-        ],
-        params,
-    )
+    try:
+        return paginate(
+            [
+                to_pydantic_model(u, schemas.UserResponse)
+                for u in views.all_users(bus)
+            ],
+            params,
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
+        )
 
 
 @router.put(
@@ -138,14 +145,15 @@ def register_user(
     responses={
         status.HTTP_200_OK: {},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+        status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
 )
 async def change_password(
     pwd_change: schemas.PasswordUpdate,
     bus: MessageBus = Depends(message_bus),
-    token: AccessToken = Depends(get_admin_token),
+    token: AccessToken = Depends(get_access_token),
 ):
-    """Endpoint to activate a user. If user is already active does nothing."""
+    """Endpoint to change password of the user."""
 
     try:
         bus.handle(

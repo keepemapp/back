@@ -25,11 +25,9 @@ class UserMongoRepo(MongoBase, UserRepository):
         find_dict = {}
         logger.info(f"Mongo query filters {find_dict}")
         resps = self._coll.find(find_dict)
-        res = []
-        for a in resps:
-            res.append(self._from_bson(a))
-        logger.info(f"Mongo response count: {len(res)}")
-        return res
+        users = [self._from_bson(a) for a in resps if a]
+        logger.info(f"Mongo response count: {len(users)}")
+        return users
 
     def get(self, uid: UserId) -> Optional[User]:
         find_dict = {"_id": uid.id}
@@ -95,7 +93,12 @@ class UserMongoRepo(MongoBase, UserRepository):
     @staticmethod
     def _from_bson(bson: Dict) -> User:
         bson["id"] = UserId(id=bson.pop("_id"))
-        return User(loaded_from_db=True, **bson)
+        try:
+            user = User(loaded_from_db=True, **bson)
+            return user
+        except Exception as e:
+            logger.error(f"Error processing user '{bson['id']}': {e}")
+            return None
 
 
 class KeepMongoRepo(MongoBase, KeepRepository):
