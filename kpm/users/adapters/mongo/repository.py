@@ -25,7 +25,11 @@ class UserMongoRepo(MongoBase, UserRepository):
         find_dict = {}
         logger.info(f"Mongo query filters {find_dict}")
         resps = self._coll.find(find_dict)
-        users = [self._from_bson(a) for a in resps if a]
+        users = []
+        for a in resps:
+            u = self._from_bson(a)
+            if u:
+                users.append(u)
         logger.info(f"Mongo response count: {len(users)}")
         return users
 
