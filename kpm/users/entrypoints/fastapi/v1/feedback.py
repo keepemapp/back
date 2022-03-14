@@ -39,6 +39,7 @@ async def list_feedback_forms(
             created_ts=to_millis(datetime.datetime(2022, 3, 5)),
             questions=[
                 sch.BooleanFeedbackQuestion(
+                    id="ad2s",
                     order=1,
                     question={
                         "en": """Twit length twit decription
@@ -50,6 +51,7 @@ Has entès de què va?""",
                     },
                 ),
                 sch.TextFeedbackQuestion(
+                    id="b34s",
                     order=2,
                     question={
                         "en": "Do you think it solves a need?",  # noqa:E501
@@ -58,6 +60,7 @@ Has entès de què va?""",
                     },
                 ),
                 sch.TextFeedbackQuestion(
+                    id="c37l",
                     order=3,
                     question={
                         "en": "Would you use it? How often?",
@@ -66,6 +69,7 @@ Has entès de què va?""",
                     },
                 ),
                 sch.TextFeedbackQuestion(
+                    id="dc38",
                     order=4,
                     question={
                         "en": "Would you pay for it? How much?",
@@ -74,6 +78,7 @@ Has entès de què va?""",
                     },
                 ),
                 sch.TextFeedbackQuestion(
+                    id="e93k",
                     order=5,
                     question={
                         "en": "Do you want to tell us something else?",
@@ -93,6 +98,7 @@ Has entès de què va?""",
             created_ts=to_millis(datetime.datetime(2022, 3, 5)),
             questions=[
                 sch.TextFeedbackQuestion(
+                    id="a2l3",
                     order=1,
                     question={
                         "en": "Please, describe what happened and what were the actions you were doing in the app so we can check it out.",  # noqa:E501
@@ -116,7 +122,8 @@ async def add_feedback_responses(
         with mongo_client() as client:
             col = client.users.feedback_response
             col.insert_many(
-                [{"user": token.subject, **r.dict()} for r in responses]
+                [{"user": token.subject, **r.dict()} for r in responses],
+                upsert=True
             )
     else:
         pass

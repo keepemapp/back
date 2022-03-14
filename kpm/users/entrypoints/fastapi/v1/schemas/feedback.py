@@ -1,9 +1,11 @@
+from dataclasses import field
 from typing import Dict, List, Union
 
 from pydantic import BaseModel
 
 
 class FeedbackQuestion(BaseModel):
+    id: str
     order: int
     """Dictionary of questions per language"""
     question: Dict[str, str]
@@ -39,5 +41,14 @@ class FeedbackForm(BaseModel):
 
 class FeedbackQuestionResponse(BaseModel):
     form_id: str
-    question_order: str
+    question_id: str
     response: Union[bool, int, str]
+
+    class Config:
+        schema_extra = {
+            "example": [
+                {"form_id": "s3d233-23sl-2coso23", "question_id": "s2l9", "response": True},
+                {"form_id": "s3d233-23sl-2coso23", "question_id": "o2jh", "response": 3},
+                {"form_id": "s3d233-23sl-2coso23", "question_id": "a2c", "response": "Text like description"},
+            ]
+        }
