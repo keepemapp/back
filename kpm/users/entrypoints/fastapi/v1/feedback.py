@@ -6,7 +6,7 @@ from fastapi_pagination import Page, Params, paginate
 
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.time_utils import to_millis
+from kpm.shared.domain.time_utils import now_utc_millis, to_millis
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
@@ -122,8 +122,8 @@ async def add_feedback_responses(
         with mongo_client() as client:
             col = client.users.feedback_response
             col.insert_many(
-                [{"user": token.subject, **r.dict()} for r in responses],
-                upsert=True
+                [{"user": token.subject, "created_ts": now_utc_millis(),
+                  **r.dict()} for r in responses]
             )
     else:
         pass
