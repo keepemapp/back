@@ -217,7 +217,7 @@ async def create_time_capsule(
 
 
 @router.get(
-    s.API_LEGACY.path() + "/{release_id}",
+    s.API_LEGACY.path() + "/{operation_id}",
     responses={
         status.HTTP_200_OK: {"model": schemas.ReleaseResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
@@ -226,12 +226,12 @@ async def create_time_capsule(
     },
 )
 async def get_release(
-    release_id: str,
+    operation_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
     views=Depends(asset_rel_view),
 ):
-    release = views.get(release_id, bus=bus)
+    release = views.get(operation_id, bus=bus)
     if release and release.get("owner") == token.subject:
         return schemas.ReleaseResponse(**release)
     else:
@@ -239,16 +239,7 @@ async def get_release(
 
 
 @router.post(
-    s.API_LEGACY.concat("{id}", "trigger").path(),
-    description="""
-    Tries to trigger a legacy operation.
-
-    To be successful, the following conditions must be met:
-
-    * The user executing this request is a receiver of the legacy op
-    * Current server time (UTC) is after the specified schedule_date (UTC)
-    * Matches the geographical location passed (lowecased string comparison)
-    """,
+    s.API_LEGACY.concat("{operation_id}", "trigger").path(),
     response_description="204 if successful, 403 if could not be triggered.",
     status_code=status.HTTP_204_NO_CONTENT,
     responses={
@@ -261,12 +252,49 @@ async def get_release(
     },
 )
 async def trigger_legacy_operation(
+    operation_id: str,
     create: schemas.ReleaseTrigger,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
 ):
+    """
+    Tries to trigger a legacy operation.
+
+    To be successful, the following conditions must be met:
+
+    * The user executing this request is a receiver of the legacy op
+    * Current server time (UTC) is after the specified schedule_date (UTC)
+    * Matches the geographical location passed (lowecased string comparison)
+    """
     payload = {k: v for k, v in create.__dict__.items() if v}
-    cmd = cmds.TriggerRelease(by_user=token.subject, **payload)
+    cmd = cmds.TriggerRelease(by_user=token.subject,
+                              aggregate_id=operation_id, **payload)
+    try:
+        bus.handle(cmd)
+    except UserNotAllowedException:
+        raise ex.FORBIDDEN_GENERIC
+    except OperationTriggerException:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Cannot be triggered yet.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+
+@router.delete(
+    s.API_LEGACY.concat("{operation_id}").path(),
+    response_description="204 if successful, 403 if could not be triggered.",
+    status_code=status.HTTP_204_NO_CONTENT,
+)
+async def cancel_operation(
+    operation_id: str,
+    token: AccessToken = Depends(get_access_token),
+    bus: MessageBus = Depends(message_bus),
+):
+    """
+    Used to decline/cancel a legacy operation
+    """
+    cmd = cmds.CancelRelease(by_user=token.subject, aggregate_id=operation_id)
     try:
         bus.handle(cmd)
     except UserNotAllowedException:

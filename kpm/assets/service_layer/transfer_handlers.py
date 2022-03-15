@@ -124,7 +124,7 @@ def trigger_release(
                 "There are receivers not part of your contacts and "
                 "thus we could not deliver to them."
             )
-            rel.cancel(reason=reason)
+            rel.cancel(by="keepem", reason=reason)
             uow.repo.put(rel)
             uow.commit()
         else:
@@ -138,9 +138,17 @@ def cancel_release(
     cmd: cmds.CancelRelease, assetrelease_uow: AbstractUnitOfWork
 ):
     """ """
+    user = UserId(id=cmd.by_user)
+
     with assetrelease_uow as uow:
         rel: model.AssetRelease = uow.repo.get(DomainId(cmd.aggregate_id))
-        rel.cancel()
+
+        user_can_trigger = user == rel.owner or user in rel.receivers
+        if not user_can_trigger:
+            raise kpm.shared.domain.model.UserNotAllowedException(
+                "User is not in the receivers list."
+            )
+        rel.cancel(mod_ts=cmd.timestamp, by=cmd.by_user)
         uow.repo.put(rel)
         uow.commit()
 

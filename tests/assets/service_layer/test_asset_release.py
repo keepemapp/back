@@ -213,7 +213,7 @@ class TestAssetReleaseVisibility:
         owner = release.owner
 
         # When
-        bus.handle(CancelRelease(aggregate_id=release_id.id))
+        bus.handle(CancelRelease(aggregate_id=release_id.id, by_user=owner.id))
 
         # Then
         with bus.uows.get(model.Asset) as uow:
@@ -497,7 +497,7 @@ class TestAssetReleaseVisibility:
         )
         time.sleep(0.005)
         canceled = events.AssetReleaseCanceled(
-            aggregate_id=release_id, assets=[asset_id]
+            aggregate_id=release_id, assets=[asset_id], by=owner
         )
 
         history = [

@@ -103,6 +103,7 @@ class TriggerRelease(Command):
 @dataclass(frozen=True)
 class CancelRelease(Command):
     aggregate_id: str = required_field()  # type: ignore
+    by_user: str = required_field()  # type: ignore
 
 
 @dataclass(frozen=True)

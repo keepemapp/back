@@ -10,6 +10,8 @@ from tests.assets.utils import bus
 
 ADMIN_TOKEN = AccessToken(subject="adminid", scopes=["user", "admin"])
 USER_TOKEN = AccessToken(subject="uid", scopes=["user"])
+USER2_TOKEN = AccessToken(subject="uid2", scopes=["user"])
+ATTACKER_TOKEN = AccessToken(subject="attacker", scopes=["user", "admin"])
 
 
 @pytest.fixture

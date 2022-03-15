@@ -249,6 +249,7 @@ class AssetRelease(RootAggregate):
     release_type: str = required_field()  # type: ignore
     bequest_type: BequestType = required_field()  # type: ignore
     id: DomainId = field(default_factory=lambda: init_id(DomainId))
+    canceled_by: Optional[str] = field(default=None)
 
     def __post_init__(self, loaded_from_db: bool):
         self._assert_conditions_compatibility()
@@ -303,15 +304,17 @@ class AssetRelease(RootAggregate):
             )
         )
 
-    def cancel(self, mod_ts: Optional[int] = None, reason: str = None):
+    def cancel(self, by: str, mod_ts: Optional[int] = None, reason: str = None):
         """Cancels the event."""
         if not mod_ts:
             mod_ts = now_utc_millis()
+        self._update_field(mod_ts, "canceled_by", by)
         self._update_field(mod_ts, "state", RootAggState.REMOVED)
         self.events.append(
             AssetReleaseCanceled(
                 aggregate_id=self.id.id,
                 timestamp=mod_ts,
+                by=by,
                 assets=[a.id for a in self.assets],
                 reason=reason,
             )

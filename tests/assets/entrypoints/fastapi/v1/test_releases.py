@@ -18,10 +18,9 @@ from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.entrypoints.fastapi.v1.fixtures import (
     ADMIN_TOKEN,
-    USER_TOKEN,
+    USER2_TOKEN, USER_TOKEN, ATTACKER_TOKEN
 )
 from tests.assets.utils import bus
-from tests.users.entrypoints.fastapi import ATTACKER_TOKEN
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).prefix
 
@@ -31,7 +30,7 @@ ASSET_ID3 = "assetId3"
 ASSET_ID4 = "assetId4"
 ASSET_ID5 = "assetId5"
 OWNER1 = USER_TOKEN.subject
-OWNER2 = "OWNER2"
+OWNER2 = USER2_TOKEN.subject
 
 PAST_TS = from_now_ms(days=-3)
 FUTURE_TS = from_now_ms(days=20)
@@ -112,7 +111,7 @@ class TestReleases:
                 owner=OWNER2,
                 receivers=[OWNER1],
             ),
-            cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id),
+            cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id, by_user=to_cancel.owner),
             to_trigger,
             cmds.TriggerRelease(
                 by_user=to_trigger.owner, aggregate_id=to_trigger.aggregate_id
@@ -293,10 +292,7 @@ class TestTrigger:
             assert rs[0].name == "note"
             assert rs[0].assets == [AssetId(ASSET_ID1)]
         # When triggering
-        payload = schema.ReleaseTrigger(
-            aggregate_id=ID,
-            geo_location=cond["guess"],
-        )
+        payload = schema.ReleaseTrigger(geo_location=cond["guess"])
         response = client.post(
             s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
@@ -350,10 +346,7 @@ class TestTrigger:
             assert rs[0].name == "note"
             assert rs[0].assets == [AssetId(ASSET_ID1)]
         # When triggering
-        payload = schema.ReleaseTrigger(
-            aggregate_id=ID,
-            geo_location=cond["guess"],
-        )
+        payload = schema.ReleaseTrigger(geo_location=cond["guess"])
         response = client.post(
             s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
@@ -402,9 +395,7 @@ class TestTrigger:
             assert rs[0].name == "note"
             assert rs[0].assets == [AssetId(ASSET_ID1)]
 
-        payload = schema.ReleaseTrigger(
-            aggregate_id=ID,
-        )
+        payload = schema.ReleaseTrigger()
         response = client.post(
             s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
@@ -449,9 +440,7 @@ class TestTrigger:
             bus.handle(msg)
         client = self.client(bus, token=cond["auth_tok"])
         # When
-        payload = schema.ReleaseTrigger(
-            aggregate_id=ID,
-        )
+        payload = schema.ReleaseTrigger()
         response = client.post(
             s.API_V1.concat(s.API_LEGACY, ID, "trigger").path(),
             json=payload.dict(),
@@ -464,6 +453,50 @@ class TestTrigger:
             is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
 
+
+    @pytest.mark.parametrize(
+        "cond",
+        [
+            {"receivers": [OWNER1], "auth_tok": USER_TOKEN, "r_code": 204},
+            {
+                "receivers": [OWNER1, ADMIN_TOKEN.subject],
+                "auth_tok": ADMIN_TOKEN,
+                "r_code": 204,
+            },
+            {"receivers": [OWNER1], "auth_tok": USER2_TOKEN, "r_code": 204},
+            {"receivers": [OWNER1], "auth_tok": ADMIN_TOKEN, "r_code": 403},
+            {"receivers": [OWNER1], "auth_tok": ATTACKER_TOKEN, "r_code": 403},
+        ],
+    )
+    def test_declined(self, bus, create_asset_cmd, cond):
+        # Given
+        ID = "to_decline"
+        setup = [
+            dc.replace(
+                create_asset_cmd, asset_id=ASSET_ID1, owners_id=[OWNER2]
+            ),
+            cmds.CreateTransfer(
+                aggregate_id=ID,
+                assets=[ASSET_ID1],
+                name="note",
+                owner=OWNER2,
+                receivers=cond["receivers"],
+            ),
+        ]
+        for msg in setup:
+            bus.handle(msg)
+        client = self.client(bus, token=cond["auth_tok"])
+        # When
+        response = client.delete(
+            s.API_V1.concat(s.API_LEGACY, ID).path(),
+        )
+        # Then
+        assert response.status_code == cond["r_code"]
+        with bus.uows.get(AssetRelease) as uow:
+            r = uow.repo.get(DomainId(id=ID))
+            assert r
+            is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
+            assert r.is_past() == is_past
 
 @pytest.mark.unit
 class TestAssetReleasesTypes:

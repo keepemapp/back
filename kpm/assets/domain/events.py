@@ -24,6 +24,7 @@ class AssetReleaseScheduled(Event):
 @dataclass(frozen=True)
 class AssetReleaseCanceled(Event):
     eventType: str = "AssetReleaseCanceled"
+    by: str = required_field()  # type: ignore
     assets: List[str] = required_field()  # type: ignore
     reason: Optional[str] = None
 
