@@ -1,3 +1,4 @@
+import copy
 from typing import Dict, List
 
 from fastapi import Depends
@@ -26,8 +27,12 @@ from kpm.users.service_layer import EVENT_HANDLERS as u_evs
 def _append_event_handlers(
     handler1: Dict[Event, List], handler2: Dict[Event, List]
 ) -> Dict[Event, List]:
-    """Merges event handlers by appending values"""
-    res = handler1.copy()
+    """Merges event handlers by appending values
+
+    TODO we should cache this call. Since it gets executed every request
+    lru_cache does not accept dictionaries though
+    """
+    res = copy.deepcopy(handler1)
     for key, value in handler2.items():
         if key in res:
             res[key].extend(value)
