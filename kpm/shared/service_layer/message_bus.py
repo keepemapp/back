@@ -27,7 +27,6 @@ class UoWs(Dict[Type[RootAggregate], AbstractUnitOfWork]):
         res = []
         for uow in self.values():
             res.extend(uow.collect_new_events())
-        logger.debug(f"New events added {res}")
         return res
 
     def as_dependencies(self) -> Dict[str, AbstractUnitOfWork]:
@@ -74,6 +73,7 @@ class MessageBus:
                 raise Exception(f"{message} was not an Event or Command")
 
     def handle_event(self, event: Event) -> None:
+        logger.debug(self.event_handlers[type(event)])
         for handler in self.event_handlers[type(event)]:
             try:
                 logger.debug(
@@ -98,7 +98,6 @@ class MessageBus:
             )
             handler(command)
             self.queue.extend(self.uows.collect_new_events())
-            logger.debug(f"Extended queue to {self.queue}")
         except Exception as e:
             logger.exception('{"command":"%s"}', command)
             raise e
