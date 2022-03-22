@@ -82,7 +82,7 @@ Has entès de què va?""",
                     order=5,
                     question={
                         "en": "Do you want to tell us something else?",
-                        "ca": "Vols fir-nos alguna cosa més?",
+                        "ca": "Vols dir-nos alguna cosa més?",
                         "es": "¿Quieres añadir algún comentario más?",
                     },
                 ),
