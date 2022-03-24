@@ -180,7 +180,7 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         if owner:
             find_dict["owner"] = owner
         if receiver:
-            find_dict["receiver"] = receiver
+            find_dict["receivers"] = receiver
         if extra_conditions:
             find_dict.update(extra_conditions)
         if pending is not None:
