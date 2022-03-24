@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from tempfile import TemporaryFile
 from typing import List, Optional, Set
 
@@ -140,7 +140,7 @@ class AssetReleaseRepository(DomainRepository):
         raise NotImplementedError
 
 
-class AssetFileRepository:
+class AssetFileRepository(ABC):
     @abstractmethod
     def create(self, location: str, file: TemporaryFile):
         raise NotImplementedError
@@ -151,4 +151,24 @@ class AssetFileRepository:
 
     @abstractmethod
     def get(self, location: str) -> TemporaryFile:
+        raise NotImplementedError
+
+
+class EncryptedAssetFileRepository:
+    def create(self, location: str, file: TemporaryFile):
+        raise NotImplementedError
+
+    @abstractmethod
+    def _create(self, location: str, file: TemporaryFile):
+        raise NotImplementedError
+
+    @abstractmethod
+    def delete(self, location: str):
+        raise NotImplementedError
+
+    def get(self, location: str) -> TemporaryFile:
+        raise NotImplementedError
+
+    @abstractmethod
+    def _get(self, location: str) -> TemporaryFile:
         raise NotImplementedError

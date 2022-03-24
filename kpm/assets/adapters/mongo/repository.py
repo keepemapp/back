@@ -154,7 +154,8 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         self._seen.add(release)
 
     def exists(self, owner: UserId, name: str) -> bool:
-        find_dict = {"owner": owner.id, "name": name}
+        find_dict = {"owner": owner.id, "name": name, "state": {"$not":
+                      {"$in": [st.value for st in FINAL_STATES]}}}
         return self._legacy.count_documents(find_dict) > 0
 
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:

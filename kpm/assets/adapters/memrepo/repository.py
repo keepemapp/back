@@ -14,7 +14,7 @@ from kpm.assets.domain.repositories import (
 )
 from kpm.settings import settings
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.model import AssetId, FINAL_STATES, UserId
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, Set[AssetId]]
@@ -186,7 +186,7 @@ class MemPersistedReleaseRepo(AssetReleaseRepository):
 
     def exists(self, owner: UserId, name: str) -> bool:
         for r in self.all():
-            if r.owner == owner and r.name == name:
+            if r.owner == owner and r.name == name and r.state not in FINAL_STATES:
                 return True
         return False
 
