@@ -1,3 +1,4 @@
+import hashlib
 import pathlib
 from os.path import join
 from typing import List
@@ -302,6 +303,10 @@ class TestUploadAsset:
 
     def test_upload(self, client_w_asset):
         client, upload_loc = client_w_asset()
+        hasher = hashlib.md5()
+        with open(self.GOOD_ASSET, "rb") as f:
+            hasher.update(f.read())
+            original_file_hash = hasher.hexdigest()
         # Uploading a file
         with open(self.GOOD_ASSET, "rb") as f:
             upload = client.post(upload_loc, files={"file": f})
@@ -311,8 +316,13 @@ class TestUploadAsset:
         # Test file retrieved is the same
         res = client.get(s.API_V1.concat(upload.headers["location"]).path())
         assert res.status_code == 200
+
+        hasher = hashlib.md5()
         with open(self.GOOD_ASSET, "rb") as f:
-            assert f.read() == res._content
+            result_bytes = res._content
+            hasher.update(result_bytes)
+            assert f.read() == result_bytes
+            assert hasher.hexdigest() == original_file_hash
 
         # Test asset state was correctly updated
         asset_id = "/".join(upload_loc.split("/")[:5])

@@ -15,6 +15,35 @@ Backend in python
 6. Before committing execute `make precommit` (runs formatting, linting, test and clean)
 
 
+Create now a file named `.env` inside the kpm folder containing at least the following values:
+
+```
+# Generate with 
+# openssl rand -hex 32
+JWT_SECRET_KEY=
+
+# If needed
+EMAIL_SENDER_ADDRESS=
+EMAIL_SENDER_PASSWORD=
+EMAIL_SMTP_SERVER=mail.8vi.cat
+
+ASSET_S3_BUCKE=kpm-dev
+ASSET_S3_ACCESS=
+ASSET_S3_SECRET= 
+
+
+# Generate it with python 
+# import base64
+# from Crypto.Random import get_random_bytes
+# kek_bytes = get_random_bytes(32)
+# kek = base64.b64encode(kek_bytes).decode('utf-8')
+# print("DATA_KEY_ENCRYPTION_KEY=", kek)
+DATA_KEY_ENCRYPTION_KEY=
+```
+
+**NOTE**: If you are running the tests in windows, you might need to set-up those 
+as environment variables. 
+
 ## 🗄️ Understanding the repo organization
 
 

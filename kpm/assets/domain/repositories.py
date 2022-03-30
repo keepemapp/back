@@ -5,9 +5,11 @@ from tempfile import TemporaryFile
 from typing import List, Optional, Set
 
 from kpm.assets.domain.model import Asset, AssetRelease
+from kpm.settings import settings as s
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.repository import DomainRepository
+from kpm.shared.security.chacha20poly import ChaCha20PolyFileCypher
 
 
 class AssetRepository(DomainRepository):
@@ -142,7 +144,7 @@ class AssetReleaseRepository(DomainRepository):
 
 class AssetFileRepository(ABC):
     @abstractmethod
-    def create(self, location: str, file: TemporaryFile):
+    def create(self, location: str, file: TemporaryFile, **kwargs):
         raise NotImplementedError
 
     @abstractmethod
@@ -150,13 +152,33 @@ class AssetFileRepository(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def get(self, location: str) -> TemporaryFile:
+    def get(self, location: str, **kwargs) -> TemporaryFile:
         raise NotImplementedError
 
 
-class EncryptedAssetFileRepository:
-    def create(self, location: str, file: TemporaryFile):
-        raise NotImplementedError
+class EncryptedAssetFileRepository(AssetFileRepository):
+    def create(
+        self,
+        location: str,
+        file: TemporaryFile,
+        encryption_type: str,
+        encryption_key: str,
+        **kwargs,
+    ):
+        try:  # Handle fastapi Async files
+            file = file.file
+        except Exception:
+            pass
+        if encryption_type == "ChaCha20PolyFileCypher":
+            cipher = ChaCha20PolyFileCypher(
+                encryption_key, s.DATA_KEY_ENCRYPTION_KEY
+            )
+            enc = TemporaryFile("br+")
+            cipher.encrypt(file, enc)
+            file.close()
+        else:
+            raise EnvironmentError("Encryption algorithm not found")
+        self._create(location, enc)
 
     @abstractmethod
     def _create(self, location: str, file: TemporaryFile):
@@ -166,8 +188,23 @@ class EncryptedAssetFileRepository:
     def delete(self, location: str):
         raise NotImplementedError
 
-    def get(self, location: str) -> TemporaryFile:
-        raise NotImplementedError
+    def get(
+        self, location: str, encryption_type, encryption_key, **kwargs
+    ) -> TemporaryFile:
+        remote_file = self._get(location)
+        if encryption_type == "ChaCha20PolyFileCypher":
+            cipher = ChaCha20PolyFileCypher(
+                encryption_key, s.DATA_KEY_ENCRYPTION_KEY
+            )
+            plain = TemporaryFile("br+")
+            cipher.decrypt(remote_file, plain)
+            remote_file.close()
+            plain.seek(0)
+            return plain
+        elif not encryption_type:
+            return remote_file
+        else:
+            raise EnvironmentError("Encryption algorithm not found")
 
     @abstractmethod
     def _get(self, location: str) -> TemporaryFile:

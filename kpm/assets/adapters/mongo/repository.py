@@ -66,7 +66,7 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         if isinstance(bookmarked, bool):
             find_dict["bookmarked"] = bookmarked
 
-        logger.info(f"Mongo query filters {find_dict}")
+        logger.debug(f"Mongo query filters {find_dict}")
         resps = self._assets.find(find_dict)
         if order_by:
             orval = (
@@ -76,7 +76,7 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.info(f"Mongo response count: {len(res)}")
+        logger.debug(f"Mongo response count: {len(res)}")
         return res
 
     @staticmethod
@@ -98,7 +98,7 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         return Asset(loaded_from_db=True, **bson)
 
     def create(self, asset: Asset) -> NoReturn:
-        logger.info(f"Creating asset with id '{asset.id.id}'")
+        logger.debug(f"Creating asset with id '{asset.id.id}'")
         if self._assets.find_one({"_id": asset.id.id}):
             raise DuplicatedAssetException()
         self._insert(self._assets, self._to_bson(asset))
@@ -106,7 +106,7 @@ class AssetMongoRepo(MongoBase, AssetRepository):
 
     def update(self, asset: Asset) -> None:
         bson = self._to_bson(asset)
-        logger.info(f"Updating asset with id '{asset.id.id}'")
+        logger.debug(f"Updating asset with id '{asset.id.id}'")
         self._update(self._assets, {"_id": bson["_id"]}, bson)
         self._seen.add(asset)
 
@@ -154,8 +154,11 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         self._seen.add(release)
 
     def exists(self, owner: UserId, name: str) -> bool:
-        find_dict = {"owner": owner.id, "name": name, "state": {"$not":
-                      {"$in": [st.value for st in FINAL_STATES]}}}
+        find_dict = {
+            "owner": owner.id,
+            "name": name,
+            "state": {"$not": {"$in": [st.value for st in FINAL_STATES]}},
+        }
         return self._legacy.count_documents(find_dict) > 0
 
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
@@ -188,14 +191,12 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
             if pending:
                 find_dict["state"] = RootAggState.ACTIVE.value
             else:
-                find_dict["state"] = {
-                    "$in": [st.value for st in FINAL_STATES]
-                }
+                find_dict["state"] = {"$in": [st.value for st in FINAL_STATES]}
 
-        logger.info(f"Mongo query filters {find_dict}")
+        logger.debug(f"Mongo query filters {find_dict}")
         resps = self._legacy.find(find_dict)
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.info(f"Mongo response count: {len(res)}")
+        logger.debug(f"Mongo response count: {len(res)}")
         return res

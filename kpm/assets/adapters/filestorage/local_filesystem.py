@@ -22,7 +22,7 @@ class AssetFileLocalRepository(AssetFileRepository):
     def location_to_list(location: str):
         return location.split("/") if "/" in location else location.split("\\")
 
-    async def create(self, location: str, file: TemporaryFile):
+    async def create(self, location: str, file: TemporaryFile, **kwargs):
         loc_split = self.location_to_list(location)
         base_path = Path(self._base_path, loc_split[0])
         base_path.mkdir(exist_ok=True)
@@ -37,8 +37,7 @@ class AssetFileLocalRepository(AssetFileRepository):
         if os.path.exists(file_path):
             os.remove(file_path)
 
-    def get(self, location: str):
+    def get(self, location: str, **kwargs):
         loc_split = self.location_to_list(location)
         file_path = os.path.join(self._base_path, *loc_split)
-        # FIXME this is wrong. We should not depend on FASTAPI magic
-        return file_path
+        return open(file_path, "rb")

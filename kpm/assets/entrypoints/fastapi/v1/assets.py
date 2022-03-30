@@ -1,15 +1,18 @@
+import inspect
 from datetime import timedelta
 from typing import Dict
 
 from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from fastapi.params import Query
-from fastapi.responses import FileResponse, RedirectResponse
+from fastapi.responses import RedirectResponse
 from fastapi_pagination import Page, Params, paginate
 from jose import JWTError
+from starlette.responses import StreamingResponse
 
 import kpm.assets.domain.commands as cmds
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.adapters.filestorage import AssetFileLocalRepository
+from kpm.assets.domain.repositories import AssetFileRepository
 from kpm.assets.entrypoints.fastapi.dependencies import asset_file_repository
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetCreate,
@@ -149,13 +152,20 @@ async def add_asset_file(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File names does not match",
         )
-    # TODO when we go with encrypted files, content_type will be different
+    # TODO when we go with e2e encryption, content_type will be different
     if a["file_type"] != file.content_type:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="File type does not match",
         )
-    await file_repo.create(a["file_location"], file)
+    create_file = file_repo.create(
+        a["file_location"],
+        file,
+        encryption_type=a.get("file_encryption_type"),
+        encryption_key=a.get("file_encryption_key"),
+    )
+    if inspect.iscoroutinefunction(create_file):
+        await create_file
     bus.handle(cmds.UploadAssetFile(asset_id=asset_id))
     return RedirectResponse(
         url=router.url_path_for("get_asset_file", asset_id=asset_id),
@@ -297,7 +307,7 @@ async def get_asset_file(
     asset_id: str,
     token: AccessToken = Depends(get_access_token),
     bus: MessageBus = Depends(message_bus),
-    file_repo: AssetFileLocalRepository = Depends(asset_file_repository),
+    file_repo: AssetFileRepository = Depends(asset_file_repository),
     views=Depends(asset_view),
 ):
     """Returns the asset's binary file"""
@@ -305,8 +315,18 @@ async def get_asset_file(
     if a:
         # TODO when we go with encrypted files, media_type will be different
         try:
-            return FileResponse(
-                file_repo.get(a["file_location"]),
+
+            def iter_response():
+                f = file_repo.get(
+                    a["file_location"],
+                    encryption_type=a.get("file_encryption_type"),
+                    encryption_key=a.get("file_encryption_key"),
+                )
+                yield from f
+                f.close()
+
+            return StreamingResponse(
+                iter_response(),
                 media_type=a["file_type"],
                 headers={
                     "Cache-Control": "private, max-age=2592000, immutable"

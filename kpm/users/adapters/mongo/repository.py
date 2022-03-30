@@ -23,14 +23,14 @@ class UserMongoRepo(MongoBase, UserRepository):
 
     def all(self) -> List[User]:
         find_dict = {}
-        logger.info(f"Mongo query filters {find_dict}")
+        logger.debug(f"Mongo query filters {find_dict}")
         resps = self._coll.find(find_dict)
         users = []
         for a in resps:
             u = self._from_bson(a)
             if u:
                 users.append(u)
-        logger.info(f"Mongo response count: {len(users)}")
+        logger.debug(f"Mongo response count: {len(users)}")
         return users
 
     def get(self, uid: UserId) -> Optional[User]:
@@ -73,7 +73,7 @@ class UserMongoRepo(MongoBase, UserRepository):
         return self._coll.count_documents({"username": username}) != 0
 
     def create(self, user: User):
-        logger.info(f"Creating user with id '{user.id.id}'")
+        logger.debug(f"Creating user with id '{user.id.id}'")
         self._insert(self._coll, self._to_bson(user))
         self._seen.add(user)
 

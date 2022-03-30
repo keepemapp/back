@@ -1,4 +1,3 @@
-from dataclasses import field
 from typing import Dict, List, Union
 
 from pydantic import BaseModel
@@ -46,8 +45,9 @@ class FeedbackQuestionResponse(BaseModel):
 
     class Config:
         schema_extra = {
-            "example": {"form_id": "s3d233-23sl-2coso23",
-                        "question_id": "s2l9",
-                        "response": "Can be string, int or boolean"}
-
+            "example": {
+                "form_id": "s3d233-23sl-2coso23",
+                "question_id": "s2l9",
+                "response": "Can be string, int or boolean",
+            }
         }

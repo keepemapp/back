@@ -106,8 +106,8 @@ Has entès de què va?""",
                         "es": "Por favor, describa qué ha pasado y qué acciones has hecho para que podamos revisarlo más facilmente.",  # noqa:E501
                     },
                 ),
-            ]
-        )
+            ],
+        ),
     ]
 
     return paginate(forms, paginate_params)
@@ -122,8 +122,14 @@ async def add_feedback_responses(
         with mongo_client() as client:
             col = client.users.feedback_response
             col.insert_many(
-                [{"user": token.subject, "created_ts": now_utc_millis(),
-                  **r.dict()} for r in responses]
+                [
+                    {
+                        "user": token.subject,
+                        "created_ts": now_utc_millis(),
+                        **r.dict(),
+                    }
+                    for r in responses
+                ]
             )
     else:
         pass

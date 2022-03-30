@@ -40,6 +40,7 @@ typecheck:
 
 .PHONY: test-only
 test-only:
+	source kpm/.env
 	$(BIN)/pytest -n 8
 
 .PHONY: test

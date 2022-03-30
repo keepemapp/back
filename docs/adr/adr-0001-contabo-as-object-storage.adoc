@@ -1,12 +1,12 @@
-= Use SeaweedFS as the main distributed file system
+= Use Contabo Object Storage as the main distributed file system
 :author: Marti Segarra Casas <marti@keepem.app>
 
 
-=== Prologue (Summary)
+== Prologue (Summary)
 
 Part of the services we are offering consist of storing files in a secure and potentially massive scale. We will write the files once and as of now, they will not have to change, so the access pattern will be write once and read 0-10 times a month.
 
-=== Discussion (Context)
+== Discussion (Context)
 
 There are several options available in the market for object/blob storage,
 and given the huge popularity of the s3 standard,
@@ -16,13 +16,14 @@ It’s important those files are stored encrypted.
 [options="header, footer"]
 .Comparison matrix
 |===
-|&nbsp; |MinIO |seaweedfs |S3 |Ceph |GlusterFS
+|&nbsp; |MinIO |seaweedfs |S3 |Ceph |GlusterFS|Contabo OO
 |Not only SaaS
 |Yes
 |Yes
 |No
 |Yes
 |Yes
+|No
 
 |S3 standard API
 |100%
@@ -30,6 +31,7 @@ It’s important those files are stored encrypted.
 |100%
 |0%
 |0%
+|90%
 
 |Encryption at Rest
 |https://docs.min.io/docs/minio-security-overview.html[100%]
@@ -37,6 +39,7 @@ It’s important those files are stored encrypted.
 |100%
 |
 |https://github.com/gluster/glusterfs-specs/blob/master/done/GlusterFS%203.5/Disk%20Encryption.md[99%] volume level
+|No
 
 |Encryption transit
 |https://docs.min.io/docs/how-to-secure-access-to-minio-server-with-tls.html[90%]
@@ -44,6 +47,7 @@ It’s important those files are stored encrypted.
 |100%
 |&nbsp;
 |https://www.cyberciti.biz/faq/how-to-enable-tlsssl-encryption-with-glusterfs-storage-cluster-on-linux/[100%]
+|Yes
 
 |Access auth
 |https://docs.min.io/minio/baremetal/security/minio-identity-management/basic-authentication-with-minio-identity-provider.html[90%]
@@ -51,10 +55,12 @@ It’s important those files are stored encrypted.
 |100%
 |&nbsp;
 |&nbsp;
+|80%
 
 |Replication(dedundancy) 2-3
 |https://blog.min.io/configurable-data-and-parity-drives-on-minio-server/[100%] parity blocks
 |https://github.com/chrislusf/seaweedfs/wiki/Replication[100%] configurable, rack and dc aware for HOT and parity for warm
+|100%
 |100%
 |100%
 |100%
@@ -65,6 +71,7 @@ It’s important those files are stored encrypted.
 |10%
 |https://storware.eu/blog/backup-strategies-for-ceph/[50%]
 |No
+|10% (manual scripts)
 
 |Commodity Hardware
 |100% (JABOD)
@@ -72,6 +79,7 @@ It’s important those files are stored encrypted.
 |N/A
 |&nbsp;
 |Fast network required
+|N/A
 
 |Horizontal scaling
 |90%
@@ -79,6 +87,7 @@ It’s important those files are stored encrypted.
 |100%
 |&nbsp;
 |https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/16.0/html/deploying_an_overcloud_with_containerized_red_hat_ceph/scaling_the_ceph_storage_cluster[90%] lots of manual tasks
+|100%
 
 |Free
 |No
@@ -86,13 +95,15 @@ It’s important those files are stored encrypted.
 |No
 |Yes
 |Yes?
+|No
 
 |Subscr. Price
-|$10 per TiB per Month
+|$10 per TiB per Month + hardware
 |&nbsp;
-|$25/month + network costs
+|$25/TB/month + network costs
 |&nbsp;
 |&nbsp;
+|10€/TB/month
 
 |Community
 |Good
@@ -100,6 +111,7 @@ It’s important those files are stored encrypted.
 |Excellent
 |Excellent
 |Good
+|Non existing
 
 |Maturity
 |Good
@@ -107,6 +119,7 @@ It’s important those files are stored encrypted.
 |Good
 |Excellent
 |Excellent
+|???
 
 |Comments
 |Bad for small files
@@ -116,74 +129,51 @@ It’s important those files are stored encrypted.
 a|https://www.ionos.com/digitalguide/server/know-how/glusterfs-vs-ceph/[Complex]
 Designed for posix storage
 Fast network required
+|Don't require maintenance
 |===
 
-=== Decision
-
-Since we want to have control of our own storage, we will not use S3 or
-any SaaS solution for now.
+== Decision
 
 Our current access pattern uses keys to store and retrieve the files,
-so any object storage would suffice and we do not need POSIX storage.
+so any object storage would suffice, and we do not need POSIX storage.
 Since we are the only ones reading and writing to the storage
 (auth happens in the API as of now), we only require simple authorization to put and read objects.
 
-Furthermore it would be ideal to use an s3 compatible API,
+Furthermore, it would be ideal to use an s3 compatible API,
 which means *Cepth and GlusterFS are not an option*.
 
-Given that we expect many small files (< 3MB),
-the cost of MinIO and the easiness of backup,
-*we decide to use seaweedFS* as our main file storage.
+This leaves us with S3, Contabo and seaweedFS and we can focus mainly on cost.
+While AWS s3 may be cheaper than other solutions, its cost for each TB moved out
+of AWS brings a big extra to the bill.
+And comparing seaweedFS, where we would need to rent and operate servers, and
+contabo object storage, it is not work it for our scale to operate and maintain
+servers if there is a good enough price/storage product.
 
-Additionally, SeaweedFS uses replication is for hot data and
-erasure coding is for warm data (reducing storage cost).
-Although mitigation actions when loosing a node do not happen automatically,
-they can be automated via cron job.
-Another good point in favor of Seaweed is that the set-up and
-administration is one of the simplest across the distributed fs space.
+So we will use Contabo Object Storage.
 
-> We are running SeaweedFS successfully in production for a few years.
-> We are serving and storing mostly user-uploaded images (around 100TB).
-> It works surprisingly stable and the maintainer is usually responsive when we encounter issues.
-> We are slowly approaching 100 seaweed nodesRemoving and adding volume servers is pretty simple.
->
-> You can manually fix replication via a cli command after adding/removing a node
-> -- https://news.ycombinator.com/item?id=24729873
 
-> We've been running SeaweedFS in production serving images and other small files. We're not using Filer functionality just the underlying volume storage. We wrote our own asynchronous replication on top of the volume servers since we couldn't rely on synchronous replication across datacenters. The maintainer is super responsive and is quick to review our PRs. Happy to answer any questions.
-> -- https://news.ycombinator.com/item?id=24730368
-
-> From a user who worked in Apple as a contractor, they have used SeaweedFS object storage to store build artifacts, grown to about 200 nodes. There are a few other companies, but not as famous as Apple. :)
-> -- https://news.ycombinator.com/item?id=24731510
-
-> In DiDi, it has been storing and serving 10 billions of files.
-> -- https://news.ycombinator.com/item?id=24736445
-
+NOTE: While we were inclined to use SeaweedFS, we changed the decision
+due to a lower cost of operation and maintenance, since we do not require
+now any extra hardware to operate it.
 
 == Consequences (Results)
 
 [none]
 .Positive
-* + Architecture based on Facebook’s HayStack
-* + Handles well many files
-* + Easy backup to s3 glacier or to local offline storage
-* + Files stored can be easily encrypted (one key per file)
-* + Works well with HDD and is SSD friendly
-* + Erasing a file is as simple as removing the encryption key. Can leave compaction for later and avoid costs in backups
-* + Easy set-up and admin
+* + No operating cost apart from the storage
+* + One of the cheapest on the market
 
 [none]
 .Neutral
-* ~ We could use the native API if its simple
-* ~ We will need to rent and administer underlying servers
+* ~ Based on Ceph
+* ~ Soft limit of 25TB
+* ~ Only available in EU as of now
 
 [none]
 .Negative
-* - We will have to implement firewalls to only allow access from our machines
-* - Not a big community, but the main developer is very involved
-* - No automatic repair right away if replica is missing!!!!! → *Need to be automated via cron job in each master server*
-* - Need for external metastore for filler service (but it’s portable). Default filer store would be enough for millions of files
-
+* - We have to implement file encryption at app level
+* - Contabo it's not as big as AWS, although they have been around dor at least 10 years
+* - Stability and response time of it is unknown
 
 
 NOTE: This decision can be revisited when seaweedfs does not fit our operative requirements and due to market innovations

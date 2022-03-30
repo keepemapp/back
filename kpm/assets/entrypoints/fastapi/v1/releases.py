@@ -267,8 +267,9 @@ async def trigger_legacy_operation(
     * Matches the geographical location passed (lowecased string comparison)
     """
     payload = {k: v for k, v in create.__dict__.items() if v}
-    cmd = cmds.TriggerRelease(by_user=token.subject,
-                              aggregate_id=operation_id, **payload)
+    cmd = cmds.TriggerRelease(
+        by_user=token.subject, aggregate_id=operation_id, **payload
+    )
     try:
         bus.handle(cmd)
     except UserNotAllowedException:

@@ -94,7 +94,7 @@ class Asset(RootAggregate):
 
         """
         regex = r"^.{1,64}$"
-        return True if re.match(regex, name) else False
+        return True if re.match(regex, name.strip()) else False
 
     def __post_init__(self, loaded_from_db: bool):
         self._id_type_is_valid(AssetId)
@@ -304,7 +304,9 @@ class AssetRelease(RootAggregate):
             )
         )
 
-    def cancel(self, by: str, mod_ts: Optional[int] = None, reason: str = None):
+    def cancel(
+        self, by: str, mod_ts: Optional[int] = None, reason: str = None
+    ):
         """Cancels the event."""
         if not mod_ts:
             mod_ts = now_utc_millis()

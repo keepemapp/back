@@ -1,5 +1,6 @@
 from dataclasses import asdict, field
 from datetime import timedelta
+from functools import lru_cache
 from os import path
 from typing import List, Union
 
@@ -68,7 +69,7 @@ class Settings(BaseSettings):
 
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
 
-    JWT_ACCESS_EXPIRE_TIME: timedelta = timedelta(minutes=15)
+    JWT_ACCESS_EXPIRE_TIME: timedelta = timedelta(minutes=15, days=19)
     JWT_REFRESH_EXPIRE_TIME: timedelta = timedelta(days=60)
     # openssl rand -hex 32
     JWT_SECRET_KEY = (
@@ -94,11 +95,19 @@ class Settings(BaseSettings):
 
     ASSET_S3_URL: str = "https://eu2.contabostorage.com"
     ASSET_S3_BUCKET: str = "kpm-dev"
-    ASSET_S3_ACCESS: str = None
-    ASSET_S3_SECRET: str = None
+    ASSET_S3_ACCESS: str
+    ASSET_S3_SECRET: str
+
+    # DEVELOPMENT PURPOSES ONLY
+    DATA_KEY_ENCRYPTION_KEY: str
 
     class Config:
         env_file = ".env"
 
 
-settings = Settings()
+@lru_cache
+def get_settings():
+    return Settings()
+
+
+settings = get_settings()

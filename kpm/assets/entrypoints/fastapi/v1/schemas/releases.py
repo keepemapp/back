@@ -99,6 +99,7 @@ class ReleaseConditions(BaseModel):
 class ReleaseTrigger(BaseModel):
     """Optional field for the geographical conditions.
     Compares lowercase and without spaces"""
+
     geo_location: Optional[str] = None
 
 

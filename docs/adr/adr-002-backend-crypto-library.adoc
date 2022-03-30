@@ -1,0 +1,142 @@
+= Use pyCryptodome package as main crypto package in the backend
+
+
+== Prologue (Summary)
+Before saving the files from our customers to the storage we need to encrypt them with state of the art cryptography. Those files can be *very big*, and thus we need to careduly look for solutions not loading the entire file in memory. We also need to
+
+According to tink documentation:
+
+> If you need to encrypt live data streams or large files that don’t fit in memory, use the Streaming Authenticated Encryption with Associated Data (AEAD) primitive. Similar to AEAD, this primitive uses a single key for both encryption and decryption.
+
+== Discussion (Context)
+
+|===
+|Package|Pros|Cons
+
+|Cryptography
+a|* Most used
+a|* Complex and __"full of land mines, dragons, and dinosaurs with laser gun"__
+* Low level package
+* Requires complete message in memory
+
+|tink
+a|* FAST AF
+* Used and developed at google
+* Good documentation
+* Great examples on encrypting large files
+* Integrated with cloud Key Management Systems
+a|* Does not support windows
+* Seems to require writing output file to disk only
+
+|pyAesCrypt
+a|* Easy to use
+* Stream cypher available
+a|* Resulting file format (AES v2) has shortcomings
+* Not recommended anymore
+* An attacker with write access to the encrypted file may alter the corresponding plaintext file size by up to 15 bytes
+
+|pyCryptodome
+a|* Mid easy to use
+* AEAD ChaCha20-Poly1305 available
+* Examples on how to process large files
+a|* Not stream cypher
+* Manually create the resulting file bytes
+|===
+
+
+Speed comparison. Encryption and decryption time are similar so we just put one.
+Tests performed using AMD ryzen 5950K slightly overclocked.
+
+|===
+|Algorithm          |Package        |32MB   |250MB  |1GB    |8GB
+
+|AES256-CBC         |pyAesCrypt     |0.03s  |0.5s   |1.6s   |13s
+|ChaCha20-Poly1305  |pyCryptodome   |0.03s  |0.7s   |2.9s   |23.5s
+|Streaming AEAD     |tink           |0.03s  |0.5s   |1.5s   |9s
+|===
+
+=== Decision
+We will use pyCryptodome with cypher ChaCha20-Poly1305
+
+== Consequences
+
+
+[none]
+.Positive
+* + Our data storage partners will not have access to our user data since it will
+be stored encrypted
+* + No vulnerabilities found in CVE libraries
+* + Has a lot of different cryptographic features like hashes, Shamir's Secret Sharing...
+
+[none]
+.Neutral
+* ~ We will implement a way to know which algorithm was the file encrypted with,
+so we can implement new ones without modifying previous files
+* ~ We will revisit this decision once we have bigger and bigger files which take
+longer to encrypt
+
+[none]
+.Negative
+* - The slowest for large files
+
+
+== Resources
+
+.Cryptography package
+* https://cryptography.io/en/latest/hazmat/primitives/aead/#cryptography.hazmat.primitives.ciphers.aead.ChaCha20Poly1305
+* https://cryptography.io/en/latest/fernet/#limitations
+
+.pyAesCrypt package
+*  (overall algorithm) https://cryptopp.com/wiki/PyAEScrypt
+
+.Tink package
+* https://developers.google.com/tink/encrypt-large-files-or-data-streams
+* https://developers.google.com/tink/streaming-aead
+* https://developers.google.com/tink/generate-plaintext-keyset
+
+.pyCryptoDome
+* https://pycryptodome.readthedocs.io/en/latest/src/cipher/chacha20_poly1305.html?highlight=ChaCha20
+
+[source, python]
+----
+import io
+import base64
+import time
+from cryptography.fernet import Fernet
+from kpm.shared.security.aes256 import Aes256FileCypher
+from kpm.shared.security.chacha20poly import ChaCha20PolyFileCypher
+
+# Obtain Keys
+kek_bytes = Fernet.generate_key()
+kek = base64.b64encode(kek_bytes).decode('utf-8')
+
+def run_tests(cipher):
+    results = []
+    for power in (25, 28, 30, 33):
+        with io.BytesIO(b'0' * 2 ** power) as plain, io.BytesIO() as enc, io.BytesIO() as deciphered_io:
+            # Encrypting
+            size = plain.seek(0, io.SEEK_END)/1024/1024/1024
+            start_time = time.time()
+            cipher.encrypt(plain, enc)
+            encr_sec = time.time() - start_time
+            #print(enc.seek(0, io.SEEK_END)/1024/1024/1024, "GB (encripted)")
+            enc.seek(0)
+            # Decrypting
+            start_time = time.time()
+            cipher.decrypt(enc, deciphered_io)
+            decr_sec = time.time() - start_time
+            results.append({"size": size, "encr_s": encr_sec, "decr_s": decr_sec})
+    print(type(cipher).__name__)
+    print("Size\tEncr(s)\tDecr(s)")
+    for r in results:
+        print(f'{r["size"]:.3g}\t{r["encr_s"]:.2g}\t{r["decr_s"]:.2g}')
+
+data_key = Aes256FileCypher.generate_data_key(kek)
+aes_cipher = Aes256FileCypher(data_key, kek)
+run_tests(aes_cipher)
+
+data_key = ChaCha20PolyFileCypher.generate_data_key(kek)
+poly_cipher = ChaCha20PolyFileCypher(data_key, kek)
+run_tests(poly_cipher)
+
+----

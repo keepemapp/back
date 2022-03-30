@@ -1,6 +1,7 @@
 import inspect
 from typing import Callable, Dict, List, Type
 
+from kpm.settings import settings as s
 from kpm.shared.adapters.notifications import (
     AbstractNotifications,
     NoNotifications,
@@ -19,6 +20,9 @@ def bootstrap(
     command_handlers: CommandHandler,
     email_notifications: AbstractNotifications = NoNotifications(),
 ) -> MessageBus:
+    if not s.DATA_KEY_ENCRYPTION_KEY:
+        raise ValueError("DATA_KEY_ENCRYPTION_KEY setting cannot be empty")
+
     dependencies = {
         "email_notifications": email_notifications,
         **uows.as_dependencies(),

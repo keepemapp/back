@@ -7,8 +7,10 @@ import kpm.assets.domain.events as events
 from kpm.assets.domain.model import Asset, BequestType, FileData
 from kpm.assets.domain.repositories import AssetRepository
 from kpm.assets.service_layer.unit_of_work import AssetUoW
+from kpm.settings import settings as s
 from kpm.shared.domain.model import AssetId, RemovalNotPossible, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.shared.security.chacha20poly import ChaCha20PolyFileCypher
 from kpm.users.domain.events import UserRemoved
 
 
@@ -69,11 +71,16 @@ def create_asset(cmd: cmds.CreateAsset, asset_uow: AssetUoW):
     dic = asdict(cmd)
     dic["owners_id"] = [UserId(u) for u in dic.pop("owners_id")]
     dic["id"] = AssetId(dic.pop("asset_id"))
+
     dic["file"] = FileData(
         type=dic.pop("file_type"),
         name=dic.pop("file_name"),
         location=_compute_location(cmd.asset_id),
         size_bytes=dic.pop("file_size_bytes"),
+        encryption_type="ChaCha20PolyFileCypher",
+        encryption_key=ChaCha20PolyFileCypher.generate_data_key(
+            s.DATA_KEY_ENCRYPTION_KEY
+        ),
     )
     dic["created_ts"] = dic.pop("timestamp")
     asset = Asset(**{k: v for k, v in dic.items() if v is not None})

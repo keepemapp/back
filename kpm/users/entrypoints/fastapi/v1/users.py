@@ -6,15 +6,18 @@ import kpm.users.domain.commands as cmds
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token, \
-    get_admin_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
+    get_access_token,
+    get_admin_token,
+)
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.dependencies import get_current_active_user
 from kpm.users.domain.model import (
     EmailAlreadyExistsException,
-    MissmatchPasswordException, User,
+    MissmatchPasswordException,
+    User,
     UsernameAlreadyExistsException,
     UserNotFound,
 )

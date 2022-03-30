@@ -18,7 +18,9 @@ from kpm.users.domain.model import Keep
 from tests.assets.domain.test_asset_creation import create_asset_cmd
 from tests.assets.entrypoints.fastapi.v1.fixtures import (
     ADMIN_TOKEN,
-    USER2_TOKEN, USER_TOKEN, ATTACKER_TOKEN
+    ATTACKER_TOKEN,
+    USER2_TOKEN,
+    USER_TOKEN,
 )
 from tests.assets.utils import bus
 
@@ -111,7 +113,9 @@ class TestReleases:
                 owner=OWNER2,
                 receivers=[OWNER1],
             ),
-            cmds.CancelRelease(aggregate_id=to_cancel.aggregate_id, by_user=to_cancel.owner),
+            cmds.CancelRelease(
+                aggregate_id=to_cancel.aggregate_id, by_user=to_cancel.owner
+            ),
             to_trigger,
             cmds.TriggerRelease(
                 by_user=to_trigger.owner, aggregate_id=to_trigger.aggregate_id
@@ -453,7 +457,6 @@ class TestTrigger:
             is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
 
-
     @pytest.mark.parametrize(
         "cond",
         [
@@ -497,6 +500,7 @@ class TestTrigger:
             assert r
             is_past = (cond["r_code"] // 100) == 2  # True for 2XY codes
             assert r.is_past() == is_past
+
 
 @pytest.mark.unit
 class TestAssetReleasesTypes:
@@ -643,4 +647,3 @@ class TestAssetReleasesTypes:
         )
         # Then
         assert response.status_code == 422
-

@@ -19,13 +19,9 @@ from tests.assets.domain import asset, valid_asset
 class TestAssetModel:
     invalid_titles = [
         "",
-        ".a2c",
-        "c/sc",
         "this title is too long and should now be allowed "
         + "asdadasdsasaassaasdwwdwwdsdsdsdsdadadasddwdwdw",
         "  ",
-        "#2sd",
-        "*invalid initial char",
     ]
 
     @pytest.mark.parametrize("title", invalid_titles)
@@ -43,6 +39,10 @@ class TestAssetModel:
         "Is this?",
         "sds[sd]",
         "sd¡",
+        ".a2c",
+        "c/sc",
+        "#2sd",
+        "*invalid initial char",
     ]
 
     @pytest.mark.parametrize("title", valid_titles)

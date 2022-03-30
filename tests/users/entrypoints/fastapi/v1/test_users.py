@@ -31,9 +31,7 @@ def create_direct_user(client, username, email):
 def create_user(client, user_num: int = 0, username=None):
     if not username:
         username = f"user{user_num}"
-    return create_direct_user(
-        client, username, f"valid{user_num}@email.com"
-    )
+    return create_direct_user(client, username, f"valid{user_num}@email.com")
 
 
 def create_active_user(client, user_num: int = 0, username=None):
@@ -77,9 +75,7 @@ class TestRegisterUser:
         assert user_resp.get("referral_code")
 
     def test_create_noemail(self, client):
-        user = UserCreate(
-            username="user", email="", password=USER_PWD
-        )
+        user = UserCreate(username="user", email="", password=USER_PWD)
         response = client.post(user_route, json=user.dict())
         assert response.status_code == 400
         user_resp = response.json()
@@ -382,9 +378,7 @@ class TestGetUsers:
 
 @pytest.mark.unit
 class TestUserUpdates:
-    ATTR_UPDATES = [
-        {"public_name": "new_public_name"}
-    ]
+    ATTR_UPDATES = [{"public_name": "new_public_name"}]
 
     @pytest.mark.parametrize("updates", ATTR_UPDATES)
     def test_update(self, client, user_client, updates):
