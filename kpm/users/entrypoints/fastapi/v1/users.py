@@ -7,7 +7,7 @@ from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token, \
-    get_admin_token, get_fresh_token
+    get_admin_token
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -151,7 +151,7 @@ def register_user(
 async def change_password(
     pwd_change: schemas.PasswordUpdate,
     bus: MessageBus = Depends(message_bus),
-    token: AccessToken = Depends(get_fresh_token),
+    token: AccessToken = Depends(get_access_token),
 ):
     """Endpoint to change password of the user."""
 
@@ -180,7 +180,7 @@ async def change_password(
 async def update_user_attributes(
     updates: schemas.UserUpdate,
     bus: MessageBus = Depends(message_bus),
-    token: AccessToken = Depends(get_fresh_token),
+    token: AccessToken = Depends(get_access_token),
 ):
     """Updates user attributes."""
 
