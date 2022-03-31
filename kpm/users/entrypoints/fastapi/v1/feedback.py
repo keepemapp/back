@@ -108,6 +108,44 @@ Has entès de què va?""",
                 ),
             ],
         ),
+        sch.FeedbackForm(
+            id="a28bbdd6-457a-4025-9299-15548e10a8e5",
+            title={
+                "en": "Report bugs",
+                "ca": "Comunica'ns errors",
+                "es": "Reporta errores",
+            },
+            created_ts=to_millis(datetime.datetime(2022, 3, 31)),
+            questions=[
+                sch.TextFeedbackQuestion(
+                    id="s2xd",
+                    order=1,
+                    question={
+                        "en": "What do you like? What would you change?",  # noqa:E501
+                        "ca": "Què t'agrada? Què canviaries?",  # noqa:E501
+                        "es": "¿Qué te gusta? ¿Qué modificarías?",  # noqa:E501
+                    },
+                ),
+                sch.TextFeedbackQuestion(
+                    id="x34d",
+                    order=2,
+                    question={
+                        "en": "Is there something not working?",  # noqa:E501
+                        "ca": "Hi ha alguna cosa que no funciona?",  # noqa:E501
+                        "es": "¿Hay algo que no funciona?",  # noqa:E501
+                    },
+                ),
+                sch.TextFeedbackQuestion(
+                    id="gh9l",
+                    order=3,
+                    question={
+                        "en": "Any doubt?",  # noqa:E501
+                        "ca": "Tens algun dubte?",  # noqa:E501
+                        "es": "¿Tienes alguna duda?",  # noqa:E501
+                    },
+                ),
+            ],
+        ),
     ]
 
     return paginate(forms, paginate_params)
