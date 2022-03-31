@@ -7,7 +7,7 @@ from bson import SON
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import AssetId, RootAggState, UserId
+from kpm.shared.domain.model import AssetId, BETA_USER, RootAggState, UserId
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 
@@ -133,8 +133,11 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
         for t in col.aggregate(type_agg):
             sizes_mb[t["_id"]] = t["size"] / (1024 * 1024)
             count[t["_id"]] = t["count"]
-    logger.debug(f"Executed MongoQuery {type_agg}")
-    return {"size_mb": sizes_mb, "count": count}
+    logger.debug(f"{len(sizes_mb)} results for MongoQuery '{type_agg}'")
+    sizes_mb["total"] = sum(sizes_mb.values())
+    count["total"] = sum(count.values())
+    return {"max_size_mb": BETA_USER.storage_mb,
+            "size_mb": sizes_mb, "count": count}
 
 
 def tag_cloud(user_id: str, bus: MessageBus = None) -> Dict:

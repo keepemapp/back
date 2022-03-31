@@ -1,13 +1,14 @@
 import random
 from collections import Counter
 from dataclasses import asdict
+from itertools import groupby
 from typing import Dict, List, Optional
 
 import flatdict
 
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
-from kpm.shared.domain.model import AssetId, UserId
+from kpm.shared.domain.model import AssetId, BETA_USER, UserId
 from kpm.shared.service_layer.message_bus import MessageBus
 
 
@@ -99,8 +100,8 @@ def find_by_ownerid(
 def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
     with bus.uows.get(Asset) as uow:
         assets = uow.repo.find_by_ownerid(UserId(user_id))
-        if len(assets) < 1:
-            return []
+        if len(assets) <= 2:
+            return [assets]
         choosen: List[Asset] = random.sample(assets, 2)
         return [
             {"id": a.id.id, "title": a.title, "file_type": a.file.type}
@@ -109,15 +110,24 @@ def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
 
 
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
-    return {
-        "total": 32,
-        "images": 20,
-        "documents": 2,
-        "videos": 7,
-        "audios": 3,
-        "others": 0,
-        "visible": 28,
-    }
+    def aggregate_by_file_type(lst):
+        file_type = lambda a: a[0]
+        lst_sorted = sorted(lst, key=file_type)
+        return {f_type: sum([kv[1] for kv in pairs])
+                for f_type, pairs in groupby(lst_sorted, file_type)}
+
+    with bus.uows.get(Asset) as uow:
+        assets = uow.repo.find_by_ownerid(UserId(user_id))
+
+    asset_sizes = [(a.file.type.split('/')[0], a.file.size_bytes/1024/1024) for a in assets]
+    asset_counts = [(a.file.type.split('/')[0], 1) for a in assets]
+
+    sizes_mb = aggregate_by_file_type(asset_sizes)
+    count = aggregate_by_file_type(asset_counts)
+    sizes_mb["total"] = sum(sizes_mb.values())
+    count["total"] = sum(count.values())
+    return {"max_size_mb": BETA_USER.storage_mb,
+            "size_mb": sizes_mb, "count": count}
 
 
 def tag_cloud(user_id: str, bus: MessageBus) -> Dict:

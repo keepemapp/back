@@ -24,6 +24,14 @@ class TransferId(DomainId):
     pass
 
 
+@dataclass(frozen=True)
+class UserCapabilities:
+    storage_mb: int
+
+
+BETA_USER = UserCapabilities(storage_mb=500)
+
+
 @dataclass
 class Entity:
     id: DomainId = field(default_factory=lambda: init_id(DomainId), hash=True)

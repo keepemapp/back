@@ -2,7 +2,7 @@ from dataclasses import asdict, field
 from datetime import timedelta
 from functools import lru_cache
 from os import path
-from typing import List, Union
+from typing import List, Optional, Union
 
 from pydantic import BaseSettings
 from pydantic.dataclasses import dataclass
@@ -69,7 +69,7 @@ class Settings(BaseSettings):
 
     UPLOAD_AUTH_TOKEN_EXPIRE_SEC: int = 30
 
-    JWT_ACCESS_EXPIRE_TIME: timedelta = timedelta(minutes=15, days=19)
+    JWT_ACCESS_EXPIRE_TIME: timedelta = timedelta(minutes=15)
     JWT_REFRESH_EXPIRE_TIME: timedelta = timedelta(days=60)
     # openssl rand -hex 32
     JWT_SECRET_KEY = (
@@ -82,24 +82,24 @@ class Settings(BaseSettings):
         path.dirname(path.dirname(path.abspath(__file__))), "data"
     )
 
-    EMAIL_SENDER_ADDRESS: str = None
+    EMAIL_SENDER_ADDRESS: Optional[str] = None
     """Base64 encoded password"""
-    EMAIL_SENDER_PASSWORD: str = None
-    EMAIL_SMTP_SERVER: str = None
+    EMAIL_SENDER_PASSWORD: Optional[str] = None
+    EMAIL_SMTP_SERVER: Optional[str] = None
     EMAIL_SMTP_PORT: int = 587
     EMAIL_SMTP_SECURITY: str = "STARTTLS"
 
-    MONGODB_URL: str = ""
-    MONGODB_USER: str = ""
-    MONGODB_PWD: str = ""
+    MONGODB_URL: str = "mongodb://127.0.0.1:27017/?replicaSet=rs0"
+    MONGODB_USER: Optional[str] = ""
+    MONGODB_PWD: Optional[str] = ""
 
     ASSET_S3_URL: str = "https://eu2.contabostorage.com"
-    ASSET_S3_BUCKET: str = "kpm-dev"
-    ASSET_S3_ACCESS: str
-    ASSET_S3_SECRET: str
+    ASSET_S3_BUCKET: Optional[str] = "kpm-dev"
+    ASSET_S3_ACCESS: Optional[str]
+    ASSET_S3_SECRET: Optional[str]
 
     # DEVELOPMENT PURPOSES ONLY
-    DATA_KEY_ENCRYPTION_KEY: str
+    DATA_KEY_ENCRYPTION_KEY: Optional[str]
 
     class Config:
         env_file = ".env"

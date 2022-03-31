@@ -1,4 +1,6 @@
 import datetime as dt
+import random
+import string
 import uuid
 from typing import Any, Dict
 
@@ -26,6 +28,34 @@ def valid_asset() -> DataType:
         "title": "asset title",
         "description": "description",
     }
+
+
+def random_asset(users=None) -> Asset:
+    def random_str(len=15):
+        return ''.join(random.choice(string.ascii_letters) for i in range(len))
+
+    def random_file_type():
+        types = [(".jpg", "image/jpeg"),
+                 (".png", "image/png"),
+                 (".mp4", "video/mp4"),
+                 (".pdf", "application/pdf"),
+                 ]
+        return random.choice(types)
+
+    if not users:
+        users = [random_str(5) for _ in range(10)]
+    file_extension, type = random_file_type()
+    return Asset(
+        id=AssetId(str(uuid.uuid4())),
+        owners_id=[UserId(random.choice(users))],
+        title=random_str(),
+        file=FileData(
+            name=random_str(10)+file_extension,
+            location=random_str(),
+            type=type,
+            size_bytes=random.randint(2*20, 2**28)
+        )
+    )
 
 
 @pytest.fixture
