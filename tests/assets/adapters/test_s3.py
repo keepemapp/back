@@ -1,5 +1,6 @@
 import io
 import os
+import uuid
 
 import boto3
 import botocore
@@ -28,7 +29,8 @@ class TestS3Repository:
         )
         enc_key = CipherCls.generate_data_key(s.DATA_KEY_ENCRYPTION_KEY)
         repo = AssetFileS3Repository()
-        file_key = "test/file.test"
+        id_file = str(uuid.uuid4().hex)
+        file_key = f"test/{id_file}.enc"
         bytes_to_cipher = os.urandom(20)
 
         # Upload
@@ -43,6 +45,45 @@ class TestS3Repository:
         result_bytes = result_file.read()
         result_file.close()
         assert result_bytes == bytes_to_cipher
+
+        # Delete
+        repo.delete(file_key)
+
+        with pytest.raises(ClientError):
+            s3.get_object(Bucket=s.ASSET_S3_BUCKET, Key=file_key)
+
+    def test_dows_not_allow_plain_upload(self, CipherCls):
+        repo = AssetFileS3Repository()
+        id_file = str(uuid.uuid4().hex)
+        file_key = f"test/{id_file}.enc"
+        file = os.urandom(20)
+
+        # Upload
+        with pytest.raises(EnvironmentError):
+            with io.BytesIO(file) as plain:
+                repo.create(file_key, file=plain, encryption_key=None,
+                            encryption_type=None)
+
+    def test_non_encrypted(self, CipherCls):
+        s3 = boto3.client("s3", endpoint_url=s.ASSET_S3_URL,
+            aws_access_key_id=s.ASSET_S3_ACCESS,
+            aws_secret_access_key=s.ASSET_S3_SECRET,
+        )
+
+        repo = AssetFileS3Repository()
+        id_file = str(uuid.uuid4().hex)
+        file_key = f"test/{id_file}.enc"
+        file_data = os.urandom(20)
+
+        s3.put_object(Bucket=s.ASSET_S3_BUCKET, Key=file_key,
+                      Body=file_data)
+
+        # Download
+        result_file = repo.get(file_key, encryption_key=None,
+                               encryption_type=None)
+        result_bytes = result_file.read()
+        result_file.close()
+        assert result_bytes == file_data
 
         # Delete
         repo.delete(file_key)
