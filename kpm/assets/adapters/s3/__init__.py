@@ -56,6 +56,7 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
             self._client.download_fileobj(
                 Bucket=self._bucket, Key=location, Fileobj=file
             )
+            logger.debug(f"File '{location}' downloaded from s3")
             return file
         except ClientError as e:
             logger.error(f"Cannot access s3 file '{location}'. Error {e}")

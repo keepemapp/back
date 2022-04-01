@@ -202,6 +202,7 @@ class EncryptedAssetFileRepository(AssetFileRepository):
             plain.seek(0)
             return plain
         elif not encryption_type:
+            remote_file.seek(0)
             return remote_file
         else:
             raise EnvironmentError("Encryption algorithm not found")
