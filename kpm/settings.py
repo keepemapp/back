@@ -82,14 +82,14 @@ class Settings(BaseSettings):
         path.dirname(path.dirname(path.abspath(__file__))), "data"
     )
 
-    EMAIL_SENDER_ADDRESS: Optional[str] = None
+    EMAIL_SENDER_ADDRESS: Optional[str]
     """Base64 encoded password"""
-    EMAIL_SENDER_PASSWORD: Optional[str] = None
-    EMAIL_SMTP_SERVER: Optional[str] = None
+    EMAIL_SENDER_PASSWORD: Optional[str]
+    EMAIL_SMTP_SERVER: Optional[str]
     EMAIL_SMTP_PORT: int = 587
     EMAIL_SMTP_SECURITY: str = "STARTTLS"
 
-    MONGODB_URL: str = "mongodb://127.0.0.1:27017/?replicaSet=rs0"
+    MONGODB_URL: Optional[str] = "mongodb://127.0.0.1:27017/?replicaSet=rs0"
     MONGODB_USER: Optional[str] = ""
     MONGODB_PWD: Optional[str] = ""
 
