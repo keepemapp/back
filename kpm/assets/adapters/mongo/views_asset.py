@@ -122,7 +122,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
             "$group": {
                 "_id": {"$arrayElemAt": [{"$split": ["$file.type", "/"]}, 0]},
                 "count": {"$sum": 1},
-                "size:": {"$sum": "$file.size_bytes"},
+                "size": {"$sum": "$file.size_bytes"},
             }
         },
     ]
@@ -131,7 +131,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     with mongo_client() as client:
         col = client["assets"].assets
         for t in col.aggregate(type_agg):
-            sizes_mb[t["_id"]] = t["file"]["size"] / (1024 * 1024)
+            sizes_mb[t["_id"]] = t["size"] / (1024 * 1024)
             count[t["_id"]] = t["count"]
     logger.debug(f"{len(sizes_mb)} results for MongoQuery '{type_agg}'")
     sizes_mb["total"] = sum(sizes_mb.values())
