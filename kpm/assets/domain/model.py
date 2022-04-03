@@ -26,7 +26,7 @@ from kpm.shared.domain.model import (
     RootAggregate,
     RootAggState,
     UserId,
-    ValueObject,
+    VISIBLE_STATES, ValueObject,
 )
 from kpm.shared.domain.time_utils import now_utc_millis
 
@@ -118,7 +118,7 @@ class Asset(RootAggregate):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)
 
     def is_visible(self) -> bool:
-        return self.state in [RootAggState.ACTIVE, RootAggState.PENDING]
+        return self.state in VISIBLE_STATES
 
     def upload_file(self, mod_ts: int):
         self._update_field(mod_ts, "state", RootAggState.ACTIVE)

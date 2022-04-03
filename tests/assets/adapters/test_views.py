@@ -1,10 +1,12 @@
+import uuid
+
 import pytest
 
 from kpm.assets.adapters.memrepo import views_asset as memrepo_views
 from kpm.assets.adapters.mongo import views_asset as mongo_views
 from kpm.assets.domain.model import Asset
-from kpm.shared.domain.model import AssetId
-from tests.assets.domain import asset, random_asset, valid_asset
+from kpm.shared.domain.model import AssetId, RootAggState, UserId
+from tests.assets.domain import asset, random_asset, valid_asset, active_asset
 from tests.assets.utils import bus
 
 
@@ -14,14 +16,14 @@ def add_asset_to_bus(asset: Asset, bus):
 
 
 @pytest.fixture
-def bus_with_asset(asset, bus):
-    add_asset_to_bus(asset, bus)
+def bus_with_asset(active_asset, bus):
+    add_asset_to_bus(active_asset, bus)
     yield bus
 
 
 @pytest.fixture
 def random_assets():
-    return [random_asset(users=["u1", "u2"]) for _ in range(50)]
+    return [random_asset(active=True, users=["u1", "u2"]) for _ in range(50)]
 
 
 VIEWS = [
@@ -67,9 +69,9 @@ class TestMemoryAssetViews:
         )
         assert should_exist["id"] == asset.id.id
 
-    def test_asset_type_filter(self, asset, bus_with_asset, views):
-        ftype = asset.file.type
-        owner = asset.owners_id[0].id
+    def test_asset_type_filter(self, active_asset, bus_with_asset, views):
+        ftype = active_asset.file.type
+        owner = active_asset.owners_id[0].id
 
         # Then
         same_type = views.find_by_ownerid(
@@ -101,6 +103,25 @@ class TestMemoryAssetViews:
         with pytest.raises(AttributeError):
             views.all_assets(order_by="non existing", bus=bus_with_asset)
 
+            add_asset_to_bus(second_asset, bus_with_asset)
+
+    def test_only_return_user_active_assets(self, valid_asset, bus, views):
+        user_id = UserId(id=str(uuid.uuid4()))
+        for state in [RootAggState.PENDING, RootAggState.ACTIVE,
+                      RootAggState.REMOVED]:
+            asset = Asset(**valid_asset)
+            asset.owners_id = [user_id]
+            asset.state = state
+            asset.id = AssetId(id=str(uuid.uuid4()))
+            add_asset_to_bus(asset, bus)
+
+        user_id = asset.owners_id[0]
+        # When
+        result = views.find_by_ownerid(user_id=user_id.id, bus=bus)
+
+        # Then
+        assert len(result) == 1
+
     def test_assets_of_the_week(self, random_assets, bus, views):
         for asset in random_assets:
             add_asset_to_bus(asset, bus)
@@ -127,3 +148,27 @@ class TestMemoryAssetViews:
         assert results["count"].pop("total") == count
         assert sum(results["size_mb"].values()) == size
         assert results.get("max_size_mb")
+
+    def test_assets_summary_only_counts_active(self, bus,
+                                               valid_asset, views):
+        active = Asset(**valid_asset)
+        active.id = AssetId("activeAset")
+        active.state = RootAggState.ACTIVE
+        add_asset_to_bus(active, bus)
+        resulting_size = active.file.size_bytes / 1024 / 1024
+
+        pending = Asset(**valid_asset)
+        pending.id = AssetId("pendingAset")
+        pending.state = RootAggState.PENDING
+        add_asset_to_bus(pending, bus)
+
+        removed = Asset(**valid_asset)
+        removed.id = AssetId("RmAsset")
+        removed.state = RootAggState.REMOVED
+        add_asset_to_bus(removed, bus)
+
+        results = views.user_stats(pending.owners_id[0].id, bus)
+
+        # Then
+        assert results["size_mb"].pop("total") == resulting_size
+        assert results["count"].pop("total") == 1

@@ -8,7 +8,7 @@ import flatdict
 
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
-from kpm.shared.domain.model import AssetId, BETA_USER, UserId
+from kpm.shared.domain.model import AssetId, BETA_USER, RootAggState, UserId
 from kpm.shared.service_layer.message_bus import MessageBus
 
 
@@ -94,6 +94,7 @@ def find_by_ownerid(
         return [
             asset_to_flat_dict(a)
             for a in uow.repo.find_by_ownerid(UserId(user_id), **kwargs)
+            if a.state == RootAggState.ACTIVE
         ]
 
 
@@ -119,8 +120,10 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     with bus.uows.get(Asset) as uow:
         assets = uow.repo.find_by_ownerid(UserId(user_id))
 
-    asset_sizes = [(a.file.type.split('/')[0], a.file.size_bytes/1024/1024) for a in assets]
-    asset_counts = [(a.file.type.split('/')[0], 1) for a in assets]
+    asset_sizes = [(a.file.type.split('/')[0], a.file.size_bytes/1024/1024)
+                   for a in assets if a.state == RootAggState.ACTIVE]
+    asset_counts = [(a.file.type.split('/')[0], 1) for a in assets
+                    if a.state == RootAggState.ACTIVE]
 
     sizes_mb = aggregate_by_file_type(asset_sizes)
     count = aggregate_by_file_type(asset_counts)

@@ -216,7 +216,7 @@ class RootAggregate(Entity):
             return None
 
     def is_visible(self):
-        return self.state not in NOT_VISIBLE_STATES
+        return self.state in VISIBLE_STATES
 
     def remove(self, mod_ts: Optional[int], **kwargs):
         if self.state != FINAL_STATES:

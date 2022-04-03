@@ -94,6 +94,7 @@ def find_by_ownerid(
         return [
             asset_to_flat_dict(a)
             for a in uow.repo.find_by_ownerid(UserId(user_id), **kwargs)
+            if a.state == RootAggState.ACTIVE
         ]
 
 
@@ -117,7 +118,7 @@ def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
 
 def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
     type_agg = [
-        {"$match": {"owners_id": user_id}},
+        {"$match": {"owners_id": user_id, "state": RootAggState.ACTIVE.value}},
         {
             "$group": {
                 "_id": {"$arrayElemAt": [{"$split": ["$file.type", "/"]}, 0]},
@@ -142,7 +143,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
 
 def tag_cloud(user_id: str, bus: MessageBus = None) -> Dict:
     type_agg = [
-        {"$match": {"owners_id": user_id}},
+        {"$match": {"owners_id": user_id, "state": RootAggState.ACTIVE.value}},
         {"$unwind": "$tags"},
         {"$group": {"_id": "$tags", "count": {"$sum": 1}}},
         {"$sort": SON([("count", -1)])},

@@ -3,20 +3,24 @@ import pathlib
 from os.path import join
 from typing import List
 
+from kpm.assets.domain import Asset
 from kpm.assets.domain.commands import CreateAsset
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
     AssetCreate,
     AssetUpdatableFields,
 )
 from kpm.settings import settings as s
+from kpm.shared.domain.model import AssetId, RootAggState
 from tests.assets.entrypoints.fastapi.v1.fixtures import *
+from tests.assets.utils import bus
 
 ASSET_ROUTE: str = s.API_V1.concat(s.API_ASSET_PATH).path()
 ASSET_ME_PATH: str = s.API_V1.concat("me", s.API_ASSET_PATH).path()
 
 
 def create_asset(
-    client: TestClient, num: int, uids: List[str] = None, bookmark: bool = True
+    client: TestClient, num: int, uids: List[str] = None, bookmark: bool = True,
+        activate=False, bus=None
 ):
     asset = AssetCreate(
         title=f"Asset number {num}",
@@ -29,7 +33,14 @@ def create_asset(
         tags=["family"],
     )
     response = client.post(ASSET_ROUTE, json=asset.dict())
+    id = response.headers.get("location").split("/")[2]
     assert response.status_code == 201
+    if activate:
+        with bus.uows.get(Asset) as uow:
+            a: Asset = uow.repo.find_by_id(AssetId(id=id))
+            a.state = RootAggState.ACTIVE
+            uow.repo.update(a)
+            uow.commit()
     return asset, response
 
 
@@ -89,8 +100,9 @@ class TestRegisterAsset:
 
 @pytest.mark.unit
 class TestGetAssets:
-    def test_user_assets(self, user_client):
-        _, r1 = create_asset(user_client, 0, [USER_TOKEN.subject])
+    def test_user_assets(self, user_client, bus):
+        _, r1 = create_asset(user_client, 0, [USER_TOKEN.subject],
+                             activate=True, bus=bus)
         aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
 
         response = user_client.get(
@@ -102,7 +114,8 @@ class TestGetAssets:
 
         # Second asset
         _, r2 = create_asset(
-            user_client, 1, ["other-user", USER_TOKEN.subject]
+            user_client, 1, ["other-user", USER_TOKEN.subject], activate=True,
+            bus=bus
         )
         aid2 = r2.headers["location"].split("/")[-2].split("?")[0]
 
@@ -137,10 +150,10 @@ class TestGetAssets:
         for r, aid in zip(items, [aid2, aid1]):
             assert r["id"] == aid
 
-    def test_bookmarked_search(self, user_client, admin_client):
-        create_asset(user_client, 0, bookmark=True)
-        create_asset(user_client, 1, bookmark=False)
-        create_asset(user_client, 2, bookmark=False)
+    def test_bookmarked_search(self, user_client, admin_client, bus):
+        create_asset(user_client, 0, bookmark=True, activate=True, bus=bus)
+        create_asset(user_client, 1, bookmark=False, activate=True, bus=bus)
+        create_asset(user_client, 2, bookmark=False, activate=True, bus=bus)
 
         response = query_uas(user_client, "?bookmarked=1")
         assert len(response.json()["items"]) == 1

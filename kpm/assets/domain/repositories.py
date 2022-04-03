@@ -84,7 +84,6 @@ class AssetRepository(DomainRepository):
         :returns: List of matching assets
         :rtype: List[Asset]
         """
-
         return self._query(owners=[uid], **kwargs)
 
     def find_by_id_and_ownerid(
