@@ -95,14 +95,19 @@ async def log_requests(request: Request, call_next):
         "path": request.url.path
     })
     start_time = time.time()
-    response = await call_next(request)
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+    except Exception as e:
+        logger.error(str(e), component="api")
 
     process_time_ms = (time.time() - start_time) * 1000
-    formatted_process_time = "{0:.2f}".format(process_time_ms)
+    formatted_process_time = round(process_time_ms, 2)
     logger.info({
         "rid": idem,
         "completed_in_ms": formatted_process_time,
-        "status_code": response.status_code
+        "status_code": status_code
     })
 
     return response
