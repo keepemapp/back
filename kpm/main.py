@@ -113,7 +113,7 @@ async def log_requests(request: Request, call_next):
     logger.info(
         {
             "rid": idem,
-            "completed_in_ms": formatted_process_time,
+            "elapsed_ms": formatted_process_time,
             "status_code": status_code,
         }, component="api"
     )

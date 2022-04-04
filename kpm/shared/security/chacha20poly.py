@@ -70,7 +70,10 @@ class ChaCha20PolyFileCypher(FileCypher):
         # Encrypt file
         # It is slow
         self._encrypt(dekb, plain_io, cypher_io)
-        logger.debug("Encryption time %s seconds" % (time.time() - start_time))
+
+        elapsed_ms = round((time.time() - start_time) * 1000, 2)
+        logger.debug({"elapsed_ms": elapsed_ms, "message": "encrypt"},
+                     component="encryption")
 
     def decrypt(self, cypher_io: BinaryIO, plain_io: BinaryIO):
         # Recover data encryption Key
@@ -80,7 +83,9 @@ class ChaCha20PolyFileCypher(FileCypher):
         # It is slow
         start_time = time.time()
         self._decrypt(dekb, cypher_io, plain_io)
-        logger.debug("Decryption time %s seconds" % (time.time() - start_time))
+        elapsed_ms = round((time.time() - start_time) * 1000, 2)
+        logger.debug({"elapsed_ms": elapsed_ms, "message": "decrypt"},
+                     component="encryption")
 
     @staticmethod
     def __get_cypher(key, nonce=None):
