@@ -86,26 +86,22 @@ async def startup_event():
 
 @app.on_event("shutdown")
 def shutdown_event():
-    logger.warn("Application shutdown")
+    logger.warn("Application shutdown", component="api")
 
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
-    client_ip = request.headers.get("X-Forwarded-For").split(',')[0]
-
     idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
     logger.info(
         {
             "rid": idem,
-            "from_ip": client_ip,
-            "from": f"{request.client.host}:{request.client.port}",
+            "from_ip": request.client.host,  # use --forwarded-allow-ips *
             "method": request.method,
             "path": request.url.path,
-        }
+        }, component="api"
     )
     start_time = time.time()
     status_code = 500
-    logger.debug({"rid": idem, "request": await request.json()})
     try:
         response = await call_next(request)
         status_code = response.status_code
@@ -119,7 +115,7 @@ async def log_requests(request: Request, call_next):
             "rid": idem,
             "completed_in_ms": formatted_process_time,
             "status_code": status_code,
-        }
+        }, component="api"
     )
 
     return response
