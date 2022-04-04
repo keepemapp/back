@@ -40,14 +40,15 @@ def active_asset(valid_asset) -> Asset:
 
 def random_asset(active=False, users=None) -> Asset:
     def random_str(len=15):
-        return ''.join(random.choice(string.ascii_letters) for i in range(len))
+        return "".join(random.choice(string.ascii_letters) for i in range(len))
 
     def random_file_type():
-        types = [(".jpg", "image/jpeg"),
-                 (".png", "image/png"),
-                 (".mp4", "video/mp4"),
-                 (".pdf", "application/pdf"),
-                 ]
+        types = [
+            (".jpg", "image/jpeg"),
+            (".png", "image/png"),
+            (".mp4", "video/mp4"),
+            (".pdf", "application/pdf"),
+        ]
         return random.choice(types)
 
     if not users:
@@ -63,11 +64,11 @@ def random_asset(active=False, users=None) -> Asset:
         title=random_str(),
         state=state,
         file=FileData(
-            name=random_str(10)+file_extension,
+            name=random_str(10) + file_extension,
             location=random_str(),
             type=type,
-            size_bytes=random.randint(2*20, 2**28)
-        )
+            size_bytes=random.randint(2 * 20, 2**28),
+        ),
     )
 
 

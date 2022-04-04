@@ -3,8 +3,10 @@ import logging.config
 import os
 import pathlib
 import sys
-from typing import Any, Union, Dict
+from typing import Any, Dict, Union
+
 from kpm.settings import settings as s
+
 
 class JsonLogger:
     def __init__(self):
@@ -16,7 +18,9 @@ class JsonLogger:
         self._log.setLevel(s.LOG_LEVEL)
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(s.LOG_LEVEL)
-        formatter = logging.Formatter('{"time": "%(asctime)s", "level": "%(levelname)s", %(message)s, "app_name": "%(name)s"}')
+        formatter = logging.Formatter(
+            '{"time": "%(asctime)s", "level": "%(levelname)s", %(message)s, "app_name": "%(name)s"}'
+        )
         ch.setFormatter(formatter)
         self._log.addHandler(ch)
         self._log.info("Starting logger")

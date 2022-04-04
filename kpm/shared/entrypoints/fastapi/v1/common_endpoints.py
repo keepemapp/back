@@ -15,8 +15,8 @@ router = APIRouter(
 
 @router.get(s.API_HEALTH.path(), status_code=200)
 async def get_health(
-        _: MessageBus = Depends(message_bus),
-        file_repo: AssetFileLocalRepository = Depends(asset_file_repository)
+    _: MessageBus = Depends(message_bus),
+    file_repo: AssetFileLocalRepository = Depends(asset_file_repository),
 ):
     return "OK"
 

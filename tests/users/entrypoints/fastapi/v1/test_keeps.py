@@ -266,7 +266,9 @@ class TestKeepsApi:
 
         assert resp.status_code == 201
 
-    def test_get_only_active_and_pending(self, init_users, admin_client, user_client):
+    def test_get_only_active_and_pending(
+        self, init_users, admin_client, user_client
+    ):
         # Given a keep
         user_client.post(
             KEEP_ROUTE.path(),

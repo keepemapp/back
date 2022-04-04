@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import flatdict
 
-from kpm.shared.domain.model import UserId, VISIBLE_STATES
+from kpm.shared.domain.model import VISIBLE_STATES, UserId
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import Keep, User, UserNotFound
 from kpm.users.domain.repositories import KeepRepository

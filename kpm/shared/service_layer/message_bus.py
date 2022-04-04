@@ -75,24 +75,34 @@ class MessageBus:
     def handle_event(self, event: Event) -> None:
         for handler in self.event_handlers[type(event)]:
             try:
-                logger.debug({"handler": handler.__name__,
-                              "event": str(event)}, component="bus")
+                logger.debug(
+                    {"handler": handler.__name__, "event": str(event)},
+                    component="bus",
+                )
                 handler(event)
                 self.queue.extend(self.uows.collect_new_events())
-                logger.debug(f"Extended queue to {self.queue}", component="bus")
+                logger.debug(
+                    f"Extended queue to {self.queue}", component="bus"
+                )
             except Exception:
-                logger.error({"handler": handler.__name__,
-                              "event": str(event)}, component="bus")
+                logger.error(
+                    {"handler": handler.__name__, "event": str(event)},
+                    component="bus",
+                )
                 continue  # TODO not sure we have to continue here
 
     def handle_command(self, command: Command) -> Optional[NoReturn]:
         handler = self.command_handlers[type(command)]
         try:
-            logger.debug({"handler": handler.__name__,
-                          "command": str(command)}, component="bus")
+            logger.debug(
+                {"handler": handler.__name__, "command": str(command)},
+                component="bus",
+            )
             handler(command)
             self.queue.extend(self.uows.collect_new_events())
         except Exception as e:
-            logger.error({"handler": handler.__name__,
-                          "command": str(command)}, component="bus")
+            logger.error(
+                {"handler": handler.__name__, "command": str(command)},
+                component="bus",
+            )
             raise e

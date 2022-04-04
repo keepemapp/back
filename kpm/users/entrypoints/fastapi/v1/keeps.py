@@ -11,8 +11,11 @@ from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain import commands as cmds
-from kpm.users.domain.model import DuplicatedKeepException, KeepActionError, \
-    KeepAlreadyDeclined
+from kpm.users.domain.model import (
+    DuplicatedKeepException,
+    KeepActionError,
+    KeepAlreadyDeclined,
+)
 from kpm.users.entrypoints.fastapi.v1.schemas import keeps as schemas
 from kpm.users.entrypoints.fastapi.v1.schemas.users import UserPublic
 
@@ -63,7 +66,10 @@ async def new_keep(
     bus: MessageBus = Depends(message_bus),
     views=Depends(user_view),
 ):
-    logger.info(f"'{token.subject}' requesting new keep to {request.dict()}")
+    logger.debug(
+        f"'{token.subject}' requesting new keep to {request.dict()}",
+        component="api",
+    )
     found_value = None
     if request.to_id:
         found_value = views.by_id(request.to_id, bus)

@@ -23,14 +23,16 @@ class UserMongoRepo(MongoBase, UserRepository):
 
     def all(self) -> List[User]:
         find_dict = {}
-        logger.debug(f"Mongo query filters {find_dict}")
+        logger.debug(f"Mongo query filters {find_dict}", component="mongodb")
         resps = self._coll.find(find_dict)
         users = []
         for a in resps:
             u = self._from_bson(a)
             if u:
                 users.append(u)
-        logger.debug(f"Mongo response count: {len(users)}")
+        logger.debug(
+            f"Mongo response count: {len(users)}", component="mongodb"
+        )
         return users
 
     def get(self, uid: UserId) -> Optional[User]:
@@ -55,7 +57,7 @@ class UserMongoRepo(MongoBase, UserRepository):
 
             find_dict["email"] = ignore_dots(email)
             collat = Collation(locale="en_US", alternate="shifted")
-            logger.debug(f"Searching {find_dict}")
+            logger.debug(f"Searching {find_dict}", component="mongodb")
             res = self._coll.find(find_dict, projection=["email"]).collation(
                 collat
             )
@@ -73,13 +75,17 @@ class UserMongoRepo(MongoBase, UserRepository):
         return self._coll.count_documents({"username": username}) != 0
 
     def create(self, user: User):
-        logger.debug(f"Creating user with id '{user.id.id}'")
+        logger.debug(
+            f"Creating user with id '{user.id.id}'", component="mongodb"
+        )
         self._insert(self._coll, self._to_bson(user))
         self._seen.add(user)
 
     def update(self, user: User):
         bson = self._to_bson(user)
-        logger.info(f"Updating user with id '{user.id.id}'")
+        logger.info(
+            f"Updating user with id '{user.id.id}'", component="mongodb"
+        )
         self._update(self._coll, {"_id": bson["_id"]}, bson)
         self._seen.add(user)
 
@@ -101,7 +107,10 @@ class UserMongoRepo(MongoBase, UserRepository):
             user = User(loaded_from_db=True, **bson)
             return user
         except Exception as e:
-            logger.error(f"Error processing user '{bson['id']}': {e}")
+            logger.error(
+                f"Error processing user '{bson['id']}': {e}",
+                component="mongodb",
+            )
             return None
 
 
@@ -125,12 +134,12 @@ class KeepMongoRepo(MongoBase, KeepRepository):
             find_dict = {
                 "$or": [{"requester": user.id}, {"requested": user.id}]
             }
-        logger.debug(f"Mongo query filters {find_dict}")
+        logger.debug(f"Mongo query filters {find_dict}", component="mongodb")
         resps = self._coll.find(find_dict)
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.debug(f"Mongo response count: {len(res)}")
+        logger.debug(f"Mongo response count: {len(res)}", component="mongodb")
         return res
 
     def get(self, kid: DomainId) -> Keep:
@@ -152,7 +161,7 @@ class KeepMongoRepo(MongoBase, KeepRepository):
         }
         if not all_states:
             find_dict["state"] = RootAggState.ACTIVE.value
-        logger.debug(f"Mongo query filters {find_dict}")
+        logger.debug(f"Mongo query filters {find_dict}", component="mongodb")
         return self._coll.count_documents(find_dict) != 0
 
     @staticmethod

@@ -53,6 +53,10 @@ app = FastAPI(
     title=s.APPLICATION_NAME,
     description=description,
     version=version,
+    servers=[
+        {"url": "https://api.keepem.app", "description": "Production environment"},
+        {"url": "https://notimpl.keepem.app", "description": "Staging environment"},
+    ],
 )
 
 app.include_router(users_router)
@@ -66,7 +70,7 @@ app.logger = logger
 @app.on_event("startup")
 async def startup_event():
     if s.MONGODB_URL:
-        logger.info("Creating mongo indexes")
+        logger.info("Creating mongo indexes", component="mongodb")
         with mongo_client() as client:
             assets_db = client["assets"]
             assets_db.assets.create_index("owners_id")
@@ -87,15 +91,21 @@ def shutdown_event():
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    client_ip = request.headers.get("X-Forwarded-For").split(',')[0]
+
     idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    logger.info({
-        "rid": idem,
-        "from":  f"{request.client.host}:{request.client.port}",
-        "method": request.method,
-        "path": request.url.path
-    })
+    logger.info(
+        {
+            "rid": idem,
+            "from_ip": client_ip,
+            "from": f"{request.client.host}:{request.client.port}",
+            "method": request.method,
+            "path": request.url.path,
+        }
+    )
     start_time = time.time()
     status_code = 500
+    logger.debug({"rid": idem, "request": await request.json()})
     try:
         response = await call_next(request)
         status_code = response.status_code
@@ -104,14 +114,17 @@ async def log_requests(request: Request, call_next):
 
     process_time_ms = (time.time() - start_time) * 1000
     formatted_process_time = round(process_time_ms, 2)
-    logger.info({
-        "rid": idem,
-        "completed_in_ms": formatted_process_time,
-        "status_code": status_code
-    })
+    logger.info(
+        {
+            "rid": idem,
+            "completed_in_ms": formatted_process_time,
+            "status_code": status_code,
+        }
+    )
 
     return response
 
 
 if __name__ == "__main__":
+    # Debug
     uvicorn.run(app, host="localhost", port=8000, access_log=False)

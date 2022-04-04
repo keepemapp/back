@@ -24,7 +24,7 @@ def authenticate_by_email(
     bus: MessageBus,
     views,
 ) -> Optional[User]:
-    logger.info(f"Trying to authenticate email '{email}'")
+    logger.info(f"Trying to authenticate email '{email}'", component="api")
     try:
         user = views.credentials_email(email, password, bus)
     except (KeyError, MissmatchPasswordException):
@@ -39,7 +39,7 @@ def authenticate_by_id(
     bus: MessageBus,
     views,
 ) -> Optional[User]:
-    logger.info(f"Trying to authenticate user id '{user_id}'")
+    logger.info(f"Trying to authenticate user id '{user_id}'", component="api")
     try:
         user = views.credentials_id(user_id, password, bus)
     except (KeyError, MissmatchPasswordException):

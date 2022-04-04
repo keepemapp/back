@@ -21,12 +21,13 @@ from kpm.shared.domain import (
     updatable_field,
 )
 from kpm.shared.domain.model import (
+    VISIBLE_STATES,
     AssetId,
     NoValue,
     RootAggregate,
     RootAggState,
     UserId,
-    VISIBLE_STATES, ValueObject,
+    ValueObject,
 )
 from kpm.shared.domain.time_utils import now_utc_millis
 

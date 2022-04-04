@@ -30,7 +30,8 @@ class EmailNotifications(AbstractNotifications):
         self.server = smtplib.SMTP(host, port)
         self.server.noop()
         logger.debug(
-            "smtp setup took (%.2f seconds passed)" % (timer() - start,)
+            "smtp setup took (%.2f seconds passed)" % (timer() - start,),
+            component="mail",
         )
         self.__pwd = str(
             base64.b64decode(s.EMAIL_SENDER_PASSWORD), "utf-8"
@@ -50,16 +51,26 @@ class EmailNotifications(AbstractNotifications):
 
         self.server.starttls()
         logger.debug(
-            "starttls started took (%.2f seconds passed)" % (timer() - start,)
+            "starttls started took (%.2f seconds passed)" % (timer() - start,),
+            component="mail",
         )
 
         self.server.login(s.EMAIL_SENDER_ADDRESS, self.__pwd)
 
-        logger.debug("login took (%.2f seconds passed)" % (timer() - start,))
+        logger.debug(
+            "login took (%.2f seconds passed)" % (timer() - start,),
+            component="mail",
+        )
         self.server.sendmail(s.EMAIL_SENDER_ADDRESS, destination, msg_body)
-        logger.debug("sending took (%.2f seconds passed)" % (timer() - start,))
+        logger.debug(
+            "sending took (%.2f seconds passed)" % (timer() - start,),
+            component="mail",
+        )
 
-        logger.info(f"Email sent to '{destination}' with subject '{subject}'")
+        logger.info(
+            f"Email sent to '{destination}' with subject '{subject}'",
+            component="mail",
+        )
 
 
 class NoNotifications(AbstractNotifications):
@@ -68,5 +79,6 @@ class NoNotifications(AbstractNotifications):
     ):
         logger.info(
             "I would have send email to "
-            + f"'{destination}' with subject '{subject}'"
+            + f"'{destination}' with subject '{subject}'",
+            component="notifications",
         )

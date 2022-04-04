@@ -7,7 +7,7 @@ from bson import SON
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import AssetId, BETA_USER, RootAggState, UserId
+from kpm.shared.domain.model import BETA_USER, AssetId, RootAggState, UserId
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 
@@ -81,7 +81,10 @@ def are_assets_active(
     with mongo_client() as client:
         col = client["assets"].assets
         num_found = col.count_documents(filter=filter)
-        logger.debug(f"Executed MongoQuery {filter} with {num_found} results")
+        logger.debug(
+            f"Executed MongoQuery {filter} with {num_found} results",
+            component="mongodb",
+        )
     return num_found == len(assets)
 
 
@@ -112,7 +115,10 @@ def assets_of_the_week(user_id: str, bus: MessageBus = None) -> List[Dict]:
             ]
         )
         results = list(assets)
-    logger.debug(f"Assets of the week selected for {user_id}: {results}")
+    logger.debug(
+        f"Assets of the week selected for {user_id}: {results}",
+        component="mongodb",
+    )
     return results
 
 
@@ -134,11 +140,17 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
         for t in col.aggregate(type_agg):
             sizes_mb[t["_id"]] = t["size"] / (1024 * 1024)
             count[t["_id"]] = t["count"]
-    logger.debug(f"{len(sizes_mb)} results for MongoQuery '{type_agg}'")
+    logger.debug(
+        f"{len(sizes_mb)} results for MongoQuery '{type_agg}'",
+        component="mongodb",
+    )
     sizes_mb["total"] = sum(sizes_mb.values())
     count["total"] = sum(count.values())
-    return {"max_size_mb": BETA_USER.storage_mb,
-            "size_mb": sizes_mb, "count": count}
+    return {
+        "max_size_mb": BETA_USER.storage_mb,
+        "size_mb": sizes_mb,
+        "count": count,
+    }
 
 
 def tag_cloud(user_id: str, bus: MessageBus = None) -> Dict:
@@ -153,5 +165,5 @@ def tag_cloud(user_id: str, bus: MessageBus = None) -> Dict:
         col = client["assets"].assets
         tags = {r["_id"]: r["count"] for r in col.aggregate(type_agg)}
 
-    logger.debug(f"Executed MongoQuery {type_agg}")
+    logger.debug(f"Executed MongoQuery {type_agg}", component="mongodb")
     return tags

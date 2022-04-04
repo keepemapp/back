@@ -198,7 +198,7 @@ class TestKeepHandlers:
                 email=f"{uid2}@emailtest.com",
                 user_id=uid2,
                 referred_by=uid1,
-            )
+            ),
         ]
         for msg in history:
             bus.handle(msg)

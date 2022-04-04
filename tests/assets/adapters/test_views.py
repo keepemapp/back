@@ -6,7 +6,7 @@ from kpm.assets.adapters.memrepo import views_asset as memrepo_views
 from kpm.assets.adapters.mongo import views_asset as mongo_views
 from kpm.assets.domain.model import Asset
 from kpm.shared.domain.model import AssetId, RootAggState, UserId
-from tests.assets.domain import asset, random_asset, valid_asset, active_asset
+from tests.assets.domain import active_asset, asset, random_asset, valid_asset
 from tests.assets.utils import bus
 
 
@@ -42,9 +42,7 @@ class TestMemoryAssetViews:
         assert r.get("id") == asset.id.id
 
     def test_find_by_id(self, active_asset, bus_with_asset, views):
-        non_existing = views.find_by_id(
-            "does not exist", bus=bus_with_asset
-        )
+        non_existing = views.find_by_id("does not exist", bus=bus_with_asset)
         assert not non_existing
 
         should_exist = views.find_by_id(active_asset.id.id, bus=bus_with_asset)
@@ -107,8 +105,11 @@ class TestMemoryAssetViews:
 
     def test_only_return_user_active_assets(self, valid_asset, bus, views):
         user_id = UserId(id=str(uuid.uuid4()))
-        for state in [RootAggState.PENDING, RootAggState.ACTIVE,
-                      RootAggState.REMOVED]:
+        for state in [
+            RootAggState.PENDING,
+            RootAggState.ACTIVE,
+            RootAggState.REMOVED,
+        ]:
             asset = Asset(**valid_asset)
             asset.owners_id = [user_id]
             asset.state = state
@@ -127,7 +128,9 @@ class TestMemoryAssetViews:
             add_asset_to_bus(asset, bus)
 
         user = random_assets[0].owners_id[0]
-        user_assets_ids = [a.id.id for a in random_assets if user in a.owners_id]
+        user_assets_ids = [
+            a.id.id for a in random_assets if user in a.owners_id
+        ]
         results = views.assets_of_the_week(user.id, bus)
 
         assert len(results) == 2
@@ -138,8 +141,13 @@ class TestMemoryAssetViews:
             add_asset_to_bus(asset, bus)
 
         user = random_assets[0].owners_id[0]
-        size = sum([a.file.size_bytes/1024/1024 for a in random_assets
-                            if user in a.owners_id])
+        size = sum(
+            [
+                a.file.size_bytes / 1024 / 1024
+                for a in random_assets
+                if user in a.owners_id
+            ]
+        )
         count = len([1 for a in random_assets if user in a.owners_id])
 
         results = views.user_stats(user.id, bus)
@@ -149,8 +157,7 @@ class TestMemoryAssetViews:
         assert sum(results["size_mb"].values()) == size
         assert results.get("max_size_mb")
 
-    def test_assets_summary_only_counts_active(self, bus,
-                                               valid_asset, views):
+    def test_assets_summary_only_counts_active(self, bus, valid_asset, views):
         active = Asset(**valid_asset)
         active.id = AssetId("activeAset")
         active.state = RootAggState.ACTIVE

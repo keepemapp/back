@@ -88,6 +88,7 @@ sudo docker run -d \
 --net $KEEP_NETW \
 --env-file .env \
 -e APP_MODULE="kpm.main:app" \
+-e GUNICORN_CMD_ARGS="--forwarded-allow-ips *" \
 -v $KEEP_DATA_API:/data \
 --restart unless-stopped \
 --log-opt max-size=50m --log-opt max-file=1 \

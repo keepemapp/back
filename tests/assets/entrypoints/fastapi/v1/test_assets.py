@@ -19,8 +19,12 @@ ASSET_ME_PATH: str = s.API_V1.concat("me", s.API_ASSET_PATH).path()
 
 
 def create_asset(
-    client: TestClient, num: int, uids: List[str] = None, bookmark: bool = True,
-        activate=False, bus=None
+    client: TestClient,
+    num: int,
+    uids: List[str] = None,
+    bookmark: bool = True,
+    activate=False,
+    bus=None,
 ):
     asset = AssetCreate(
         title=f"Asset number {num}",
@@ -116,8 +120,9 @@ class TestRegisterAsset:
 @pytest.mark.unit
 class TestGetAssets:
     def test_user_assets(self, user_client, bus):
-        _, r1 = create_asset(user_client, 0, [USER_TOKEN.subject],
-                             activate=True, bus=bus)
+        _, r1 = create_asset(
+            user_client, 0, [USER_TOKEN.subject], activate=True, bus=bus
+        )
         aid1 = r1.headers["location"].split("/")[-2].split("?")[0]
 
         response = user_client.get(
@@ -129,8 +134,11 @@ class TestGetAssets:
 
         # Second asset
         _, r2 = create_asset(
-            user_client, 1, ["other-user", USER_TOKEN.subject], activate=True,
-            bus=bus
+            user_client,
+            1,
+            ["other-user", USER_TOKEN.subject],
+            activate=True,
+            bus=bus,
         )
         aid2 = r2.headers["location"].split("/")[-2].split("?")[0]
 
@@ -245,8 +253,8 @@ class TestGetAssets:
 
     def test_only_active_assets(self, user_client, bus):
         uid = USER_TOKEN.subject
-        create_asset(user_client,  1, uids=[uid], activate=False, bus=bus)
-        create_asset(user_client,  1, uids=[uid], activate=True, bus=bus)
+        create_asset(user_client, 1, uids=[uid], activate=False, bus=bus)
+        create_asset(user_client, 1, uids=[uid], activate=True, bus=bus)
 
         response = user_client.get(ASSET_ME_PATH)
         assert len(response.json()["items"]) == 1

@@ -299,7 +299,10 @@ async def remove_asset_fields(
         try:
             file_repo.delete(a["file_location"])
         except Exception:
-            logger.error(f"File {a['file_location']} could not be deleted.")
+            logger.error(
+                f"File {a['file_location']} could not be deleted.",
+                component="api",
+            )
     else:
         raise ex.FORBIDDEN_GENERIC
 

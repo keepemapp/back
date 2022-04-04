@@ -19,7 +19,10 @@ from kpm.shared.service_layer.message_bus import UoWs
 
 def uows() -> UoWs:
     if s.MONGODB_URL:
-        logger.debug(f"Initializing Mongo Repositories at {s.MONGODB_URL}")
+        logger.debug(
+            f"Initializing Mongo Repositories at {s.MONGODB_URL}",
+            component="api",
+        )
         return UoWs(
             {
                 model.Asset: MongoUoW(AssetMongoRepo),
@@ -29,7 +32,8 @@ def uows() -> UoWs:
     else:
 
         logger.warn(
-            "Initializing in-memory repositories. ONLY FOR DEVELOPMENT"
+            "Initializing in-memory repositories. ONLY FOR DEVELOPMENT",
+            component="api",
         )
         return UoWs(
             {
@@ -41,10 +45,13 @@ def uows() -> UoWs:
 
 def asset_file_repository() -> AssetFileRepository:
     if s.ASSET_S3_ACCESS and s.ASSET_S3_SECRET:
-        logger.debug(f"Initializing S3 repo at {s.ASSET_S3_URL}")
+        logger.debug(
+            f"Initializing S3 repo at {s.ASSET_S3_URL}", component="api"
+        )
         return AssetFileS3Repository()
     else:
         logger.warn(
-            "Initializing local disk repositories. ONLY FOR DEVELOPMENT"
+            "Initializing local disk repositories. ONLY FOR DEVELOPMENT",
+            component="api",
         )
         return AssetFileLocalRepository()

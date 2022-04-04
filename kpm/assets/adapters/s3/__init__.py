@@ -34,17 +34,24 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
         location = location.replace("\\", "/")
         try:
             file.seek(0)
-            logger.debug(f"Saving file to bucket '{self._bucket}/{location}'")
+            logger.debug(
+                f"Saving file to bucket '{self._bucket}/{location}'",
+                component="s3",
+            )
             resp = self._client.put_object(
                 Body=file, Bucket=self._bucket, Key=location
             )
             file.close()
             status = resp.get("ResponseMetadata", {}).get("HTTPStatusCode")
             if status // 100 != 2:
-                logger.error(f"Cannot add s3 file '{location}': {resp}")
+                logger.error(
+                    f"Cannot add s3 file '{location}': {resp}", component="s3"
+                )
                 raise RuntimeError("File could not be saved. Try later")
         except ClientError as e:
-            logger.error(f"Cannot add s3 file '{location}'. Error '{e}'")
+            logger.error(
+                f"Cannot add s3 file '{location}'. Error '{e}'", component="s3"
+            )
             raise RuntimeError(f"Could not put file. Error '{e}'")
 
         logger.info(f"Added file '{location}'")
@@ -56,13 +63,21 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
             self._client.download_fileobj(
                 Bucket=self._bucket, Key=location, Fileobj=file
             )
-            logger.debug(f"File '{location}' downloaded from s3")
+            logger.debug(
+                f"File '{location}' downloaded from s3", component="s3"
+            )
             return file
         except ClientError as e:
-            logger.error(f"Cannot access s3 file '{location}'. Error {e}")
+            logger.error(
+                f"Cannot access s3 file '{location}'. Error {e}",
+                component="s3",
+            )
             raise RuntimeError("Could not get file")
         except ValueError as e:
-            logger.error(f"Cannot decrypt s3 file '{location}'. Error {e}")
+            logger.error(
+                f"Cannot decrypt s3 file '{location}'. Error {e}",
+                component="s3",
+            )
             raise e
 
     def delete(self, location: str):
@@ -70,6 +85,8 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
         resp = self._client.delete_object(Bucket=self._bucket, Key=location)
         status = resp.get("ResponseMetadata", {}).get("HTTPStatusCode")
         if status // 100 != 2:
-            logger.error(f"Cannot delete s3 file '{location}': {resp}")
+            logger.error(
+                f"Cannot delete s3 file '{location}': {resp}", component="s3"
+            )
             raise RuntimeError("Could not delete file")
-        logger.info(f"Removed file '{location}'")
+        logger.info(f"Removed file '{location}'", component="s3")

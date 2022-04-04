@@ -37,7 +37,9 @@ async def get_access_token(t: str = Depends(oauth2_scheme)) -> AccessToken:
         if token.is_access() and token.is_valid():
             return token
     except Exception as e:
-        logger.warning("Exception validating JWT token " + str(e))
+        logger.error(
+            "Exception validating JWT token " + str(e), component="api"
+        )
 
     raise ex.TOKEN_ER
 

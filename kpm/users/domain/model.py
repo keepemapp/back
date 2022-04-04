@@ -131,7 +131,9 @@ class User(RootAggregate):
         self.validate_password(cmd.old_password)
 
         new_pwd = hash_password(salt_password(cmd.new_password, self.salt))
-        logger.info(f"Password updated for user '{self.id.id}'")
+        logger.info(
+            f"Password updated for user '{self.id.id}'", component="auth"
+        )
         self._update_field(
             mod_ts=cmd.timestamp, field="password_hash", value=new_pwd
         )
@@ -140,9 +142,14 @@ class User(RootAggregate):
         salted_pwd = salt_password(password, self.salt)
         pwd_valid = verify_password(salted_pwd, self.password_hash)
         if not pwd_valid:
-            logger.info(f"Password auth failure for user '{self.id.id}'")
+            logger.info(
+                f"Password auth failure for user '{self.id.id}'",
+                component="auth",
+            )
             raise MissmatchPasswordException()
-        logger.info(f"Password auth success for user '{self.id.id}'")
+        logger.info(
+            f"Password auth success for user '{self.id.id}'", component="auth"
+        )
 
     def __hash__(self):
         return hash(self.id.id)
