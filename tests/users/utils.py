@@ -69,7 +69,6 @@ class TestKeepRepository(KeepRepository):
         return self._keeps[kid.id]
 
     def put(self, k: Keep):
-        print("adding keep", k)
         self._keeps[k.id.id] = k
 
     def exists(

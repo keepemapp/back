@@ -45,6 +45,7 @@ class ApiRoute:
 
 
 class Settings(BaseSettings):
+    LOG_LEVEL: str = "DEBUG"
     APPLICATION_NAME: str = "Keepem"
     APPLICATION_TECHNICAL_NAME: str = "Keepem"
 

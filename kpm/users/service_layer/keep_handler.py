@@ -59,3 +59,16 @@ def remove_all_keeps_of_user(
             k.decline(by_id=user, reason=reason, mod_ts=event.timestamp)
             repo.put(k)
         uow.commit()
+
+
+def add_referral_keep_when_user_activated(
+        event: events.UserActivated, keep_uow: AbstractUnitOfWork,
+        user_uow: AbstractUnitOfWork):
+    new_user_id = event.aggregate_id
+    with user_uow:
+        new_user: model.User = user_uow.repo.get(UserId(id=new_user_id))
+        referral_user_id = new_user.referred_by
+    if (referral_user_id):
+        request_cmd = cmds.RequestKeep(requester=new_user_id,
+                                       requested=referral_user_id)
+        new_keep(request_cmd, keep_uow)

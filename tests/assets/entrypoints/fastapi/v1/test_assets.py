@@ -71,6 +71,21 @@ class TestRegisterAsset:
         assert response.status_code == 201
         assert "location" in response.headers.keys()
 
+    @pytest.mark.parametrize("title", [""])
+    def test_create_wrong_title(self, user_client, title):
+        uids = [USER_TOKEN.subject]
+        asset = AssetCreate(
+            title=title,
+            description=f"Description for",
+            owners_id=uids,
+            file_type=f"Type of ",
+            file_name=f"file_of_.jpg",
+            file_size_bytes=12323,
+        )
+        response = user_client.post(ASSET_ROUTE, json=asset.dict())
+
+        assert response.status_code == 422
+
     def test_create_multiple_owners(self, user_client):
         uids = [USER_TOKEN.subject, "other-owner"]
         asset = AssetCreate(
@@ -227,6 +242,14 @@ class TestGetAssets:
 
         response = user_client.get(ASSET_ROUTE + "/" + aid1)
         assert response.status_code == 403
+
+    def test_only_active_assets(self, user_client, bus):
+        uid = USER_TOKEN.subject
+        create_asset(user_client,  1, uids=[uid], activate=False, bus=bus)
+        create_asset(user_client,  1, uids=[uid], activate=True, bus=bus)
+
+        response = user_client.get(ASSET_ME_PATH)
+        assert len(response.json()["items"]) == 1
 
 
 @pytest.mark.unit

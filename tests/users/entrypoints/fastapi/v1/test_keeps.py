@@ -1,8 +1,9 @@
 import pytest
 
 from kpm.settings import settings as s
-from kpm.shared.domain.model import UserId
-from kpm.users.domain.model import User
+from kpm.shared.domain import DomainId
+from kpm.shared.domain.model import RootAggState, UserId
+from kpm.users.domain.model import Keep, User
 from kpm.users.domain.repositories import UserRepository
 from kpm.users.entrypoints.fastapi.v1.schemas.keeps import (
     AcceptKeep,
@@ -214,7 +215,7 @@ class TestKeepsApi:
             == "pending"
         )
 
-    def test_decline_d(self, init_users, admin_client, user_client):
+    def test_decline_d(self, init_users, admin_client, user_client, bus):
         user_client.post(
             KEEP_ROUTE.path(),
             json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
@@ -227,12 +228,12 @@ class TestKeepsApi:
             json=DeclineKeep(keep_id=keep_id, reason="something").dict(),
         )
         assert admin_r.status_code == 204
-        keep = user_client.get(KEEP_ROUTE.path()).json()["items"][0]
-        assert keep["state"] == "removed"
-        assert keep["declined_by"] == "requested"
-        assert "declined_reason" not in keep.keys()
+        with bus.uows.get(Keep) as uow:
+            keep = uow.repo.get(DomainId(id=keep_id))
+            assert keep.state == RootAggState.REMOVED
+            assert keep.declined_by == "requested"
 
-    def test_decline_r(self, init_users, user_client):
+    def test_decline_r(self, init_users, user_client, bus):
         user_client.post(
             KEEP_ROUTE.path(),
             json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
@@ -245,7 +246,36 @@ class TestKeepsApi:
             json=DeclineKeep(keep_id=keep_id, reason="something").dict(),
         )
         assert resp.status_code == 204
-        keep = user_client.get(KEEP_ROUTE.path()).json()["items"][0]
-        assert keep["state"] == "removed"
-        assert keep["declined_by"] == "requester"
-        assert "declined_reason" not in keep.keys()
+        with bus.uows.get(Keep) as uow:
+            keep = uow.repo.get(DomainId(id=keep_id))
+            assert keep.state == RootAggState.REMOVED
+            assert keep.declined_by == "requester"
+
+    def test_duplicated(self, init_users, user_client):
+        user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
+        )
+        keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
+
+        # Decline it by the requested part
+        resp = user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
+        )
+
+        assert resp.status_code == 201
+
+    def test_get_only_active_and_pending(self, init_users, admin_client, user_client):
+        # Given a keep
+        user_client.post(
+            KEEP_ROUTE.path(),
+            json=RequestKeep(to_id=ADMIN_TOKEN.subject).dict(),
+        )
+        keep_id = user_client.get(KEEP_ROUTE.path()).json()["items"][0]["id"]
+        # Declined it by the requested part
+        admin_client.put(
+            KEEP_ROUTE.concat("decline").path(),
+            json=DeclineKeep(keep_id=keep_id, reason="something").dict(),
+        )
+        assert len(user_client.get(KEEP_ROUTE.path()).json()["items"]) == 0

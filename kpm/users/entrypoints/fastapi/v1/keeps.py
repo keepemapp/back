@@ -11,7 +11,8 @@ from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain import commands as cmds
-from kpm.users.domain.model import KeepActionError, KeepAlreadyDeclined
+from kpm.users.domain.model import DuplicatedKeepException, KeepActionError, \
+    KeepAlreadyDeclined
 from kpm.users.entrypoints.fastapi.v1.schemas import keeps as schemas
 from kpm.users.entrypoints.fastapi.v1.schemas.users import UserPublic
 
@@ -78,7 +79,10 @@ async def new_keep(
             headers={"WWW-Authenticate": "Bearer"},
         )
     cmd = cmds.RequestKeep(requester=token.subject, requested=user_id)
-    bus.handle(cmd)
+    try:
+        bus.handle(cmd)
+    except DuplicatedKeepException:
+        pass
 
 
 @router.put("/accept", status_code=status.HTTP_204_NO_CONTENT)

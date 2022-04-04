@@ -12,6 +12,7 @@ from starlette.responses import StreamingResponse
 import kpm.assets.domain.commands as cmds
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 from kpm.assets.adapters.filestorage import AssetFileLocalRepository
+from kpm.assets.domain import AssetTitleException
 from kpm.assets.domain.repositories import AssetFileRepository
 from kpm.assets.entrypoints.fastapi.dependencies import asset_file_repository
 from kpm.assets.entrypoints.fastapi.v1.schemas import (
@@ -74,7 +75,14 @@ async def add_asset(
 
     payload = new_asset.__dict__
     cmd = cmds.CreateAsset(**payload)
-    bus.handle(cmd)
+    try:
+        bus.handle(cmd)
+    except AssetTitleException as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Title cannot be empty nor too long",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
     return RedirectResponse(
         url=create_asset_upload_path(cmd.asset_id, token.subject),
         status_code=status.HTTP_201_CREATED,

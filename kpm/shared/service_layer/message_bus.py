@@ -61,7 +61,7 @@ class MessageBus:
         If the command fails, it raises the error
         If an event fails, it does nothing
         """
-        logger.debug(f"Handling initial message {message}")
+        logger.debug(f"Handling initial message {message}", component="bus")
         self.queue = [message]
         while self.queue:
             message = self.queue.pop(0)
@@ -73,31 +73,26 @@ class MessageBus:
                 raise Exception(f"{message} was not an Event or Command")
 
     def handle_event(self, event: Event) -> None:
-        logger.debug(self.event_handlers[type(event)])
         for handler in self.event_handlers[type(event)]:
             try:
-                logger.debug(
-                    '{"handler":"%s", "event":"%s"}', handler.__name__, event
-                )
+                logger.debug({"handler": handler.__name__,
+                              "event": str(event)}, component="bus")
                 handler(event)
                 self.queue.extend(self.uows.collect_new_events())
-                logger.debug(f"Extended queue to {self.queue}")
+                logger.debug(f"Extended queue to {self.queue}", component="bus")
             except Exception:
-                logger.exception(
-                    '{"level": "ERROR", "handler":"%s", "event":"%s"}',
-                    handler.__name__,
-                    event,
-                )
+                logger.error({"handler": handler.__name__,
+                              "event": str(event)}, component="bus")
                 continue  # TODO not sure we have to continue here
 
     def handle_command(self, command: Command) -> Optional[NoReturn]:
+        handler = self.command_handlers[type(command)]
         try:
-            handler = self.command_handlers[type(command)]
-            logger.debug(
-                '{"handler":"%s", "command":"%s"}', handler.__name__, command
-            )
+            logger.debug({"handler": handler.__name__,
+                          "command": str(command)}, component="bus")
             handler(command)
             self.queue.extend(self.uows.collect_new_events())
         except Exception as e:
-            logger.exception('{"command":"%s"}', command)
+            logger.error({"handler": handler.__name__,
+                          "command": str(command)}, component="bus")
             raise e

@@ -65,9 +65,8 @@ app.logger = logger
 
 @app.on_event("startup")
 async def startup_event():
-    logger.info("Application startup")
     if s.MONGODB_URL:
-        # TODO create indexes
+        logger.info("Creating mongo indexes")
         with mongo_client() as client:
             assets_db = client["assets"]
             assets_db.assets.create_index("owners_id")
@@ -77,7 +76,8 @@ async def startup_event():
             users_db.users.create_index("referral_code")
             users_db.keeps.create_index("requester")
             users_db.keeps.create_index("requested")
-            logger.info("Created Mongo indexes")
+
+    logger.info("Application started")
 
 
 @app.on_event("shutdown")
@@ -88,27 +88,25 @@ def shutdown_event():
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
     idem = "".join(random.choices(string.ascii_uppercase + string.digits, k=6))
-    logger.info(
-        '{"rid":"%s", "from": "%s", "method":"%s", "path": "%s"}',
-        idem,
-        f"{request.client.host}:{request.client.port}",
-        request.method,
-        request.url.path,
-    )
+    logger.info({
+        "rid": idem,
+        "from":  f"{request.client.host}:{request.client.port}",
+        "method": request.method,
+        "path": request.url.path
+    })
     start_time = time.time()
     response = await call_next(request)
 
-    process_time = (time.time() - start_time) * 1000
-    formatted_process_time = "{0:.2f}".format(process_time)
-    logger.info(
-        '{"rid":"%s", "completed_in":"%sms", "status_code":"%s"}',
-        idem,
-        formatted_process_time,
-        response.status_code,
-    )
+    process_time_ms = (time.time() - start_time) * 1000
+    formatted_process_time = "{0:.2f}".format(process_time_ms)
+    logger.info({
+        "rid": idem,
+        "completed_in_ms": formatted_process_time,
+        "status_code": response.status_code
+    })
 
     return response
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="localhost", port=8000)
+    uvicorn.run(app, host="localhost", port=8000, access_log=False)

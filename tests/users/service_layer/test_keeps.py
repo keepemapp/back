@@ -3,7 +3,7 @@ import pytest
 import kpm.users.domain.model as model
 from kpm.shared.domain.model import RootAggState
 from kpm.users.domain import commands as cmds
-from kpm.users.domain.events import UserRemoved
+from kpm.users.domain.events import UserActivated, UserRemoved
 from kpm.users.domain.repositories import KeepRepository
 from tests.users.fixtures import bus
 
@@ -186,3 +186,29 @@ class TestKeepHandlers:
             repo: KeepRepository = uow.repo
             for k in repo.all():
                 assert k.state == RootAggState.REMOVED
+
+    def test_keep_is_created_when_referral_register(self, bus):
+        uid1 = "uid1"
+        uid2 = "uid2"
+        history = [
+            create_user_cmd(uid1),
+            cmds.RegisterUser(
+                username=uid2,
+                password="THIS_IS_AN_ALLOWED_PASSWORD_LETS_SAY",
+                email=f"{uid2}@emailtest.com",
+                user_id=uid2,
+                referred_by=uid1,
+            )
+        ]
+        for msg in history:
+            bus.handle(msg)
+
+        # When
+        bus.handle(UserActivated(aggregate_id=uid2))
+
+        # Then
+        with bus.uows.get(model.Keep) as uow:
+            repo: KeepRepository = uow.repo
+            assert len(repo.all()) == 1
+            assert repo.all()[0].requester.id == uid2
+            assert repo.all()[0].state == RootAggState.PENDING
