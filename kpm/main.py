@@ -2,10 +2,12 @@ import os
 import random
 import string
 import time
+import traceback
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
@@ -53,10 +55,10 @@ app = FastAPI(
     title=s.APPLICATION_NAME,
     description=description,
     version=version,
-    servers=[
-        {"url": "https://api.keepem.app", "description": "Production environment"},
-        {"url": "https://notimpl.keepem.app", "description": "Staging environment"},
-    ],
+    #servers=[
+    #    {"url": "https://api.keepem.app", "description": "Production environment"},
+    #    {"url": "http://localhost:8000", "description": "Staging environment"},
+    #],
 )
 
 app.include_router(users_router)
@@ -81,7 +83,7 @@ async def startup_event():
             users_db.keeps.create_index("requester")
             users_db.keeps.create_index("requested")
 
-    logger.info("Application started")
+    logger.info("Application started", component="api")
 
 
 @app.on_event("shutdown")
@@ -106,7 +108,21 @@ async def log_requests(request: Request, call_next):
         response = await call_next(request)
         status_code = response.status_code
     except Exception as e:
-        logger.error(str(e), component="api")
+        process_time_ms = (time.time() - start_time) * 1000
+        logger.error(
+            {
+                "rid": idem,
+                "elapsed_ms": round(process_time_ms, 2),
+                "status_code": 500,
+                "message": str(e),
+                "stack": str(traceback.format_exc())[-168:]
+            }, component="api"
+        )
+
+        return JSONResponse(status_code=500, content={
+            "detail":
+                f"Please give this code to support: '{idem}'. Error {str(e)}",
+        })
 
     process_time_ms = (time.time() - start_time) * 1000
     formatted_process_time = round(process_time_ms, 2)
