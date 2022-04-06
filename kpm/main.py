@@ -103,7 +103,6 @@ async def log_requests(request: Request, call_next):
         }, component="api"
     )
     start_time = time.time()
-    status_code = 500
     try:
         response = await call_next(request)
         status_code = response.status_code
@@ -112,6 +111,7 @@ async def log_requests(request: Request, call_next):
         logger.error(
             {
                 "rid": idem,
+                "path": request.url.path,
                 "elapsed_ms": round(process_time_ms, 2),
                 "status_code": 500,
                 "message": str(e),
@@ -129,6 +129,8 @@ async def log_requests(request: Request, call_next):
     logger.info(
         {
             "rid": idem,
+            "path": request.url.path,
+            "method": request.method,
             "elapsed_ms": formatted_process_time,
             "status_code": status_code,
         }, component="api"

@@ -36,7 +36,7 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
             file.seek(0)
             logger.debug(
                 f"Saving file to bucket '{self._bucket}/{location}'",
-                component="s3",
+                component="fileRepo",
             )
             resp = self._client.put_object(
                 Body=file, Bucket=self._bucket, Key=location
@@ -45,12 +45,12 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
             status = resp.get("ResponseMetadata", {}).get("HTTPStatusCode")
             if status // 100 != 2:
                 logger.error(
-                    f"Cannot add s3 file '{location}': {resp}", component="s3"
+                    f"Cannot add s3 file '{location}': {resp}", component="fileRepo"
                 )
                 raise RuntimeError("File could not be saved. Try later")
         except ClientError as e:
             logger.error(
-                f"Cannot add s3 file '{location}'. Error '{e}'", component="s3"
+                f"Cannot add s3 file '{location}'. Error '{e}'", component="fileRepo"
             )
             raise RuntimeError(f"Could not put file. Error '{e}'")
 
@@ -64,7 +64,7 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
                 Bucket=self._bucket, Key=location, Fileobj=file
             )
             logger.debug(
-                f"File '{location}' downloaded from s3", component="s3"
+                f"File '{location}' downloaded from s3", component="fileRepo"
             )
             return file
         except ClientError as e:
@@ -76,7 +76,7 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
         except ValueError as e:
             logger.error(
                 f"Cannot decrypt s3 file '{location}'. Error {e}",
-                component="s3",
+                component="fileRepo",
             )
             raise e
 
@@ -86,7 +86,7 @@ class AssetFileS3Repository(EncryptedAssetFileRepository):
         status = resp.get("ResponseMetadata", {}).get("HTTPStatusCode")
         if status // 100 != 2:
             logger.error(
-                f"Cannot delete s3 file '{location}': {resp}", component="s3"
+                f"Cannot delete s3 file '{location}': {resp}", component="fileRepo"
             )
             raise RuntimeError("Could not delete file")
-        logger.info(f"Removed file '{location}'", component="s3")
+        logger.info(f"Removed file '{location}'", component="fileRepo")

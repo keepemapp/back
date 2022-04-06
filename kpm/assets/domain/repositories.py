@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import time
 from abc import ABC, abstractmethod
 from tempfile import TemporaryFile
 from typing import List, Optional, Set
@@ -9,6 +10,7 @@ from kpm.settings import settings as s
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import AssetId, UserId
 from kpm.shared.domain.repository import DomainRepository
+from kpm.shared.log import logger
 from kpm.shared.security.chacha20poly import ChaCha20PolyFileCypher
 
 
@@ -164,6 +166,7 @@ class EncryptedAssetFileRepository(AssetFileRepository):
         encryption_key: str,
         **kwargs,
     ):
+        start_time = time.time()
         try:  # Handle fastapi Async files
             file = file.file
         except Exception:
@@ -178,6 +181,10 @@ class EncryptedAssetFileRepository(AssetFileRepository):
         else:
             raise EnvironmentError("Encryption algorithm not found")
         self._create(location, enc)
+        process_time_ms = (time.time() - start_time) * 1000
+        logger.debug({"message": "create",
+                      "elapsed_ms": round(process_time_ms, 2)},
+                     component="fileRepo")
 
     @abstractmethod
     def _create(self, location: str, file: TemporaryFile):
@@ -190,15 +197,30 @@ class EncryptedAssetFileRepository(AssetFileRepository):
     def get(
         self, location: str, encryption_type, encryption_key, **kwargs
     ) -> TemporaryFile:
+        start_time = time.time()
         remote_file = self._get(location)
         if encryption_type == "ChaCha20PolyFileCypher":
             cipher = ChaCha20PolyFileCypher(
                 encryption_key, s.DATA_KEY_ENCRYPTION_KEY
             )
             plain = TemporaryFile("br+")
-            cipher.decrypt(remote_file, plain)
-            remote_file.close()
+            try:
+                cipher.decrypt(remote_file, plain)
+            except ValueError as e:
+                logger.error(
+                    f"Cannot decrypt file '{location}'. Error {e}",
+                    component="fileRepo",
+                )
+                plain.close()
+                raise e
+            finally:
+                remote_file.close()
             plain.seek(0)
+
+            process_time_ms = (time.time() - start_time) * 1000
+            logger.debug({"message": "get",
+                          "elapsed_ms": round(process_time_ms, 2)},
+                         component="fileRepo")
             return plain
         elif not encryption_type:
             remote_file.seek(0)

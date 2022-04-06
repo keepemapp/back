@@ -1,5 +1,5 @@
 import copy
-from typing import Dict, List
+from typing import Dict, List, Type
 
 from fastapi import Depends
 
@@ -24,9 +24,12 @@ from kpm.users.service_layer import COMMAND_HANDLERS as u_cmds
 from kpm.users.service_layer import EVENT_HANDLERS as u_evs
 
 
+HandlerDict = Dict[Type[Event], List]
+
+
 def _append_event_handlers(
-    handler1: Dict[Event, List], handler2: Dict[Event, List]
-) -> Dict[Event, List]:
+    handler1: HandlerDict, handler2: HandlerDict
+) -> HandlerDict:
     """Merges event handlers by appending values
 
     TODO we should cache this call. Since it gets executed every request
