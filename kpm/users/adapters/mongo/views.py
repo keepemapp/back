@@ -58,7 +58,7 @@ def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
 def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
     with mongo_client() as client:
         col = client["users"].users
-        res = col.find_one(filter={"email": email}, projection=["_id"])
+        res = col.find_one(filter={"email": email.lower()}, projection=["_id"])
 
     return res.get("_id", None) if res else None
 
@@ -66,7 +66,7 @@ def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
 def credentials_email(email: str, password: str, bus: MessageBus) -> User:
     user = None
     with bus.uows.get(User) as uow:
-        user: User = uow.repo.by_email(email)
+        user: User = uow.repo.by_email(email.lower())
     if not user:
         raise UserNotFound()
     user.validate_password(password)

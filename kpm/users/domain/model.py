@@ -59,7 +59,7 @@ class User(RootAggregate):
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:
-        regex = r"^[a-z0-9]+[\._]?[a-z0-9]+[@]\w+[.]\w{2,5}$"
+        regex = r"^[a-z0-9+\._-]+[@]\w+[.]\w{2,10}$"
         return True if re.match(regex, email) else False
 
     @staticmethod
@@ -68,6 +68,7 @@ class User(RootAggregate):
         return True if re.match(regex, name) else False
 
     def __post_init__(self, loaded_from_db: bool):
+        self.email = self.email.lower()
         self._id_type_is_valid(UserId)
         if not self._name_is_valid(self.username):
             raise ValueError(INVALID_USERNAME)

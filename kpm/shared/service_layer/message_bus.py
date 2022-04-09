@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import traceback
 from typing import (
     Callable,
     Dict,
@@ -61,7 +62,6 @@ class MessageBus:
         If the command fails, it raises the error
         If an event fails, it does nothing
         """
-        logger.debug(f"Handling initial message {message}", component="bus")
         self.queue = [message]
         while self.queue:
             message = self.queue.pop(0)
@@ -75,18 +75,20 @@ class MessageBus:
     def handle_event(self, event: Event) -> None:
         for handler in self.event_handlers[type(event)]:
             try:
+                handler(event)
                 logger.debug(
                     {"handler": handler.__name__, "event": str(event)},
                     component="bus",
                 )
-                handler(event)
                 self.queue.extend(self.uows.collect_new_events())
                 logger.debug(
                     f"Extended queue to {self.queue}", component="bus"
                 )
-            except Exception:
+            except Exception as e:
                 logger.error(
-                    {"handler": handler.__name__, "event": str(event)},
+                    {"handler": handler.__name__, "event": str(event),
+                     "message": str(e),
+                     "stack": str(traceback.format_exc())[-168:]},
                     component="bus",
                 )
                 continue  # TODO not sure we have to continue here
@@ -94,15 +96,17 @@ class MessageBus:
     def handle_command(self, command: Command) -> Optional[NoReturn]:
         handler = self.command_handlers[type(command)]
         try:
+            handler(command)
             logger.debug(
                 {"handler": handler.__name__, "command": str(command)},
                 component="bus",
             )
-            handler(command)
             self.queue.extend(self.uows.collect_new_events())
         except Exception as e:
             logger.error(
-                {"handler": handler.__name__, "command": str(command)},
+                {"handler": handler.__name__, "command": str(command),
+                 "message": str(e),
+                 "stack": str(traceback.format_exc())[-168:]},
                 component="bus",
             )
             raise e

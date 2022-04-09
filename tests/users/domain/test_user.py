@@ -36,8 +36,28 @@ class TestUser:
             active_user["id"] = UserId("232")
             assert isinstance(User(**active_user).id, UserId)
 
-        def test_email_should_be_valid(self, active_user):
-            active_user["email"] = "asds"
+        @pytest.mark.parametrize("email", [
+            "test@fmai.cos",
+            "tes-t-test-test_test.test@fmai.cos",
+            "test@barcelona.barcelona",
+            "test-test@gmail.com",
+            "test.test@gmail.com",
+            "a@a.co",
+            "Test@C.co",
+            "test@Com.cSo",
+            "test+valid@gmail.com",
+        ])
+        def test_valid_emails(self, active_user, email):
+            active_user["email"] = email
+            u = User(**active_user)
+            assert u.email == email.lower()
+
+        @pytest.mark.parametrize("email", [
+            "asd", "@gmail.com", "s d@gmail.com", "test@gmail", "test@.com",
+            "te`st@gmail.com", "';test@gmail.com"
+        ])
+        def test_invalid_emails(self, active_user, email):
+            active_user["email"] = email
             with pytest.raises(ValueError) as _:
                 User(**active_user)
 

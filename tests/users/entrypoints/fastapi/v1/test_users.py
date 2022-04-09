@@ -154,7 +154,7 @@ class TestRegisterUser:
         "noemail",
         "noemail@sds",
         "@asdsd.com",
-        "CAPSHERE@asdsd.com",
+        "de'sdklw@asdsd.com",
         "",
     ]
 
