@@ -123,7 +123,7 @@ class AssetReleaseRepository(DomainRepository):
         raise NotImplementedError
 
     @abstractmethod
-    def exists(self, owner: UserId, name: str) -> bool:
+    def exists(self, owner: str, name: str, assets: List[str]) -> bool:
         raise NotImplementedError
 
     @abstractmethod

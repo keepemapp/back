@@ -29,16 +29,18 @@ def create_asset_in_a_bottle(
 
     """
     with assetrelease_uow as uow:
-        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+        assets = [AssetId(a) for a in cmd.assets]
+        owner = UserId(cmd.owner)
+        if uow.repo.exists(owner=owner, name=cmd.name, assets=assets):
             raise model.DuplicatedAssetReleaseException()
         scheduled_date = random.randint(cmd.min_date, cmd.max_date)
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
             name=cmd.name,
             description=cmd.description,
-            owner=UserId(cmd.owner),
+            owner=owner,
             receivers=[UserId(u) for u in cmd.receivers],
-            assets=[AssetId(a) for a in cmd.assets],
+            assets=assets,
             release_type="asset_future_self",
             bequest_type=model.BequestType.GIFT,
             conditions=[model.TimeCondition(release_ts=scheduled_date)],
@@ -75,15 +77,17 @@ def create_asset_future_self(
     :return:
     """
     with assetrelease_uow as uow:
-        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+        assets = [AssetId(a) for a in cmd.assets]
+        owner = UserId(cmd.owner)
+        if uow.repo.exists(owner=owner, name=cmd.name, assets=assets):
             raise model.DuplicatedAssetReleaseException()
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
             name=cmd.name,
             description=cmd.description,
-            owner=UserId(cmd.owner),
-            receivers=[UserId(cmd.owner)],
-            assets=[AssetId(a) for a in cmd.assets],
+            owner=owner,
+            receivers=[owner],
+            assets=assets,
             release_type="asset_future_self",
             bequest_type=model.BequestType.SELF,
             conditions=[model.TimeCondition(release_ts=cmd.scheduled_date)],
@@ -169,15 +173,17 @@ def hide_asset(
     3. scheduled date must be in the future
     """
     with assetrelease_uow as uow:
-        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+        assets = [AssetId(a) for a in cmd.assets]
+        owner = UserId(cmd.owner)
+        if uow.repo.exists(owner=owner, name=cmd.name, assets=assets):
             raise model.DuplicatedAssetReleaseException()
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
             name=cmd.name,
             description=cmd.description,
-            owner=UserId(cmd.owner),
+            owner=owner,
             receivers=[UserId(u) for u in cmd.receivers],
-            assets=[AssetId(a) for a in cmd.assets],
+            assets=assets,
             release_type="hide_and_seek",
             bequest_type=model.BequestType.GIFT,
             conditions=[model.GeographicalCondition(location=cmd.location)],
@@ -198,15 +204,17 @@ def create_time_capsule(
     2. scheduled date must be in the future
     """
     with assetrelease_uow as uow:
-        if uow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+        assets = [AssetId(a) for a in cmd.assets]
+        owner = UserId(cmd.owner)
+        if uow.repo.exists(owner=owner, name=cmd.name, assets=assets):
             raise model.DuplicatedAssetReleaseException()
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
             name=cmd.name,
             description=cmd.description,
-            owner=UserId(cmd.owner),
+            owner=owner,
             receivers=[UserId(u) for u in cmd.receivers],
-            assets=[AssetId(a) for a in cmd.assets],
+            assets=assets,
             release_type="time_capsule",
             bequest_type=model.BequestType.GIFT,
             conditions=[
@@ -230,16 +238,18 @@ def transfer_asset(
     2. Happens "immediately"
     """
     with assetrelease_uow as ruow:
-        if ruow.repo.exists(owner=UserId(cmd.owner), name=cmd.name):
+        assets = [AssetId(a) for a in cmd.assets]
+        owner = UserId(cmd.owner)
+        if ruow.repo.exists(owner=owner, name=cmd.name, assets=assets):
             raise model.DuplicatedAssetReleaseException()
 
         rel = model.AssetRelease(
             id=DomainId(cmd.aggregate_id),
             name=cmd.name,
             description=cmd.description,
-            owner=UserId(cmd.owner),
+            owner=owner,
             receivers=[UserId(u) for u in cmd.receivers],
-            assets=[AssetId(a) for a in cmd.assets],
+            assets=assets,
             release_type="transfer",
             bequest_type=model.BequestType.GIFT,
             conditions=[model.TimeCondition(release_ts=cmd.scheduled_date)],

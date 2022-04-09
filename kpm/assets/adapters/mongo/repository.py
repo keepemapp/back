@@ -66,7 +66,6 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         if isinstance(bookmarked, bool):
             find_dict["bookmarked"] = bookmarked
 
-        logger.debug(f"Mongo query filters {find_dict}", component="mongodb")
         resps = self._assets.find(find_dict)
         if order_by:
             orval = (
@@ -76,7 +75,8 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.debug(f"Mongo response count: {len(res)}", component="mongodb")
+        logger.debug({"query": str(find_dict), "count": len(res)},
+                     component="mongodb")
         return res
 
     @staticmethod
@@ -98,9 +98,7 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         return Asset(loaded_from_db=True, **bson)
 
     def create(self, asset: Asset) -> NoReturn:
-        logger.debug(
-            f"Creating asset with id '{asset.id.id}'", component="mongodb"
-        )
+        logger.debug({"create": asset.id.id}, component="mongodb")
         if self._assets.find_one({"_id": asset.id.id}):
             raise DuplicatedAssetException()
         self._insert(self._assets, self._to_bson(asset))
@@ -108,17 +106,14 @@ class AssetMongoRepo(MongoBase, AssetRepository):
 
     def update(self, asset: Asset) -> None:
         bson = self._to_bson(asset)
-        logger.debug(
-            f"Updating asset with id '{asset.id.id}'", component="mongodb"
-        )
+        logger.debug({"update": asset.id.id}, component="mongodb")
         self._update(self._assets, {"_id": bson["_id"]}, bson)
         self._seen.add(asset)
 
     def remove(self, id: AssetId) -> NoReturn:
         res = self._remove(self._assets, {"_id": id.id})
-        logger.info(
-            f"Mongo deletion of id: '{id.id}' "
-            f"with count {res.deleted_count}",
+        logger.info({
+            "delete": id.id, "entity": "asset", "count": res.deleted_count},
             component="mongodb",
         )
 
@@ -158,13 +153,17 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         self._update(self._legacy, {"_id": bson["_id"]}, bson)
         self._seen.add(release)
 
-    def exists(self, owner: UserId, name: str) -> bool:
+    def exists(self, owner: UserId, name: str, assets: List[AssetId]) -> bool:
+        assets = [a.id for a in assets]
         find_dict = {
             "owner": owner.id,
             "name": name,
             "state": {"$not": {"$in": [st.value for st in FINAL_STATES]}},
+            "assets": {"$elemMatch": {"$in": assets}}
         }
-        return self._legacy.count_documents(find_dict) > 0
+        res = self._legacy.count_documents(find_dict) > 0
+        logger.debug({"query": str(find_dict), "count": res}, component="mongodb")
+        return res > 0
 
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         find_dict = {"_id": release_id.id}
@@ -198,10 +197,11 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
             else:
                 find_dict["state"] = {"$in": [st.value for st in FINAL_STATES]}
 
-        logger.debug(f"Mongo query filters {find_dict}", component="mongodb")
         resps = self._legacy.find(find_dict)
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.debug(f"Mongo response count: {len(res)}", component="mongodb")
+
+        logger.debug({"query": str(find_dict), "count": len(res)},
+                     component="mongodb")
         return res

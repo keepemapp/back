@@ -9,7 +9,7 @@ from kpm.assets.domain.model import AssetRelease
 from kpm.assets.domain.repositories import AssetReleaseRepository
 from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import FINAL_STATES, UserId
+from kpm.shared.domain.model import AssetId, FINAL_STATES, UserId
 from kpm.shared.entrypoints import bootstrap
 from kpm.shared.service_layer.message_bus import UoWs
 from kpm.users.domain.model import Keep
@@ -44,12 +44,13 @@ class TestReleaseRepo(AssetReleaseRepository):
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
         return self._repo.get(release_id)
 
-    def exists(self, owner: UserId, name: str) -> bool:
+    def exists(self, owner: UserId, name: str, assets: List[AssetId]) -> bool:
         for r in self.all():
             if (
                 r.owner == owner
                 and r.name == name
                 and r.state not in FINAL_STATES
+                and any(a in r.assets for a in assets)
             ):
                 return True
         return False
