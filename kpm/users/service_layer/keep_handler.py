@@ -2,24 +2,30 @@ import kpm.users.domain.commands as cmds
 import kpm.users.domain.events as events
 import kpm.users.domain.model as model
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import UserId
+from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 from kpm.users.domain.repositories import KeepRepository
 
 
 def new_keep(cmd: cmds.RequestKeep, keep_uow: AbstractUnitOfWork):
+    requester = UserId(cmd.requester)
+    requested = UserId(cmd.requested)
     with keep_uow as uow:
         repo: KeepRepository = uow.repo
-        if repo.exists(
-            UserId(cmd.requester), UserId(cmd.requested), all_states=True
-        ):
-            raise model.DuplicatedKeepException()
+        if repo.exists(requester, requested, all_states=True):
+            # Allow to request back the keep if declined by mistake
+            mutual_keeps = [k for k in repo.all(requester)
+                           if k.requester == requested
+                           or k.requested == requested]
+            if len(mutual_keeps) == 2 \
+                    or mutual_keeps[0].state != RootAggState.REMOVED:
+                raise model.DuplicatedKeepException()
         k = model.Keep(
             id=DomainId(cmd.id),
             created_ts=cmd.timestamp,
             name_by_requester=cmd.name_by_requester,
-            requester=UserId(cmd.requester),
-            requested=UserId(cmd.requested),
+            requester=requester,
+            requested=requested,
         )
         repo.put(k)
         uow.commit()

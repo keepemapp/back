@@ -114,6 +114,29 @@ class TestKeepHandlers:
             repo: KeepRepository = uow.repo
             assert len(repo.all()) == 1
 
+    def test_allow_inverse_request_if_declined(self, bus):
+        uid1 = "uid1"
+        uid2 = "uid2"
+        history = [
+            create_user_cmd(uid1),
+            create_user_cmd(uid2),
+            cmds.RequestKeep(requester=uid1, requested=uid2),
+        ]
+        for msg in history:
+            bus.handle(msg)
+        with bus.uows.get(model.Keep) as uow:
+            kid = uow.repo.all()[0].id.id
+        bus.handle(cmds.DeclineKeep(keep_id=kid, by=uid2))
+
+        # When
+        cmd = cmds.RequestKeep(requester=uid2, requested=uid1)
+        bus.handle(cmd)
+
+        # Then
+        with bus.uows.get(model.Keep) as uow:
+            repo: KeepRepository = uow.repo
+            assert len(repo.all()) == 2
+
     def test_declining_keep(self, bus):
         uid1 = "uid1"
         uid2 = "uid2"
