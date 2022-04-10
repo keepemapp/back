@@ -136,7 +136,6 @@ class TestRegisterUser:
         "s",
         "#2sd",
         "so 2s",
-        "CAPS",
     ]
 
     @pytest.mark.parametrize("wrong_username", non_allowed_usernames)
