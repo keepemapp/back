@@ -36,6 +36,30 @@ class TestUser:
             active_user["id"] = UserId("232")
             assert isinstance(User(**active_user).id, UserId)
 
+        @pytest.mark.parametrize("username", [
+            "test",
+            "Test",
+            "this_is_an_user",
+            "Ts",
+        ])
+        def test_valid_usernames(self, active_user, username):
+            active_user["username"] = username
+            u = User(**active_user)
+            assert u.username == username.lower()
+
+        @pytest.mark.parametrize("username", [
+            "spa ces",
+            "",
+            "no-dash",
+            "odd'chars",
+            "oddajkshdajksdhaskjdhsakjdhasdkljashdkjs",
+        ])
+        def test_invalid_usernames(self, active_user, username):
+            active_user["username"] = username
+
+            with pytest.raises(ValueError):
+                u = User(**active_user)
+
         @pytest.mark.parametrize("email", [
             "test@fmai.cos",
             "tes-t-test-test_test.test@fmai.cos",

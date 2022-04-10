@@ -81,9 +81,6 @@ class MessageBus:
                     component="bus",
                 )
                 self.queue.extend(self.uows.collect_new_events())
-                logger.debug(
-                    f"Extended queue to {self.queue}", component="bus"
-                )
             except Exception as e:
                 logger.error(
                     {"handler": handler.__name__, "event": str(event),

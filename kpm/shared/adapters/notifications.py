@@ -69,6 +69,7 @@ class EmailNotifications(AbstractNotifications):
             ).replace("\n", "")
             server.login(s.EMAIL_SENDER_ADDRESS, pwd)
             server.sendmail(s.EMAIL_SENDER_ADDRESS, destination, msg_body)
+            server.close()
         except Exception as e:
             logger.error({
                 "message": str(e),
