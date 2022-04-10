@@ -1,708 +1,109 @@
 <!DOCTYPE html>
-<html><head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Welcome to Keepem</title>
-<style id="applicationStylesheet" type="text/css">
-	.mediaViewInfo {
-		--web-view-name: F&F Welcome email ;
-		--web-view-id: FF_Welcome_email_;
-		--web-scale-on-resize: true;
-		--web-enable-deep-linking: true;
-	}
-	:root {
-		--web-view-ids: FF_Welcome_email_;
-	}
-	* {
-		margin: 0;
-		padding: 0;
-		box-sizing: border-box;
-		border: none;
-	}
-	#FF_Welcome_email_ {
-		position: absolute;
-		width: 100%;
-		height: 1200px;
-		background-color: rgba(255,255,255,1);
-		overflow: hidden;
-		--web-view-name: F&F Welcome email ;
-		--web-view-id: FF_Welcome_email_;
-		--web-scale-on-resize: true;
-		--web-enable-deep-linking: true;
-  		background: url(https://keepem.app/assets/emails/welcome/background.png);
-  		background-repeat: no-repeat;
-  		background-size: 100% 100%;
-	}
-	@keyframes  {
-	
-	
-	}
-	#backgroundimg {
-		position: absolute;
-		width: 2320px;
-		height: 1247px;
-		left: -1034px;
-		top: -47px;
-		overflow: visible;
-	}
-	#Rectngulo_1752 {
-		opacity: 0.375;
-		fill: rgba(0,255,196,1);
-	}
-	.Rectngulo_1752 {
-		display: none;
-		position: absolute;
-		overflow: visible;
-		width: 25px;
-		height: 605px;
-		left: 0px;
-		top: 0px;
-	}
-	#Rectngulo_1759 {
-		opacity: 0.375;
-		fill: rgba(0,255,196,1);
-	}
-	.Rectngulo_1759 {
-		display: none;
-		position: absolute;
-		overflow: visible;
-		width: 25px;
-		height: 605px;
-		left: 625px;
-		top: 0px;
-	}
-	#Rectngulo_1760 {
-		opacity: 0.375;
-		fill: rgba(0,255,196,1);
-	}
-	.Rectngulo_1760 {
-		display: none;
-		width: 25px;
-		height: 650px;
-		position: absolute;
-		overflow: visible;
-		transform: matrix(1,0,0,1,312.5,-312.5) rotate(90deg);
-		transform-origin: center;
-	}
-	#Trazado_961 {
-		fill: rgba(255,255,255,1);
-	}
-	.Trazado_961 {
-		overflow: visible;
-		position: absolute;
-		width: 600px;
-		height: 370px;
-		left: 25px;
-		top: 133px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#Trazado_965 {
-		fill: rgba(255,255,255,1);
-	}
-	.Trazado_965 {
-		overflow: visible;
-		position: absolute;
-		width: 600px;
-		height: 220px;
-		left: 24px;
-		top: 675px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#Trazado_966 {
-		fill: rgba(34,55,72,1);
-	}
-	.Trazado_966 {
-		overflow: visible;
-		position: absolute;
-		width: 600px;
-		height: 162px;
-		left: 25px;
-		top: 503px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#img1 {
-		position: absolute;
-		width: 200px;
-		height: 162px;
-		left: 26px;
-		top: 503px;
-		overflow: visible;
-	}
-	#img2 {
-		position: absolute;
-		width: 199px;
-		height: 162px;
-		left: 226px;
-		top: 503px;
-		overflow: visible;
-	}
-	#img3 {
-		position: absolute;
-		width: 199px;
-		height: 162px;
-		left: 425px;
-		top: 503px;
-		overflow: visible;
-	}
-	#Grupo_1584 {
-		position: absolute;
-		width: 189.774px;
-		height: 70.456px;
-		left: 230.113px;
-		top: 42.744px;
-		overflow: visible;
-	}
-	#Componente_72__9 {
-		position: absolute;
-		width: 189.774px;
-		height: 70.456px;
-		left: 0px;
-		top: 0px;
-		overflow: visible;
-	}
-	#logo {
-		position: absolute;
-		width: 189.774px;
-		height: 70.456px;
-		left: 0px;
-		top: 0px;
-		overflow: visible;
-	}
-	#View_in_browser {
-		left: 489px;
-		top: 25px;
-		position: absolute;
-		overflow: visible;
-		width: 137px;
-		height: 13px;
-		text-align: right;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: lighter;
-		font-size: 11px;
-		color: rgba(255,255,255,1);
-	}
-	#Thank_you_and_Welcome_to_our_F {
-		left: 56px;
-		top: 159px;
-		position: absolute;
-		overflow: visible;
-		width: 551px;
-		height: 20px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: bold;
-		font-size: 17px;
-		color: rgba(84,84,84,1);
-	}
-	#Grupo_1590 {
-		position: absolute;
-		width: 492px;
-		height: 41px;
-		left: 65px;
-		top: 685px;
-		overflow: visible;
-	}
-	#Rectngulo_1769 {
-		fill: rgba(0,133,119,1);
-		stroke: rgba(112,112,112,1);
-		stroke-width: 1px;
-		stroke-linejoin: miter;
-		stroke-linecap: butt;
-		stroke-miterlimit: 4;
-		shape-rendering: auto;
-	}
-	.Rectngulo_1769 {
-		position: absolute;
-		overflow: visible;
-		width: 492px;
-		height: 41px;
-		left: 0px;
-		top: 0px;
-	}
-	#Your_feedback_is_very_importan {
-		left: 0px;
-		top: 11px;
-		position: absolute;
-		overflow: visible;
-		width: 493px;
-		height: 20px;
-		text-align: center;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: bold;
-		font-size: 17px;
-		color: rgba(255,255,255,1);
-	}
-	#Lorem_ipsum_dolor_sit_amet_con {
-		left: 50px;
-		top: 199px;
-		position: absolute;
-		overflow: visible;
-		width: 551px;
-		height: 252px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 12px;
-		color: rgba(84,84,84,1);
-	}
-	#Grupo_1585 {
-		position: absolute;
-		width: 130.3px;
-		height: 37px;
-		left: 260px;
-		top: 1020px;
-		overflow: visible;
-	}
-	#twitter {
-		position: absolute;
-		width: 37px;
-		height: 37px;
-		left: 46px;
-		top: 0px;
-		overflow: visible;
-	}
-	#instagram {
-		position: absolute;
-		width: 36.3px;
-		height: 36.3px;
-		left: 94px;
-		top: 0.5px;
-		overflow: visible;
-	}
-	#linkedin {
-		position: absolute;
-		width: 35px;
-		height: 35.053px;
-		left: 0px;
-		top: 0.974px;
-		overflow: visible;
-	}
-	#Youre_receiving_this_email_bec {
-		left: 65px;
-		top: 1068px;
-		position: absolute;
-		overflow: visible;
-		width: 536px;
-		height: 28px;
-		text-align: center;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 12px;
-		color: rgba(255,255,255,1);
-	}
-	#n_022_Keepem_App__PO_Box_XXX_B {
-		left: 65px;
-		top: 1105px;
-		position: absolute;
-		overflow: visible;
-		width: 536px;
-		height: 14px;
-		text-align: center;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 12px;
-		color: rgba(255,255,255,1);
-	}
-	#Grupo_1586 {
-		position: absolute;
-		width: 199px;
-		height: 15px;
-		left: 226px;
-		top: 1155px;
-		overflow: visible;
-	}
-	#Trazado_996 {
-		fill: rgba(239,239,239,1);
-	}
-	.Trazado_996 {
-		overflow: visible;
-		position: absolute;
-		width: 1.07px;
-		height: 13.14px;
-		left: 99.29px;
-		top: 1.81px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#Privacy_Policy {
-		left: 0px;
-		top: 0px;
-		position: absolute;
-		overflow: visible;
-		width: 101px;
-		height: 15px;
-		text-align: center;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 13px;
-		color: rgba(255,255,255,1);
-	}
-	#Unsubscribe {
-		left: 99px;
-		top: 0px;
-		position: absolute;
-		overflow: visible;
-		width: 101px;
-		height: 15px;
-		text-align: center;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 13px;
-		color: rgba(255,255,255,1);
-	}
-	#Grupo_1589 {
-		position: absolute;
-		width: 600px;
-		height: 105px;
-		left: 25px;
-		top: 905px;
-		overflow: visible;
-	}
-	#Trazado_970 {
-		fill: rgba(255,255,255,1);
-	}
-	.Trazado_970 {
-		overflow: visible;
-		position: absolute;
-		width: 600px;
-		height: 105px;
-		left: 0px;
-		top: 0px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#Get_our_App {
-		left: 25px;
-		top: 11.078px;
-		position: absolute;
-		overflow: visible;
-		width: 128px;
-		height: 14px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: bold;
-		font-size: 12px;
-		color: rgba(0,133,119,1);
-	}
-	#Grupo_1588 {
-		position: absolute;
-		width: 302px;
-		height: 64px;
-		left: 9px;
-		top: 23.507px;
-		overflow: visible;
-	}
-	#playstore {
-		position: absolute;
-		width: 160px;
-		height: 64px;
-		left: 0px;
-		top: 0px;
-		overflow: visible;
-	}
-	#applestore {
-		position: absolute;
-		width: 159px;
-		height: 62px;
-		left: 143px;
-		top: 2px;
-		overflow: visible;
-	}
-	#Grupo_1587 {
-		position: absolute;
-		width: 258px;
-		height: 61px;
-		left: 317px;
-		top: 25.512px;
-		overflow: visible;
-	}
-	#Download_the_app_to_follow_upd {
-		left: 0px;
-		top: 0px;
-		position: absolute;
-		overflow: visible;
-		width: 259px;
-		height: 14px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 12px;
-		color: rgba(84,84,84,1);
-	}
-	#Our_app_is_free_and_is_ethical {
-		left: 0px;
-		top: 19px;
-		position: absolute;
-		overflow: visible;
-		width: 259px;
-		height: 42px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 12px;
-		color: rgba(84,84,84,1);
-	}
-	#Keep_your_valuable_Emotional_A {
-		left: 50px;
-		top: 440px;
-		position: absolute;
-		overflow: visible;
-		width: 433px;
-		height: 32px;
-		line-height: 18px;
-		margin-top: -3px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: bold;
-		font-size: 12px;
-		color: rgba(0,133,119,1);
-	}
-	#Lnea_28 {
-		opacity: 0.564;
-		fill: transparent;
-		stroke: rgba(255,255,255,1);
-		stroke-width: 1px;
-		stroke-linejoin: miter;
-		stroke-linecap: butt;
-		stroke-miterlimit: 4;
-		shape-rendering: auto;
-	}
-	.Lnea_28 {
-		overflow: visible;
-		position: absolute;
-		width: 600px;
-		height: 1px;
-		left: 25px;
-		top: 1144.5px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#botton_extra_large_primary_gra {
-		position: absolute;
-		width: 320px;
-		height: 50px;
-		left: 151px;
-		top: 830px;
-		overflow: visible;
-		--web-animation: fadein 0.3s ease-out;
-		--web-action-type: page;
-		--web-action-target: Tut2.html;
-		cursor: pointer;
-	}
-	#Rectngulo_1612_cl {
-		fill: url(#Rectngulo_1612_cl);
-	}
-	.Rectngulo_1612_cl {
-		filter: drop-shadow(0px 3px 6px rgba(0, 0, 0, 0.161));
-		position: absolute;
-		overflow: visible;
-		width: 338px;
-		height: 68px;
-		left: 0px;
-		top: 0px;
-	}
-	#Trazado_880_cn {
-		fill: url(#Trazado_880_cn);
-	}
-	.Trazado_880_cn {
-		overflow: visible;
-		position: absolute;
-		width: 1px;
-		height: 1px;
-		left: 0px;
-		top: 50px;
-		transform: matrix(1,0,0,1,0,0);
-	}
-	#Label {
-		left: 110px;
-		top: 16px;
-		position: absolute;
-		overflow: visible;
-		width: 101px;
-		white-space: nowrap;
-		line-height: 22px;
-		margin-top: -3.5px;
-		text-align: center;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 15px;
-		color: rgba(255,255,255,1);
-	}
-	#Lorem_ipsum_dolor_sit_amet_con_cp {
-		left: 50px;
-		top: 736px;
-		position: absolute;
-		overflow: visible;
-		width: 551px;
-		height: 98px;
-		text-align: left;
-		font-family: Sans-serif;
-		font-style: normal;
-		font-weight: normal;
-		font-size: 12px;
-		color: rgba(84,84,84,1);
-	}
-</style>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:o="urn:schemas-microsoft-com:office:office">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="x-apple-disable-message-reformatting">
+  <title></title>
+  <!--[if mso]>
+  <style>
+    table {border-collapse:collapse;border-spacing:0;border:none;margin:0;}
+    div, td {padding:0;}
+    div {margin:0 !important;}
+  </style>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
+  <style>
+    table, td, div, h1, p {
+      font-family: Arial, sans-serif;
+    }
+    @media screen and (max-width: 530px) {
+      .unsub {
+        display: block;
+        padding: 8px;
+        margin-top: 14px;
+        border-radius: 6px;
+        background-color: #555555;
+        text-decoration: none !important;
+        font-weight: bold;
+      }
+      .col-lge {
+        max-width: 100% !important;
+      }
+    }
+    @media screen and (min-width: 531px) {
+      .col-sml {
+        max-width: 27% !important;
+      }
+      .col-lge {
+        max-width: 73% !important;
+      }
+    }
+  </style>
 </head>
-<body>
-<div id="FF_Welcome_email_" style="transform-origin: 0px 0px 0px;">
+<body style="margin:0;padding:0;word-spacing:normal;background-color:#939297;">
+  <div role="article" aria-roledescription="email" lang="en" style="text-size-adjust:100%;-webkit-text-size-adjust:100%;-ms-text-size-adjust:100%;background-color:#939297;">
+    <table role="presentation" style="width:100%;border:none;border-spacing:0;">
+      <tr>
+        <td align="center" style="padding:0;">
+          <!--[if mso]>
+          <table role="presentation" align="center" style="width:600px;">
+          <tr>
+          <td>
+          <![endif]-->
+          <table role="presentation" style="width:94%;max-width:600px;border:none;border-spacing:0;text-align:left;font-family:Arial,sans-serif;font-size:16px;line-height:22px;color:#363636;">
+            <tr>
+              <td style="padding:40px 30px 30px 30px;text-align:center;font-size:24px;font-weight:bold;">
+                <a href="https://keepem.app/" style="text-decoration:none;"><img src="https://keepem.app/assets/emails/logo_blue.svg" width="165" alt="Logo" style="width:165px;max-width:80%;height:auto;border:none;text-decoration:none;color:#ffffff;"></a>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px;background-color:#ffffff;">
+                <p style="margin:0;">Hola {{ name }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px;background-color:#ffffff;">
+                <h1 style="margin-top:0;margin-bottom:16px;font-size:26px;line-height:32px;font-weight:bold;letter-spacing:-0.02em;">Gràcies</h1>
+                <p style="margin:0;">Gràcies per registrar-te a Keepem. Actualment estem en fase de proves tancada (beta) i revisarem manualment la teva participació.
+					Si has esta convidat per algú de nosaltres, activarem la teva conta en 24-48 hores.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px;background-color:#ffffff;">
+                <p style="margin:0;">Gracias por registrarte en Keepem. Actualmente estamos en fase de pruebas tancada i revisaremos manualmente tu participación.
+				Si has sido invitado por alguien de nosotros, activaremos tu cuenta en 24-48 horas.</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:30px;background-color:#ffffff;">
+                <p style="margin:0;">Thank you for registering at Keepem. We are currently in a closed beta and will manually check your account.
+				If you have been invited by some of us we will activate your account in 24-48 hours.</p>
+              </td>
+            </tr>
 
-	<svg class="Rectngulo_1752">
-		<rect id="Rectngulo_1752" rx="0" ry="0" x="0" y="0" width="25" height="605">
-		</rect>
-	</svg>
-	<svg class="Rectngulo_1759">
-		<rect id="Rectngulo_1759" rx="0" ry="0" x="0" y="0" width="25" height="605">
-		</rect>
-	</svg>
-	<svg class="Rectngulo_1760">
-		<rect id="Rectngulo_1760" rx="0" ry="0" x="0" y="0" width="25" height="650">
-		</rect>
-	</svg>
-	<svg class="Trazado_961" viewBox="980 420 600 370">
-		<path id="Trazado_961" d="M 980 420.0000305175781 L 1580 420.0000305175781 L 1580 790.0000610351562 L 980 790.0000610351562 L 980 420.0000305175781 Z">
-		</path>
-	</svg>
-	<svg class="Trazado_965" viewBox="980 850 600 220">
-		<path id="Trazado_965" d="M 980 849.9998779296875 L 1580 849.9998779296875 L 1580 1069.999877929688 L 980 1069.999877929688 L 980 849.9998779296875 Z">
-		</path>
-	</svg>
-	<svg class="Trazado_966" viewBox="980 850 600 162">
-		<path id="Trazado_966" d="M 980 850 L 1580 850 L 1580 1012 L 980 1012 L 980 850 Z">
-		</path>
-	</svg>
-	<img id="img1" src="https://keepem.app/assets/emails/welcome/kelly-sikkema-IE8KfewAp-w-unsplash.jpg">
-	<img id="img2" src="https://keepem.app/assets/emails/welcome/jakob-owens-f3s0i96CRGQ-unsplash.jpg">
-	<img id="img3" src="https://keepem.app/assets/emails/welcome/kelly-sikkema-M6dAnUgiOlQ-unsplash.jpg">
-	<div id="Grupo_1584">
-		<div id="Componente_72__9" class="Componente_72___9">
-			<img id="logo" src="https://keepem.app/assets/emails/logo_blue.svg">
-			
-		</div>
-	</div>
-	<div id="View_in_browser">
-		<span>View in browser</span>
-	</div>
-	<div id="Thank_you_and_Welcome_to_our_F">
-		<span>Thank you and Welcome to our “</span><span style="font-style:normal;font-weight:bold;">Friends &amp; Family</span><span>” Beta release !</span>
-	</div>
-	<div id="Grupo_1590">
-		<svg class="Rectngulo_1769">
-			<rect id="Rectngulo_1769" rx="0" ry="0" x="0" y="0" width="492" height="41">
-			</rect>
-		</svg>
-		<div id="Your_feedback_is_very_importan">
-			<span>Your feedback is very important to us</span>
-		</div>
-	</div>
-	<div id="Lorem_ipsum_dolor_sit_amet_con">
-		<span>Hi {{ name }}, thank you for joining this closed beta of Keepem,
-			our way to help you recover the past and preserve the present to live the future.
-<br><br>Pellentesque eget mauris in odio efficitur
-consequat. Nam euismod ex ut aliquet tristique. Nam facilisis nisi a 
-risus varius molestie. Maecenas euismod finibus odio, mattis consequat 
-erat vestibulum at. Suspendisse potenti. Vivamus dapibus, metus a 
-eleifend scelerisque, neque nisi hendrerit ipsum, id pellentesque ligula
- massa at felis. Suspendisse eleifend, nisl nec congue scelerisque, est 
-est sodales ligula, sit amet hendrerit turpis lacus et eros. Sed non 
-maximus dui. Integer venenatis diam in ex eleifend, a pharetra sem 
-congue. Aliquam eleifend commodo sapien sit amet bibendum.<br></span><br>
-	</div>
-	<div id="Grupo_1585">
-		<img id="twitter" src="https://keepem.app/assets/emails/twitter.png">
-		<img id="instagram" src="https://keepem.app/assets/emails/instagram.png">
-		<img id="linkedin" src="https://keepem.app/assets/emails/linkedin.png">
-	</div>
-	<div id="Youre_receiving_this_email_bec">
-		<span>You’re receiving this email because you fulfilled the </span><span style="font-style:normal;font-weight:bold;color:rgba(0,133,119,1);">Keepem app</span><span> registration form. In case you did not or you do not want to join us, please, let us know </span><span style="font-style:normal;font-weight:bold;">here</span><span>.</span>
-	</div>
-	<div id="n_022_Keepem_App__PO_Box_XXX_B">
-		<span>2022 Keepem App | PO Box XXX, Barcelona - Spain</span>
-	</div>
-	<div id="Grupo_1586">
-		<svg class="Trazado_996" viewBox="1280.29 1301.81 1.07 13.14">
-			<path id="Trazado_996" d="M 1280.2900390625 1314.949951171875 L 1280.2900390625 1301.81005859375 L 1281.359985351562 1301.81005859375 L 1281.359985351562 1314.949951171875 L 1280.2900390625 1314.949951171875 Z">
-			</path>
-		</svg>
-		<div id="Privacy_Policy">
-			<span>Privacy Policy</span>
-		</div>
-		<div id="Unsubscribe">
-			<span>Unsubscribe</span>
-		</div>
-	</div>
-	<div id="Grupo_1589">
-		<svg class="Trazado_970" viewBox="980 1012 600 105">
-			<path id="Trazado_970" d="M 980 1012 L 1580 1012 L 1580 1117.000122070312 L 980 1117.000122070312 L 980 1012 Z">
-			</path>
-		</svg>
-		<div id="Get_our_App">
-			<span>Get our App</span>
-		</div>
-		<div id="Grupo_1588">
-			<img id="playstore" src="https://keepem.app/assets/emails/google_play.png">
-			<img id="applestore" src="https://keepem.app/assets/emails/apple_store.png">
-		</div>
-		<div id="Grupo_1587">
-			<div id="Download_the_app_to_follow_upd">
-				<span>Download the app to follow updates</span>
-			</div>
-			<div id="Our_app_is_free_and_is_ethical">
-				<span>Our app is part of a <b>new future</b>. It's built with your <i>privacy in mind</i> and we do not
-					gather, store or process more data than strictly needed nor share your data with any third party.</span>
-			</div>
-		</div>
-	</div>
-	<div id="Keep_your_valuable_Emotional_A">
-		<span>Keep your valuable Emotional Assets private and safe…forever. <br>Manage easily your Digital Legacy</span>
-	</div>
-	<svg class="Lnea_28" viewBox="0 0 600 1">
-		<path id="Lnea_28" d="M 0 0 L 600 0">
-		</path>
-	</svg>
-	<div onclick="application.goToTargetView(event)" id="botton_extra_large_primary_gra" class="botton_extra_large_primary_gradient_color_02">
-		<svg class="Rectngulo_1612_cl">
-			<linearGradient id="Rectngulo_1612_cl" spreadMethod="pad" x1="-0.023" x2="1.035" y1="0.5" y2="0.5">
-				<stop offset="0" stop-color="#5fddc9" stop-opacity="1"></stop>
-				<stop offset="1" stop-color="#006e77" stop-opacity="1"></stop>
-			</linearGradient>
-			<rect id="Rectngulo_1612_cl" rx="25" ry="25" x="0" y="0" width="320" height="50">
-			</rect>
-		</svg>
-		<svg class="Trazado_880_cn" viewBox="0 50 1 1">
-			<linearGradient id="Trazado_880_cn" spreadMethod="pad" x1="-0.042" x2="1.023" y1="0.159" y2="0.766">
-				<stop offset="0" stop-color="#5fddc9" stop-opacity="1"></stop>
-				<stop offset="1" stop-color="#006e77" stop-opacity="1"></stop>
-			</linearGradient>
-			<path id="Trazado_880_cn" d="M 0 50 L 0 50 Z">
-			</path>
-		</svg>
-		<div id="Label">
-			<span>Give feedback</span>
-		</div>
-	</div>
-	<div id="Lorem_ipsum_dolor_sit_amet_con_cp">
-		<span>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque
- massa leo, rutrum at mi vel, consequat consectetur nisl. Integer 
-ultricies sapien eget lorem auctor ultricies. Ut at massa tempor, 
-suscipit nibh sit amet, luctus erat. Maecenas id dictum justo. 
-Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere
- cubilia curae; Mauris consectetur tortor sed metus varius facilisis. 
-Nam dignissim libero sit amet libero aliquet porttitor id eget ligula. 
-Vivamus pellentesque tempor neque sed sodales. </span><br>
-	</div>
-</div>
+            <tr>
+              <td style="padding:30px;background-color:#ffffff;">
+                <p style="margin:0;">Atentament</p>
+                <p style="margin:0;">{{ founder_name }}</p>
+              </td>
+            </tr>
+            <tr>
+              <td style="padding:20px 30px 30px 30px;text-align:center;font-size:24px;font-weight:bold;">
+              </td>
+            </tr>
+            <tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </div>
+</body>
+</html>
 
-</body></html>

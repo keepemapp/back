@@ -108,7 +108,6 @@ class User(RootAggregate):
                     "removed_by": by,
                     "removed_reason": reason,
                     "email": "",
-                    "username": "",
                     "public_name": None,
                 },
             )

@@ -1,4 +1,5 @@
 import os
+import random
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -10,6 +11,14 @@ from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 from kpm.users.domain.repositories import UserRepository
+
+
+def _load_email_templates() -> Environment:
+    return Environment(
+        loader=FileSystemLoader(
+            os.path.join(os.path.dirname(__file__), "templates")
+        )
+    )
 
 
 def register_user(cmd: cmds.RegisterUser, user_uow: AbstractUnitOfWork):
@@ -89,20 +98,48 @@ def activate(cmd: cmds.ActivateUser, user_uow: AbstractUnitOfWork):
         uow.commit()
 
 
+def send_activation_email(
+    event: events.UserActivated, user_uow: AbstractUnitOfWork,
+    email_notifications: AbstractNotifications
+):
+    env = _load_email_templates()
+    with user_uow as uow:
+        repo: UserRepository = uow.repo
+        user: model.User = repo.get(UserId(event.aggregate_id))
+        if not user:
+            raise model.UserNotFound()
+
+    template = env.get_template("user_activated.html")
+    founder_name = random.choice(["Martí", "David", "Jordi"])
+    output = template.render(name=user.username, founder_name=founder_name)
+    email_notifications.send(user.email, "Your account is ready", output)
+
+
 def send_welcome_email(
     event: events.UserRegistered, email_notifications: AbstractNotifications
 ):
-    """Sends welcome email"""
-    env = Environment(
-        loader=FileSystemLoader(
-            os.path.join(os.path.dirname(__file__), "templates")
-        )
-    )
-
+    """Sends welcome email to user"""
+    env = _load_email_templates()
     template = env.get_template("welcome_email.html")
-    output = template.render(name=event.username)
-
+    founder_name = random.choice(["Martí", "David", "Jordi"])
+    output = template.render(name=event.username, founder_name=founder_name)
     email_notifications.send(event.email, "Welcome to Keepem!", output)
+
+
+def send_new_user_email(
+        event: events.UserRegistered, email_notifications: AbstractNotifications
+):
+    """Sends welcome email to user"""
+    env = _load_email_templates()
+    template = env.get_template("new_user_internal.html")
+
+    output = template.render(
+        id=event.aggregate_id,
+        username=event.username,
+        email=event.email,
+        referral=event.referred_by,
+    )
+    email_notifications.send("board@keepem.app", "User requires activation", output)
 
 
 def remove_user(cmd: cmds.RemoveUser, user_uow: AbstractUnitOfWork):

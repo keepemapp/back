@@ -1,7 +1,7 @@
 import copy
 from typing import Dict, List, Type
 
-from fastapi import Depends
+from fastapi import Depends, BackgroundTasks
 
 import kpm.assets.adapters.memrepo.views_asset as av_mem
 import kpm.assets.adapters.memrepo.views_asset_release as arv_mem
@@ -14,7 +14,8 @@ from kpm.assets.entrypoints.fastapi.dependencies import uows as a_uows
 from kpm.assets.service_layer import COMMAND_HANDLERS as a_cmds
 from kpm.assets.service_layer import EVENT_HANDLERS as a_evs
 from kpm.shared.adapters.mongo import MongoUoW
-from kpm.shared.adapters.notifications import NoNotifications
+from kpm.shared.adapters.notifications import EmailNotifications, \
+    NoNotifications
 from kpm.shared.domain.events import Event
 from kpm.shared.entrypoints.bootstrap import bootstrap
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs
@@ -22,6 +23,8 @@ from kpm.users.domain.model import User
 from kpm.users.entrypoints.fastapi.dependencies import uows as u_uows
 from kpm.users.service_layer import COMMAND_HANDLERS as u_cmds
 from kpm.users.service_layer import EVENT_HANDLERS as u_evs
+
+from kpm.settings import settings as s
 
 
 HandlerDict = Dict[Type[Event], List]
@@ -45,6 +48,7 @@ def _append_event_handlers(
 
 
 def message_bus(
+    background_tasks: BackgroundTasks,
     asset_uows: UoWs = Depends(a_uows),
     user_uows: UoWs = Depends(u_uows),
 ) -> MessageBus:
@@ -53,9 +57,8 @@ def message_bus(
     commands = {**a_cmds, **u_cmds}
 
     email_notifications = NoNotifications()
-    # TODO Takes 30 sec to even init
-    # if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
-    #    email_notifications = EmailNotifications()
+    if s.EMAIL_SENDER_ADDRESS and s.EMAIL_SENDER_PASSWORD:
+        email_notifications = EmailNotifications(background_tasks)
 
     yield bootstrap(
         uows=asset_uows,
