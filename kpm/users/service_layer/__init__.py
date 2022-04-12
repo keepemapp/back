@@ -4,7 +4,7 @@ from kpm.users.service_layer import keep_handler as kh
 from kpm.users.service_layer import user_handler as uh
 
 EVENT_HANDLERS = {
-    events.UserRegistered: [uh.send_welcome_email, uh.send_new_user_email],
+    events.UserRegistered: [uh.send_new_user_email, uh.send_welcome_email],
     events.UserActivated: [kh.add_referral_keep_when_user_activated,
                            uh.send_activation_email],
     events.UserRemoved: [kh.remove_all_keeps_of_user],

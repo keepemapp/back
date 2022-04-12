@@ -54,11 +54,11 @@ class EmailNotifications(AbstractNotifications):
             )
         else:
             logger.warning("Synchronously sending email", component="mail")
-            EmailNotifications._connect_and_send(self._host, self._port,
+            await EmailNotifications._connect_and_send(self._host, self._port,
                                                  destination, msg_body, subject)
 
     @staticmethod
-    def _connect_and_send(host, port, destination, msg_body, subject):
+    async def _connect_and_send(host, port, destination, msg_body, subject):
         try:
             server = smtplib.SMTP(host, port)
             server.noop()
