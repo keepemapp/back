@@ -79,7 +79,6 @@ class EmailNotifications(AbstractNotifications):
                 "stack": str(traceback.format_exc())[-168:]}
                 , component="mail"
             )
-            raise e
 
 
 class NoNotifications(AbstractNotifications):
