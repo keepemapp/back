@@ -130,9 +130,9 @@ Has entès de què va?""",
                     id="x34d",
                     order=2,
                     question={
-                        "en": "Is there something not working?",  # noqa:E501
-                        "ca": "Hi ha alguna cosa que no funciona?",  # noqa:E501
-                        "es": "¿Hay algo que no funciona?",  # noqa:E501
+                        "en": "You can send an email with screenshots at info@keepem.app\n\nIs there something not working?",  # noqa:E501
+                        "ca": "Pots enviar captures de pantalla a info@keepem.app\n\nHi ha alguna cosa que no funciona?",  # noqa:E501
+                        "es": "Puedes enviar imágenes al correo info@keepem.app\n\n¿Hay algo que no funciona?",  # noqa:E501
                     },
                 ),
                 sch.TextFeedbackQuestion(

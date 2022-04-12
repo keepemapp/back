@@ -4,7 +4,7 @@ import traceback
 from abc import ABC, abstractmethod
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import List, Union
+from typing import Dict, List, Union
 from fastapi import BackgroundTasks
 
 from kpm.settings import settings as s
@@ -18,10 +18,14 @@ class AbstractNotifications(ABC):
     ):
         raise NotImplementedError
 
+    @abstractmethod
+    def send_multiple(self, emails: List[Dict]):
+        raise NotImplementedError
+
 
 class EmailNotifications(AbstractNotifications):
     """
-    NOTE: this takes 30s just to init.
+    NOTE: sending is slow
     """
 
     def __init__(
@@ -48,16 +52,33 @@ class EmailNotifications(AbstractNotifications):
                 f"Sending email to '{destination}'",
                 component="mail",
             )
-            logger.debug(f"Background Tasks {self._bg_tasks.tasks}", component="mail",)
             self._bg_tasks.add_task(
                 EmailNotifications._connect_and_send,
                 self._host, self._port, destination, msg_body, subject
             )
-            logger.debug(f"Background Tasks {self._bg_tasks.tasks}", component="mail",)
         else:
             logger.warning("Synchronously sending email", component="mail")
             EmailNotifications._connect_and_send(self._host, self._port,
                                                  destination, msg_body, subject)
+
+    def send_multiple(self, emails: List[Dict]):
+        msgs = []
+        for email in emails:
+            message = MIMEMultipart()
+            message["Subject"] = email["subject"]
+            message["From"] = f"Keepem App <{s.EMAIL_SENDER_ADDRESS}>"
+            message["Reply-To"] = "Keepem Info <info@keepem.app>"
+            message["To"] = email["to"]
+            message.attach(MIMEText(email["body"], "html"))
+            msgs.append(message)
+        if self._bg_tasks:
+            self._bg_tasks.add_task(
+                EmailNotifications._send_multiple,
+                self._host, self._port, msgs
+            )
+        else:
+            logger.warning("Synchronously sending email", component="mail")
+            EmailNotifications._send_multiple(self._host, self._port, msgs)
 
     @staticmethod
     def _connect_and_send(host, port, destination, msg_body, subject):
@@ -82,6 +103,39 @@ class EmailNotifications(AbstractNotifications):
                 , component="mail"
             )
 
+    @staticmethod
+    def _send_multiple(host, port, messages: List[MIMEMultipart]):
+        try:
+            server = smtplib.SMTP(host, port)
+            server.noop()
+            server.starttls()
+            pwd = str(
+                base64.b64decode(s.EMAIL_SENDER_PASSWORD), "utf-8"
+            ).replace("\n", "")
+            server.login(s.EMAIL_SENDER_ADDRESS, pwd)
+            for msg in messages:
+                try:
+                    msg_body = msg.as_string()
+                    server.sendmail(s.EMAIL_SENDER_ADDRESS,
+                                    msg["To"], msg_body)
+                    logger.info(
+                        f"Email sent to '{msg['To']}' with subject '{msg['Subject']}'",
+                        component="mail",
+                    )
+                except Exception as e:
+                    logger.error({
+                        "message": str(e),
+                        "stack": str(traceback.format_exc())[-168:]}
+                        , component="mail"
+                    )
+            server.close()
+        except Exception as e:
+            logger.error({
+                "message": str(e),
+                "stack": str(traceback.format_exc())[-168:]}
+                , component="mail"
+            )
+
 
 class NoNotifications(AbstractNotifications):
     def send(
@@ -90,5 +144,11 @@ class NoNotifications(AbstractNotifications):
         logger.info(
             "I would have send email to "
             + f"'{destination}' with subject '{subject}'",
+            component="notifications",
+        )
+
+    def send_multiple(self, emails: List[Dict]):
+        logger.info(
+            f"I would have send {emails} ",
             component="notifications",
         )

@@ -116,32 +116,30 @@ def send_activation_email(
     email_notifications.send(user.email, "Your account is ready", output)
 
 
-def send_welcome_email(
-    event: events.UserRegistered, email_notifications: AbstractNotifications
-):
-    """Sends welcome email to user"""
-    env = _load_email_templates()
-    template = env.get_template("welcome_email.html")
-    founder_name = random.choice(["Martí", "David", "Jordi"])
-    output = template.render(name=event.username, founder_name=founder_name)
-    email_notifications.send(event.email, "Welcome to Keepem!", output)
-
-
 def send_new_user_email(
         event: events.UserRegistered, email_notifications: AbstractNotifications
 ):
-    """Sends welcome email to user"""
+    """Sends welcome email to user and activation to board"""
     env = _load_email_templates()
-    template = env.get_template("new_user_internal.html")
 
-    output = template.render(
+    template = env.get_template("welcome_email.html")
+    founder_name = random.choice(["Martí", "David", "Jordi"])
+    welcome = template.render(name=event.username, founder_name=founder_name)
+
+    template = env.get_template("new_user_internal.html")
+    activation = template.render(
         id=event.aggregate_id,
         username=event.username,
         email=event.email,
         referral=event.referred_by,
     )
-    logger.debug(f"Sending email to activate user'", component="mail")
-    email_notifications.send("board@keepem.app", "User requires activation", output)
+
+    email_notifications.send_multiple([
+        {"to": event.username, "subject": "Welcome to Keepem!",
+         "body": welcome},
+        {"to": "board@keepem.app", "subject": "User requires activation",
+         "body": activation},
+    ])
 
 
 def remove_user(cmd: cmds.RemoveUser, user_uow: AbstractUnitOfWork):
