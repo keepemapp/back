@@ -90,7 +90,7 @@ class MongoBase(ABC):
     def _insert(self, collection, document):
         self._start_transaction()
         logger.debug(
-            f"Adding to '{collection.name}' document {document}",
+            f"Adding to '{collection.name}' document {document.get('_id')}",
             component="mongodb",
         )
         return collection.insert_one(document, session=self._tx_session)
@@ -98,7 +98,7 @@ class MongoBase(ABC):
     def _update(self, collection, filter, document):
         self._start_transaction()
         logger.debug(
-            f"Adding to '{collection.name}' document {document}",
+            f"Adding to '{collection.name}' document {document.get('_id')}",
             component="mongodb",
         )
         return collection.replace_one(
@@ -126,7 +126,6 @@ class MongoBase(ABC):
         self.close_conn()
 
     def commit(self) -> None:
-        logger.debug("Committing to mongo", component="mongodb")
         if isinstance(self._tx_session, ClientSession):
             self._tx_session.commit_transaction()
             self._tx_session.end_session()

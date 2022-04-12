@@ -51,15 +51,10 @@ class EmailNotifications(AbstractNotifications):
         else:
             logger.warning("Synchronously sending email", component="mail")
             EmailNotifications._connect_and_send(self._host, self._port,
-                                                 destination, msg_body)
-
-        logger.info(
-            f"Email sent to '{destination}' with subject '{subject}'",
-            component="mail",
-        )
+                                                 destination, msg_body, subject)
 
     @staticmethod
-    def _connect_and_send(host, port, destination, msg_body):
+    def _connect_and_send(host, port, destination, msg_body, subject):
         try:
             server = smtplib.SMTP(host, port)
             server.noop()
@@ -70,11 +65,15 @@ class EmailNotifications(AbstractNotifications):
             server.login(s.EMAIL_SENDER_ADDRESS, pwd)
             server.sendmail(s.EMAIL_SENDER_ADDRESS, destination, msg_body)
             server.close()
+            logger.info(
+                f"Email sent to '{destination}' with subject '{subject}'",
+                component="mail",
+            )
         except Exception as e:
             logger.error({
                 "message": str(e),
                 "stack": str(traceback.format_exc())[-168:]}
-                , component='mail'
+                , component="mail"
             )
             raise e
 
