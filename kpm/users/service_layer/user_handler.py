@@ -8,6 +8,7 @@ import kpm.users.domain.events as events
 import kpm.users.domain.model as model
 from kpm.shared.adapters.notifications import AbstractNotifications
 from kpm.shared.domain.model import RootAggState, UserId
+from kpm.shared.log import logger
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 from kpm.users.domain.repositories import UserRepository
@@ -139,6 +140,7 @@ def send_new_user_email(
         email=event.email,
         referral=event.referred_by,
     )
+    logger.debug(f"Sending email to activate user'", component="mail")
     email_notifications.send("board@keepem.app", "User requires activation", output)
 
 

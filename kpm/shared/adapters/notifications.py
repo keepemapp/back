@@ -44,6 +44,10 @@ class EmailNotifications(AbstractNotifications):
         msg_body = message.as_string()
 
         if self._bg_tasks:
+            logger.debug(
+                f"Sending email to '{destination}'",
+                component="mail",
+            )
             self._bg_tasks.add_task(
                 EmailNotifications._connect_and_send,
                 self._host, self._port, destination, msg_body, subject
@@ -56,10 +60,6 @@ class EmailNotifications(AbstractNotifications):
     @staticmethod
     def _connect_and_send(host, port, destination, msg_body, subject):
         try:
-            logger.info(
-                f"Sending email to '{destination}'",
-                component="mail",
-            )
             server = smtplib.SMTP(host, port)
             server.noop()
             server.starttls()

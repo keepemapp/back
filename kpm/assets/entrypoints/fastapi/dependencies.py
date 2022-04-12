@@ -19,10 +19,6 @@ from kpm.shared.service_layer.message_bus import UoWs
 
 def uows() -> UoWs:
     if s.MONGODB_URL:
-        logger.debug(
-            f"Initializing Mongo Repositories",
-            component="mongo",
-        )
         return UoWs(
             {
                 model.Asset: MongoUoW(AssetMongoRepo),
@@ -45,9 +41,6 @@ def uows() -> UoWs:
 
 def asset_file_repository() -> AssetFileRepository:
     if s.ASSET_S3_ACCESS and s.ASSET_S3_SECRET:
-        logger.debug(
-            f"Initializing S3 repo at {s.ASSET_S3_URL}", component="s3"
-        )
         return AssetFileS3Repository()
     else:
         logger.warn(
