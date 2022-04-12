@@ -46,7 +46,7 @@ class EmailNotifications(AbstractNotifications):
         if self._bg_tasks:
             self._bg_tasks.add_task(
                 EmailNotifications._connect_and_send,
-                self._host, self._port, destination, msg_body
+                self._host, self._port, destination, msg_body, subject
             )
         else:
             logger.warning("Synchronously sending email", component="mail")
@@ -56,6 +56,10 @@ class EmailNotifications(AbstractNotifications):
     @staticmethod
     def _connect_and_send(host, port, destination, msg_body, subject):
         try:
+            logger.info(
+                f"Sending email to '{destination}'",
+                component="mail",
+            )
             server = smtplib.SMTP(host, port)
             server.noop()
             server.starttls()
