@@ -48,10 +48,12 @@ class EmailNotifications(AbstractNotifications):
                 f"Sending email to '{destination}'",
                 component="mail",
             )
+            logger.debug(f"Background Tasks {self._bg_tasks.tasks}", component="mail",)
             self._bg_tasks.add_task(
                 EmailNotifications._connect_and_send,
                 self._host, self._port, destination, msg_body, subject
             )
+            logger.debug(f"Background Tasks {self._bg_tasks.tasks}", component="mail",)
         else:
             logger.warning("Synchronously sending email", component="mail")
             EmailNotifications._connect_and_send(self._host, self._port,
