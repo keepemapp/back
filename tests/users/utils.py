@@ -34,11 +34,11 @@ class MemoryUserRepository(UserRepository):
         def is_email_equals(email1: str, email2: str):
             if "@gmail" in email1:
                 return (
-                    email1.replace(".", "").lower()
-                    == email2.replace(".", "").lower()
+                    email1.replace(".", "").lower().strip()
+                    == email2.replace(".", "").lower().strip()
                 )
             else:
-                return email1.lower() == email2.lower()
+                return email1.lower().strip() == email2.lower().strip()
 
         return any(is_email_equals(u.email, email) for u in self.all())
 

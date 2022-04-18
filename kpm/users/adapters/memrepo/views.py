@@ -58,7 +58,7 @@ def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
 
 
 def credentials_email(email: str, password: str, bus: MessageBus) -> User:
-    email = email.lower()
+    email = email.lower().strip()
 
     def is_email_equals(email1: str, email2: str):
         if "@gmail" in email1:

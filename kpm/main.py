@@ -88,7 +88,7 @@ async def startup_event():
 
 @app.on_event("shutdown")
 def shutdown_event():
-    logger.warn("Application shutdown", component="api")
+    logger.warning("Application shutdown", component="api")
 
 
 @app.middleware("http")

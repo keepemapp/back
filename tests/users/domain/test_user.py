@@ -70,11 +70,14 @@ class TestUser:
             "Test@C.co",
             "test@Com.cSo",
             "test+valid@gmail.com",
+            "  testvalid@gmail.com",
+            "  testvalid@gmail.com   ",
+            "testvalid@gmail.com     ",
         ])
         def test_valid_emails(self, active_user, email):
             active_user["email"] = email
             u = User(**active_user)
-            assert u.email == email.lower()
+            assert u.email == email.lower().strip()
 
         @pytest.mark.parametrize("email", [
             "asd", "@gmail.com", "s d@gmail.com", "test@gmail", "test@.com",

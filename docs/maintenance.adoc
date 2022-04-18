@@ -1,0 +1,37 @@
+= Maintenance scripts
+
+[source, python]
+----
+from pymongo import MongoClient
+client = MongoClient("mongodb://kpm_mongo:27017/?replicaSet=rs0")
+
+us = client.users.users
+ks = client.users.keeps
+
+client.assets.list_collection_names()
+aets = client.assets.assets
+ops = client.assets.legacy
+
+
+# Email change
+user = us.find_one({'username': 'jordi'})
+user['email'] = 'new@email.com'
+us.update_one({'_id': user['_id']}, {'$set': user})
+
+
+# Orphan entities
+uids = [u["_id"]  for u in us.find({})]
+not_uid = {"$not": {"$in": uids}}
+
+orphan_keeps = [k["_id"] for k in ks.find(
+  {"$or": [{"requester": not_uid},{"requested": not_uid}]}
+)]
+orphan_keeps
+
+
+orphan_assets = [k["_id"] for k in aets.find({"owners": not_uid})]
+orphan_assets
+
+orphan_legacy = [k["_id"] for k in ops.find({"owner": not_uid})]
+orphan_legacy
+----

@@ -118,8 +118,17 @@ Since we are using messaging patterns, in the service layer we will have
 the handlers for each event or command. Ideally, those have only one repo
 and communicate with eachother via events. 
 
-## WRITING FASTAPI endpoints
+## WRITING FASTAPI 
+### Background tasks
+| :boom: DANGER              |
+|:---------------------------|
+|In prod, it seems like two background tasks do not run at the same time so try to unify them.|
 
+E.g. with one handler send an email and with another handler send another email.
+The second background task is not sent. 
+
+
+### Responses
 | :boom: DANGER              |
 |:---------------------------|
 |Never use the `response_model` parameter when defining the endpoint **AND** using a pydantic model as return.|
@@ -156,7 +165,8 @@ async def get_all_users(repo: UserRepository = Depends(user_repository)):
 
 ## 📧 E-mail service
 
-As of now it's not activated since it takes some time to connect to the mail svc. 
+Sending an email takes time. 
+Due to this we execute it async using fastapi background tasks as of now
 But see `shared/adapters/notifications` and `shared/entrypoints/fastapi/dependencies.py`
 
 ## 🗃️ MongoDB 
@@ -204,29 +214,17 @@ Extra for future
 
 ## 🔘️ TODOs
 
-* [X] Ensure that we detect/register when the asset file was uploaded (or if it was), and change the response accordingly
-  Either give them the publish_url or the view URL for the file when they do a `get` on the asset
-* [X] Test asset file upload and retrieval
-* Implement command responsibility segregation for POST APIs (do not return result and just redirect. See https://stackoverflow.com/questions/62119138/how-to-do-a-post-redirect-get-prg-in-fastapi)
-  * [X] For assets
-  * [ ] for Users
+* [ ] Investigate why in prod fastapi dows not handle well multiple background tasks
 * Database
-  * [ ] change database to a persistent one
+  * [X] change database to a persistent one
   * [ ] Schema evolution in database and dataclasses. How to do it?
+  * [ ] Test all views and databases in the same setup
 * [ ] Clean DomainID mess. Pass it to UUID or string and use type class
-* [X] Change folder structure to a one more DDD like (domain, services, infra)
-* [X] Erase `emo/shared/infra/memrepo/message_bus.py`
-* Improve GET responses  
-  * [X] Limit GET responses (paging, max items...)
-  * [X] Allow ordering of responses (assets, releases...)
-* [X] Add Creation and modification date as API response for assets, transfers...
-* [X] Automatically add userID that makes the call to the create asset and transfers
-* [X] Auto-add owner to assets and releases if none is passed
-* [ ] Add error messageID to the ones returned by the API (for translations)
+* [ ] Add error translations
 
 
 Low prio:
-* [ ] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas
+* [X] Improve loggers https://stackoverflow.com/a/64807716/5375579 + custom json schemas
 * [ ] Create flake8 rule to ensure domain does not have any dependencies on INF
 * [ ] flake8 rules to forbid cross-bounded context dependencies
 

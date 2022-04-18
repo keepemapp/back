@@ -27,7 +27,7 @@ def uows() -> UoWs:
         )
     else:
 
-        logger.warn(
+        logger.warning(
             "Initializing in-memory repositories. ONLY FOR DEVELOPMENT",
             component="api",
         )
@@ -43,7 +43,7 @@ def asset_file_repository() -> AssetFileRepository:
     if s.ASSET_S3_ACCESS and s.ASSET_S3_SECRET:
         return AssetFileS3Repository()
     else:
-        logger.warn(
+        logger.warning(
             "Initializing local disk repositories. ONLY FOR DEVELOPMENT",
             component="api",
         )

@@ -68,8 +68,8 @@ class User(RootAggregate):
         return True if re.match(regex, name) else False
 
     def __post_init__(self, loaded_from_db: bool):
-        self.username = self.username.lower()
-        self.email = self.email.lower()
+        self.username = self.username.lower().strip()
+        self.email = self.email.lower().strip()
         self._id_type_is_valid(UserId)
         if not self._name_is_valid(self.username):
             raise ValueError(INVALID_USERNAME)

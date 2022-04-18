@@ -48,7 +48,7 @@ class UserMongoRepo(MongoBase, UserRepository):
             return self._from_bson(resp)
 
     def exists_email(self, email: str) -> bool:
-        email = email.lower()
+        email = email.lower().strip()
         find_dict = {}
         if "@gmail" in email:
 

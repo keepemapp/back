@@ -203,6 +203,9 @@ class TestRegisterUser:
         ("v.alid@gmail.com", "valid@gmail.com"),
         ("v.alid@gmail.com", "vali.d@gmail.com"),
         ("v.alid@gmail.com", "vali.d@gmail.com"),
+        ("  valid@gmail.com", "valid@gmail.com"),
+        ("valid@gmail.com  ", "valid@gmail.com"),
+        (" valid@gmail.com  ", "valid@gmail.com"),
     ]
 
     @pytest.mark.parametrize("email_pairs", EQUIVALENT_EMAILS)
@@ -281,6 +284,8 @@ class TestGetUsers:
         ("v.alid@gmail.com", "valid@gmail.com"),
         ("v.alid@gmail.com", "vali.d@gmail.com"),
         ("v.alid@gmail.com", "vali.d@gmail.com"),
+        ("valid@gmail.com", " valid@gmail.com "),
+        ("valid@gmail.com", "  valid@gmail.com  "),
     ]
 
     @pytest.mark.parametrize("email_pairs", EQUIVALENT_EMAILS)

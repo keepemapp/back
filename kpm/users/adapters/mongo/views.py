@@ -66,7 +66,7 @@ def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
 def credentials_email(email: str, password: str, bus: MessageBus) -> User:
     user = None
     with bus.uows.get(User) as uow:
-        user: User = uow.repo.by_email(email.lower())
+        user: User = uow.repo.by_email(email.lower().strip())
     if not user:
         raise UserNotFound()
     user.validate_password(password)

@@ -42,7 +42,7 @@ class MemoryPersistedUserRepository(UserRepository):
         self.__write_file()
 
     def exists_email(self, email: str) -> bool:
-        email = email.lower()
+        email = email.lower().strip()
 
         def is_email_equals(email1: str, email2: str):
             if "@gmail" in email1:
