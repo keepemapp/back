@@ -14,7 +14,10 @@ class JsonLogger:
         for _, logger in logging.root.manager.loggerDict.items():
             logger.disabled = True
 
-        self._log = logging.getLogger("kpm")
+        if s.ENVIRONMENT != 'prod':
+            self._log = logging.getLogger(f"kpm-{s.ENVIRONMENT}")
+        else:
+            self._log = logging.getLogger("kpm")
         self._log.setLevel(s.LOG_LEVEL)
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(s.LOG_LEVEL)

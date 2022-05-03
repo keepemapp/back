@@ -99,8 +99,8 @@ class Settings(BaseSettings):
     ASSET_S3_ACCESS: Optional[str]
     ASSET_S3_SECRET: Optional[str]
 
-    # DEVELOPMENT PURPOSES ONLY
     DATA_KEY_ENCRYPTION_KEY: Optional[str]
+    ENVIRONMENT: str = "dev"
 
     class Config:
         env_file = ".env"
@@ -108,6 +108,9 @@ class Settings(BaseSettings):
 
 @lru_cache
 def get_settings():
+    res = Settings()
+    if res.ASSET_S3_BUCKET and res.ENVIRONMENT not in res.ASSET_S3_BUCKET:
+        raise ValueError("ENVIRONMENT must be in ASSET_S3_BUCKET")
     return Settings()
 
 

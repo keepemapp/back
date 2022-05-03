@@ -18,6 +18,9 @@ Backend in python
 Create now a file named `.env` inside the kpm folder containing at least the following values:
 
 ```
+# Options: `prod`, `dev`, `qa` (requires an s3 bucket with the environment in the name)
+ENVIRONMENT=dev
+
 # Generate with 
 # openssl rand -hex 32
 JWT_SECRET_KEY=

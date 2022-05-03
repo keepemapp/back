@@ -12,6 +12,7 @@ from starlette.responses import JSONResponse
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import mongo_client
+from kpm.shared.entrypoints.fastapi.tasks import repeat_every
 from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
 from kpm.shared.log import logger
 from kpm.users.entrypoints.fastapi.v1 import users_router
@@ -86,6 +87,13 @@ async def startup_event():
     logger.info("Application started", component="api")
 
 
+@app.on_event("startup")
+@repeat_every(seconds=60 * 60)  # 1 hour
+async def second_startup_event():
+    # TODO send email with new keep requests and legacy op
+    pass
+
+
 @app.on_event("shutdown")
 def shutdown_event():
     logger.warning("Application shutdown", component="api")
@@ -103,26 +111,26 @@ async def log_requests(request: Request, call_next):
         }, component="api"
     )
     start_time = time.time()
-    try:
-        response = await call_next(request)
-        status_code = response.status_code
-    except Exception as e:
-        process_time_ms = (time.time() - start_time) * 1000
-        logger.error(
-            {
-                "rid": idem,
-                "path": request.url.path,
-                "elapsed_ms": round(process_time_ms, 2),
-                "status_code": 500,
-                "message": str(e),
-                "stack": str(traceback.format_exc())[-168:]
-            }, component="api"
-        )
-
-        return JSONResponse(status_code=500, content={
-            "detail":
-                f"Please give this code to support: '{idem}'. Error {str(e)}",
-        })
+    # try:
+    response = await call_next(request)
+    status_code = response.status_code
+    # except Exception as e:
+        # process_time_ms = (time.time() - start_time) * 1000
+        # logger.error(
+        #     {
+        #         "rid": idem,
+        #         "path": request.url.path,
+        #         "elapsed_ms": round(process_time_ms, 2),
+        #         "status_code": 500,
+        #         "message": str(e),
+        #         "stack": str(traceback.format_exc())[-168:]
+        #     }, component="api"
+        # )
+        #
+        # return JSONResponse(status_code=500, content={
+        #     "detail":
+        #         f"Please give this code to support: '{idem}'. Error {str(e)}",
+        # })
 
     process_time_ms = (time.time() - start_time) * 1000
     formatted_process_time = round(process_time_ms, 2)
