@@ -109,7 +109,8 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     res = Settings()
-    if res.ASSET_S3_BUCKET and res.ENVIRONMENT not in res.ASSET_S3_BUCKET:
+    if res.ASSET_S3_BUCKET and res.ENVIRONMENT != "prod" \
+            and res.ENVIRONMENT not in res.ASSET_S3_BUCKET:
         raise ValueError("ENVIRONMENT must be in ASSET_S3_BUCKET")
     return Settings()
 
