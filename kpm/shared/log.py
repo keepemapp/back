@@ -10,9 +10,9 @@ from kpm.settings import settings as s
 
 class JsonLogger:
     def __init__(self):
-        # Disable existing loggers
+        # Disable verbosity of existing loggers
         for _, logger in logging.root.manager.loggerDict.items():
-            logger.disabled = True
+            logger.setLevel(logging.ERROR)
 
         if s.ENVIRONMENT != 'prod':
             self._log = logging.getLogger(f"kpm-{s.ENVIRONMENT}")

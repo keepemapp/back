@@ -53,7 +53,7 @@ class UserResponse(UserBase):
 class UserPublic(BaseModel):
     id: str
     email: str
-    referral_code: str
+    referral_code: Optional[str]
     public_name: Optional[str]
     links: Optional[Links]
 
