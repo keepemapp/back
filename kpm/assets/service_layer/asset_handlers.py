@@ -43,6 +43,7 @@ def change_asset_owner(event: events.AssetReleased, asset_uow: AssetUoW):
             a: Asset = uow.repo.find_by_id(AssetId(aid), visible_only=False)
             if event.bequest_type == BequestType.GIFT.value:
                 a.change_owner(event.timestamp, event.owner, event.receivers)
+                a.update_fields(event.timestamp, {"bookmarked": False})
                 uow.repo.update(a)
             elif event.bequest_type == BequestType.CO_OWNSRSHIP.value:
                 new_owners = event.receivers + [event.owner]

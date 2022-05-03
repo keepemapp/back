@@ -349,6 +349,42 @@ class TestAssetReleaseVisibility:
             assert len(a.owners_id) == 1
             assert a.owners_id[0] == UserId(id="receiver")
 
+    def test_acceptinc_clears_bookmark(self, bus, create_asset_cmd):
+        # Given
+        self.populate_bus_with_asset_and_keep(
+            bus,
+            create_asset_cmd,
+            keep_state=RootAggState.ACTIVE,
+            asset_id="aid",
+            owner="owner",
+            receiver="receiver",
+            bookmarked=True,
+        )
+        # When
+        transfer_cmd = CreateTransfer(
+            assets=["aid"],
+            name="Name",
+            owner="owner",
+            receivers=["receiver"],
+            description="Some description",
+            scheduled_date=self.PAST_TS,
+        )
+        bus.handle(transfer_cmd)
+
+        # Then
+        with bus.uows.get(model.AssetRelease) as uow:
+            r = uow.repo.get(DomainId(transfer_cmd.aggregate_id))
+            assert not r.is_past()
+
+        bus.handle(
+            TriggerRelease(
+                by_user="receiver", aggregate_id=transfer_cmd.aggregate_id
+            )
+        )
+        with bus.uows.get(model.Asset) as uow:
+            a: model.Asset = uow.repo.find_by_id(AssetId(id="aid"))
+            assert not a.bookmarked
+
     def test_transfers_future(self, bus, create_asset_cmd):
         # Given
         self.populate_bus_with_asset_and_keep(
@@ -521,6 +557,7 @@ class TestAssetReleaseVisibility:
         receiver="2",
         asset_id="assetId",
         keep_state: RootAggState = RootAggState.ACTIVE,
+        bookmarked=False,
     ):
         if keep_state:
             keep_r = bus.uows.get(Keep).repo
@@ -533,7 +570,8 @@ class TestAssetReleaseVisibility:
             )
             keep_r.commit()
         bus.handle(
-            dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner])
+            dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner],
+                       bookmarked=bookmarked)
         )
 
     def populate_bus_with_release(
@@ -545,11 +583,13 @@ class TestAssetReleaseVisibility:
         release_id="123",
         keep_state: RootAggState = RootAggState.ACTIVE,
         conditions: List[model.ReleaseCondition] = [model.TrueCondition()],
+        asset_bookmarked=False,
     ) -> model.AssetRelease:
         # Given
         asset_id = "assetId"
         self.populate_bus_with_asset_and_keep(
-            bus, create_asset_cmd, owner, receiver, asset_id, keep_state
+            bus, create_asset_cmd, owner, receiver, asset_id, keep_state,
+            asset_bookmarked
         )
         release = model.AssetRelease(
             id=DomainId(release_id),
