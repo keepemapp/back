@@ -18,6 +18,13 @@ user = us.find_one({'username': 'jordi'})
 user['email'] = 'new@email.com'
 us.update_one({'_id': user['_id']}, {'$set': user})
 
+# Password change
+new_pwd = 'thisismynewpwd'
+from passlib.context import CryptContext
+pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+user = us.find_one({'username': 'usernamehere'})
+user['password_hash'] = pwd_context.hash(new_pwd + user['salt'])
+us.update_one({'_id': user['_id']}, {'$set': user})
 
 # Orphan entities
 uids = [u["_id"]  for u in us.find({})]

@@ -73,8 +73,8 @@ app.logger = logger
 @app.on_event("startup")
 async def startup_event():
     if s.MONGODB_URL:
-        logger.info("Creating mongo indexes", component="mongodb")
         with mongo_client() as client:
+            logger.info("Creating mongo indexes", component="mongodb")
             assets_db = client["assets"]
             assets_db.assets.create_index("owners_id")
             assets_db.releases.create_index("owner")

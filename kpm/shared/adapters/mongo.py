@@ -40,13 +40,13 @@ class MongoUoW(AbstractUnitOfWork):
         self.repo.rollback()
 
 
-def mongo_client(mongo_url: str = s.MONGODB_URL) -> MongoClient:
+def mongo_client(mongo_url: str = s.MONGODB_URL, **kwargs) -> MongoClient:
     if s.MONGODB_USER and s.MONGODB_PWD:
         return MongoClient(
-            mongo_url, user=s.MONGODB_USER, password=s.MONGODB_PWD
+            mongo_url, user=s.MONGODB_USER, password=s.MONGODB_PWD, **kwargs
         )
     else:
-        return MongoClient(mongo_url)
+        return MongoClient(mongo_url, **kwargs)
 
 
 class MongoBase(ABC):

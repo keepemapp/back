@@ -211,9 +211,27 @@ See:
 
 Extra for future
 
-* pymongo docs https://pymongo.readthedocs.io/en/stable/api/pymongo/
+* Pymongo async library
 * Capped Collections (for events): https://docs.mongodb.com/manual/core/capped-collections/
 * Authentication https://docs.mongodb.com/manual/tutorial/configure-scram-client-authentication/
+
+
+## Deployment 
+
+In the makefile you will find a couple of useful commands for managing the 
+containers created by docker-compose.
+
+There are the following options:
+
+* `build` builds the api container
+* `up` starts the stack/updates it
+* `stop`
+* `ps`
+* `logs`
+
+By default, the dev environment gets acted upon, but via environment variables
+you can act on the others, like so: `ENVIRONMENT=qa make up`
+
 
 ## 🔘️ TODOs
 

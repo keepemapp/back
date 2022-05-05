@@ -1,3 +1,5 @@
+ENVIRONMENT ?= dev
+
 PY = python3.9
 VENV = venv
 BIN = $(VENV)/bin
@@ -68,3 +70,29 @@ clean-data:
 
 clean-deep: clean clean-data
 	rm -rf $(VENV)
+
+
+#######################
+## Docker deployment ##
+#######################
+.PHONY: build
+build:
+	docker-compose build
+
+.PHONY: up
+up:
+	docker-compose --env-file .env.$(ENVIRONMENT) up -d
+
+.PHONY: logs
+logs:
+	docker-compose logs --follow
+
+.PHONY: stop
+stop:
+	docker-compose stop
+
+.PHONY: ps
+ps:
+	docker-compose ps
+	ENVIRONMENT=qa docker-compose ps
+	ENVIRONMENT=prod docker-compose ps

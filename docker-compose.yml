@@ -1,0 +1,59 @@
+version: '3.5'
+
+name: "kpm-${ENVIRONMENT:-dev}"
+
+# To Join any other app setup using another network, change name and set external = true
+networks:
+  default:
+    name: "kpm-${ENVIRONMENT:-dev}"
+    external: false
+
+secrets:
+  env_file:
+    file: ./.env
+
+services:
+  mongo:
+    container_name: "mongo-${ENVIRONMENT:-dev}"
+    hostname: "mongo-${ENVIRONMENT:-dev}"
+    image: mongo:5.0.6
+    restart: unless-stopped
+    command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
+    healthcheck:
+      test: test $$(echo "rs.initiate({_id:'rs0',members:[{_id:0,host:\"mongo-${ENVIRONMENT:-dev}:27017\"}]}).ok || rs.status().ok" | mongo --port 27017 --quiet) -eq 1
+      interval: 10s
+      start_period: 30s
+    networks:
+      - default
+    ports:
+      - "127.0.0.1:${MONGO_PORT:-2299}:27017"
+    volumes:
+      - "${DATA_DIR:-$HOME}/kpm_mongo-${ENVIRONMENT:-dev}:/data/db"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 50m
+        max-file: 2
+
+  api:
+    container_name: "api-${ENVIRONMENT:-dev}"
+    build:
+      context: .
+    restart: unless-stopped
+    env_file: "kpm/.env"
+    image: kpm-api
+    environment:
+      - COMPOSE_CONVERT_WINDOWS_PATHS=1
+      - APP_MODULE=kpm.main:app
+      - GUNICORN_CMD_ARGS=--forwarded-allow-ips *
+      - "MONGODB_URL=mongodb://mongo-${ENVIRONMENT:-dev}:27017/?replicaSet=rs0"
+      - MAX_WORKERS
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 50m
+        max-file: 2
+    depends_on:
+      - mongo
+    ports:
+      - "127.0.0.1:${API_PORT:-2300}:80"
