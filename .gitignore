@@ -234,6 +234,9 @@ celerybeat.pid
 
 # Environments
 .env
+kpm/.env.dev
+kpm/.env.qa
+kpm/.env.prod
 .venv
 venv
 venv/*

@@ -1,6 +1,6 @@
 version: '3.5'
 
-name: "kpm-${ENVIRONMENT:-dev}"
+#name: "kpm-${ENVIRONMENT:-dev}"
 
 # To Join any other app setup using another network, change name and set external = true
 networks:
@@ -40,7 +40,7 @@ services:
     build:
       context: .
     restart: unless-stopped
-    env_file: "kpm/.env"
+    env_file: "kpm/.env.${ENVIRONMENT}"
     image: kpm-api
     environment:
       - COMPOSE_CONVERT_WINDOWS_PATHS=1
