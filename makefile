@@ -77,22 +77,26 @@ clean-deep: clean clean-data
 #######################
 .PHONY: build
 build:
-	docker-compose build
+	docker compose build
 
 .PHONY: up
 up:
-	docker-compose --env-file .env.$(ENVIRONMENT) up -d
+	docker compose --env-file .env.$(ENVIRONMENT) up -d
 
 .PHONY: logs
 logs:
-	docker-compose logs --follow
+	docker compose logs --follow
 
 .PHONY: stop
 stop:
-	docker-compose stop
+	docker compose stop
+
+.PHONY: down
+rm:
+	docker compose down
 
 .PHONY: ps
 ps:
-	docker-compose ps
-	ENVIRONMENT=qa docker-compose ps
-	ENVIRONMENT=prod docker-compose ps
+	docker compose ps
+	ENVIRONMENT=qa docker compose ps
+	ENVIRONMENT=prod docker compose ps

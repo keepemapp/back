@@ -28,12 +28,12 @@ services:
     ports:
       - "127.0.0.1:${MONGO_PORT:-2299}:27017"
     volumes:
-      - "${DATA_DIR:-$HOME}/kpm_mongo-${ENVIRONMENT:-dev}:/data/db"
+      - '../kpm_mongo-${ENVIRONMENT:-dev}:/data/db'
     logging:
       driver: "json-file"
       options:
-        max-size: 50m
-        max-file: 2
+        max-size: "50m"
+        max-file: "2"
 
   api:
     container_name: "api-${ENVIRONMENT:-dev}"
@@ -51,8 +51,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: 50m
-        max-file: 2
+        max-size: "50m"
+        max-file: "2"
     depends_on:
       - mongo
     ports:
