@@ -2,20 +2,21 @@ import os
 import random
 import string
 import time
-import traceback
 
 import uvicorn
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, BackgroundTasks
 from starlette.requests import Request
-from starlette.responses import JSONResponse
 
 from kpm.assets.entrypoints.fastapi.v1 import assets_router
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import mongo_client
+from kpm.shared.adapters.notifications import EmailNotifications
+from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.entrypoints.fastapi.tasks import repeat_every
 from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
 from kpm.shared.log import logger
 from kpm.users.entrypoints.fastapi.v1 import users_router
+from kpm.users.service_layer.user_handler import _load_email_templates
 
 description = """
 Keepem API helps you managing your emotional assets and memories 💖
@@ -89,9 +90,32 @@ async def startup_event():
 
 @app.on_event("startup")
 @repeat_every(seconds=60 * 60)  # 1 hour
-async def second_startup_event():
+async def second_startup_event(background_tasks: BackgroundTasks):
     # TODO send email with new keep requests and legacy op
-    pass
+    if not s.EMAIL_SENDER_ADDRESS or not s.EMAIL_SENDER_PASSWORD:
+        return
+    if not s.MONGODB_URL:
+        return
+
+    email_notifications = EmailNotifications(background_tasks)
+    emails = []
+    env = _load_email_templates()
+    since = now_utc_millis() - 60 * 60 * 1000
+    with mongo_client() as client:
+
+        feedback = client.users.feedback_response
+        responses = [{
+            "form": r["form_id"],
+            "question": r["question_id"],
+            "response": r["response"]}
+            for r in feedback.find({"created_ts": since})]
+        template = env.get_template("feedback.html")
+        body = template.render(responses)
+        emails.append({"to": "board@keepem.app", "subject": "Feedback forms",
+                       "body": body})
+
+    if emails:
+        email_notifications.send_multiple(emails)
 
 
 @app.on_event("shutdown")
