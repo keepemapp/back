@@ -39,7 +39,7 @@ router = APIRouter(
     },
 )
 @router.get(
-    "/me",
+    s.API_ME.path(),
     responses={
         status.HTTP_200_OK: {"model": schemas.UserResponse},
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},

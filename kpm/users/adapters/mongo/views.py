@@ -4,7 +4,7 @@ from typing import Dict, List, Optional
 import flatdict
 
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import VISIBLE_STATES, UserId
+from kpm.shared.domain.model import RootAggState, VISIBLE_STATES, UserId
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import Keep, User, UserNotFound
 from kpm.users.domain.repositories import KeepRepository
@@ -111,3 +111,14 @@ def user_keeps(
         is_reverse = order == "desc"
         keeps.sort(reverse=is_reverse, key=lambda a: getattr(a, order_by))
     return [keep_to_flat_dict(k) for k in keeps]
+
+
+def pending_keeps(user_id: str, bus=None) -> int:
+    with mongo_client() as client:
+        col = client.users.keeps
+        filter = {
+            "requested": user_id,
+            "state": RootAggState.PENDING.value,
+        }
+        num_pending = col.count_documents(filter)
+    return num_pending

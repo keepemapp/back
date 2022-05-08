@@ -1,5 +1,8 @@
 = Depolyment using docker
 
+INFO: Use the docker-compose file via `make-up`
+
+
 == Networking and set-up
 
 We will have a private network for both of our containers

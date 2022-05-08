@@ -98,3 +98,7 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
         "future_self": 7,
         "time_capsule": 3,
     }
+
+
+def pending(user_id: str, bus=None) -> int:
+    return len(get_incoming_releases(user_id, bus=bus))

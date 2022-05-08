@@ -12,8 +12,10 @@ class JsonLogger:
     def __init__(self):
         # Disable verbosity of existing loggers
         for _, logger in logging.root.manager.loggerDict.items():
-            logger.setLevel(logging.ERROR)
-
+            try:
+                logger.setLevel(logging.ERROR)
+            except:
+                pass
         if s.ENVIRONMENT != 'prod':
             self._log = logging.getLogger(f"kpm-{s.ENVIRONMENT}")
         else:

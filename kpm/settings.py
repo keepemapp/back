@@ -53,6 +53,7 @@ class Settings(BaseSettings):
     API_HEALTH: ApiRoute = ApiRoute(prefix="/health")
     API_VERSION: ApiRoute = ApiRoute(prefix="/version")
 
+    API_ME: ApiRoute = ApiRoute(prefix="/me")
     API_TOKEN: ApiRoute = ApiRoute(prefix="/token", tags=["authentication"])
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])

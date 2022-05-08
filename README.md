@@ -15,7 +15,7 @@ Backend in python
 6. Before committing execute `make precommit` (runs formatting, linting, test and clean)
 
 
-Create now a file named `.env` inside the kpm folder containing at least the following values:
+Create now a file named `.env.{dev|qa|prod}` inside the kpm folder containing at least the following values:
 
 ```
 # Options: `prod`, `dev`, `qa` (requires an s3 bucket with the environment in the name)

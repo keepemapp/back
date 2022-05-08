@@ -34,7 +34,7 @@ VIEWS = [
 
 @pytest.mark.parametrize("views", VIEWS)
 @pytest.mark.integration
-class TestMemoryAssetViews:
+class TestAssetViews:
     def test_asset_to_python_dict(self, asset, views):
         r = views.asset_to_flat_dict(asset)
         assert r.get("file_type") == asset.file.type

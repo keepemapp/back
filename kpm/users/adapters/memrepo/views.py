@@ -3,7 +3,7 @@ from typing import Dict, List, Optional
 
 import flatdict
 
-from kpm.shared.domain.model import VISIBLE_STATES, UserId
+from kpm.shared.domain.model import RootAggState, VISIBLE_STATES, UserId
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import Keep, User, UserNotFound
 from kpm.users.domain.repositories import KeepRepository
@@ -118,3 +118,16 @@ def user_keeps(
         is_reverse = order == "desc"
         keeps.sort(reverse=is_reverse, key=lambda a: getattr(a, order_by))
     return [keep_to_flat_dict(k) for k in keeps]
+
+
+def pending_keeps(user_id: str, bus=None) -> int:
+    uid = UserId(user_id)
+    with bus.uows.get(Keep) as uow:
+        repo: KeepRepository = uow.repo
+        keeps = repo.all(uid)
+
+    def pending_filter(k: Keep):
+        return k.state == RootAggState.PENDING and k.requested == uid
+
+    num_pending = len(list(filter(pending_filter, keeps)))
+    return num_pending

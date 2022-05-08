@@ -6,8 +6,9 @@ import flatdict
 import kpm.assets.domain.model as model
 from kpm.assets.adapters.mongo.repository import AssetReleaseMongoRepo
 from kpm.assets.domain.repositories import AssetReleaseRepository
+from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import UserId
+from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
@@ -104,3 +105,19 @@ def user_stats(user_id: str, bus: MessageBus = None) -> Dict:
         "future_self": 7,
         "time_capsule": 3,
     }
+
+
+def pending(user_id: str, bus=None) -> int:
+    with mongo_client() as client:
+        col = client.assets.legacy
+        filter = {
+            "receivers": user_id,
+            "state": RootAggState.ACTIVE.value,
+            "$or": [
+                {"conditions.release_ts": {"$lt": now_utc_millis()}},
+                {"conditions.type": {"$ne": "time_condition"}},
+            ]
+        }
+        num_pending = col.count_documents(filter)
+
+    return num_pending
