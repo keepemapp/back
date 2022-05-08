@@ -33,9 +33,11 @@ INVALID_EMAIL = "Email is not valid"
 
 def generate_referral_code() -> str:
     chars = string.ascii_letters + string.digits
+    # Avoid ambiguous characters
+    chars = chars.replace("l", "").replace("I", "").replace("1", "").replace("O", "").replace("0", "").replace("S", "").replace("5", "")
     candidate = "".join(random.choice(chars) for x in range(5))
     forbidden_words = ["nazis", "nigga"]
-    if candidate in forbidden_words:
+    if candidate.lower() in forbidden_words:
         return generate_referral_code()
     else:
         return candidate

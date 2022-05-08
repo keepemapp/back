@@ -3,7 +3,7 @@ import pytest
 from kpm.shared.domain import DomainId, IdTypeException
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.users.domain.events import UserRemoved
-from kpm.users.domain.model import User
+from kpm.users.domain.model import User, generate_referral_code
 from tests.users.domain import active_user, valid_user
 
 
@@ -87,6 +87,13 @@ class TestUser:
             active_user["email"] = email
             with pytest.raises(ValueError) as _:
                 User(**active_user)
+
+        def test_abiguous_characters_referral_code(self):
+            ambiguous_characters = ["I", "l", "1", "0", "O", "S", "5"]
+            for i in range(100000):
+                code = generate_referral_code()
+                for char in ambiguous_characters:
+                    assert char not in code
 
     class TestActions:
         def test_user_disable(self, active_user):
