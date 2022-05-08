@@ -57,7 +57,9 @@ class Settings(BaseSettings):
     API_TOKEN: ApiRoute = ApiRoute(prefix="/token", tags=["authentication"])
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
-    API_KEEP_PATH: ApiRoute = ApiRoute(prefix="/me/keeps", tags=["users"])
+    API_KEEPS: ApiRoute = ApiRoute(prefix="/keeps")
+    API_MY_KEEPS: ApiRoute = ApiRoute(prefix=API_ME.concat(API_KEEPS).path(),
+                                      tags=["users"])
     API_FEEDBACK: ApiRoute = ApiRoute(prefix="/feedback")
 
     API_LEGACY: ApiRoute = ApiRoute(

@@ -113,6 +113,20 @@ def user_keeps(
     return [keep_to_flat_dict(k) for k in keeps]
 
 
+def all_keeps(
+    bus: MessageBus,
+    order_by: str = None,
+    order: str = "asc",
+):
+    with bus.uows.get(Keep) as uow:
+        repo: KeepRepository = uow.repo
+        keeps = repo.all()
+    if order_by:
+        is_reverse = order == "desc"
+        keeps.sort(reverse=is_reverse, key=lambda a: getattr(a, order_by))
+    return [keep_to_flat_dict(k) for k in keeps]
+
+
 def pending_keeps(user_id: str, bus=None) -> int:
     with mongo_client() as client:
         col = client.users.keeps

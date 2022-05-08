@@ -6,7 +6,8 @@ from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi import query_params
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.exceptions import FORBIDDEN_GENERIC
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token, \
+    get_admin_token
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -25,12 +26,13 @@ router = APIRouter(
         status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
         status.HTTP_403_FORBIDDEN: {"model": HTTPError},
     },
-    **s.API_KEEP_PATH.dict(),
 )
 
 
 @router.get(
-    "", responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
+    s.API_MY_KEEPS.path(),
+    tags=s.API_MY_KEEPS.tags,
+    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
 )
 async def list_keeps(
     order_by: str = query_params.order_by,
@@ -59,7 +61,9 @@ async def list_keeps(
     return paginate(keeps, paginate_params)
 
 
-@router.post("", status_code=status.HTTP_201_CREATED)
+@router.post(
+    s.API_MY_KEEPS.path(),
+    tags=s.API_MY_KEEPS.tags, status_code=status.HTTP_201_CREATED)
 async def new_keep(
     request: schemas.RequestKeep,
     token: AccessToken = Depends(get_access_token),
@@ -91,7 +95,10 @@ async def new_keep(
         pass
 
 
-@router.put("/accept", status_code=status.HTTP_204_NO_CONTENT)
+@router.put(
+    s.API_MY_KEEPS.concat("accept").path(),
+    tags=s.API_MY_KEEPS.tags,
+    status_code=status.HTTP_204_NO_CONTENT)
 async def accept_keep(
     request: schemas.AcceptKeep,
     token: AccessToken = Depends(get_access_token),
@@ -107,7 +114,10 @@ async def accept_keep(
         raise e
 
 
-@router.put("/decline", status_code=status.HTTP_204_NO_CONTENT)
+@router.put(
+    s.API_MY_KEEPS.concat("decline").path(),
+    tags=s.API_MY_KEEPS.tags,
+    status_code=status.HTTP_204_NO_CONTENT)
 async def decline_keep(
     request: schemas.DeclineKeep,
     token: AccessToken = Depends(get_access_token),
@@ -125,3 +135,34 @@ async def decline_keep(
         pass
     except Exception as e:
         raise e
+
+
+@router.get(
+    s.API_KEEPS.path(),
+    tags=["admin"],
+    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
+)
+async def list_all_keeps(
+    order_by: str = query_params.order_by,
+    order: str = query_params.order,
+    paginate_params: Params = Depends(),
+    token: AccessToken = Depends(get_admin_token),
+    bus: MessageBus = Depends(message_bus),
+    views=Depends(user_view),
+):
+    keeps_raw = views.all_keeps(bus, order_by, order)
+    users = set(
+        [k["requester"] for k in keeps_raw]
+        + [k["requested"] for k in keeps_raw]
+    )
+    user_lookup = {
+        u["id"]: u for u in views.users_public_info(list(users), bus)
+    }
+
+    keeps = list()
+    for k in keeps_raw:
+        k["requester"] = UserPublic(**user_lookup[k.pop("requester")])
+        k["requested"] = UserPublic(**user_lookup[k.pop("requested")])
+        keeps.append(schemas.KeepResponse(**k))
+
+    return paginate(keeps, paginate_params)

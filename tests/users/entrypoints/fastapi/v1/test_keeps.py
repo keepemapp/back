@@ -4,7 +4,7 @@ from kpm.settings import settings as s
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.users.domain.model import Keep, User
-from kpm.users.domain.repositories import UserRepository
+from kpm.users.domain.repositories import KeepRepository, UserRepository
 from kpm.users.entrypoints.fastapi.v1.schemas.keeps import (
     AcceptKeep,
     DeclineKeep,
@@ -13,7 +13,7 @@ from kpm.users.entrypoints.fastapi.v1.schemas.keeps import (
 from tests.users.domain import active_user, valid_user
 from tests.users.entrypoints.fastapi import *
 
-KEEP_ROUTE = s.API_V1.concat(s.API_KEEP_PATH)
+KEEP_ROUTE = s.API_V1.concat(s.API_MY_KEEPS)
 
 
 @pytest.fixture
@@ -29,6 +29,11 @@ def init_users(bus, active_user):
         active_user["email"] = f"{USER_TOKEN.subject}@email.com"
         user = User(**active_user)
         repo.create(user)
+
+        active_user["id"] = UserId("anotherUser")
+        active_user["email"] = "anotherUser@email.com"
+        other = User(**active_user)
+        repo.create(other)
 
         uow.commit()
     return admin, user
@@ -281,3 +286,32 @@ class TestKeepsApi:
             json=DeclineKeep(keep_id=keep_id, reason="something").dict(),
         )
         assert len(user_client.get(KEEP_ROUTE.path()).json()["items"]) == 0
+
+
+    @staticmethod
+    @pytest.fixture
+    def init_keeps(bus):
+        with bus.uows.get(Keep) as uow:
+            repo: KeepRepository = uow.repo
+            repo.put(Keep(
+                requester=UserId(USER_TOKEN.subject),
+                requested=UserId(ADMIN_TOKEN.subject),
+                state=RootAggState.PENDING
+            ))
+            repo.put(Keep(
+                requester=UserId("anotherUser"),
+                requested=UserId(USER_TOKEN.subject),
+                state=RootAggState.ACTIVE
+            ))
+            repo.put(Keep(
+                requester=UserId(ADMIN_TOKEN.subject),
+                requested=UserId("anotherUser"),
+                state=RootAggState.REMOVED
+            ))
+            repo.commit()
+
+    def test_get_all_keeps(self, init_users, init_keeps, admin_client):
+        resp = admin_client.get(s.API_V1.concat(s.API_KEEPS).path())
+
+        assert resp.status_code == 200
+        assert resp.json()["total"] == 3
