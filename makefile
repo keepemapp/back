@@ -92,7 +92,7 @@ stop:
 	docker compose stop
 
 .PHONY: down
-rm:
+down:
 	docker compose down
 
 .PHONY: ps

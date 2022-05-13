@@ -12,11 +12,17 @@ secrets:
   env_file:
     file: ./.env
 
+volumes:
+  mongo_db:
+    name: kpm_mongo-${ENVIRONMENT:-dev}
+    external: true
+
+
 services:
   mongo:
     container_name: "mongo-${ENVIRONMENT:-dev}"
     hostname: "mongo-${ENVIRONMENT:-dev}"
-    image: mongo:5.0.6
+    image: mongo:5.0.8
     restart: unless-stopped
     command: ["--replSet", "rs0", "--bind_ip_all", "--port", "27017"]
     healthcheck:
@@ -28,7 +34,7 @@ services:
     ports:
       - "127.0.0.1:${MONGO_PORT:-2299}:27017"
     volumes:
-      - '../kpm_mongo-${ENVIRONMENT:-dev}:/data/db'
+      - mongo_db:/data/db
     logging:
       driver: "json-file"
       options:
@@ -57,3 +63,25 @@ services:
       - mongo
     ports:
       - "127.0.0.1:${API_PORT:-2300}:80"
+  cron:
+    container_name: "cron-${ENVIRONMENT:-dev}"
+    build:
+      context: .
+    restart: unless-stopped
+    env_file: "kpm/.env.${ENVIRONMENT}"
+    image: kpm-api
+    environment:
+      - COMPOSE_CONVERT_WINDOWS_PATHS=1
+      - APP_MODULE=kpm.cron_app:app
+      - GUNICORN_CMD_ARGS=--forwarded-allow-ips *
+      - "MONGODB_URL=mongodb://mongo-${ENVIRONMENT:-dev}:27017/?replicaSet=rs0"
+      - MAX_WORKERS=1
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "50m"
+        max-file: "2"
+    depends_on:
+      - mongo
+    ports:
+      - "127.0.0.1:${CRON_PORT:-2301}:80"

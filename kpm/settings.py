@@ -48,6 +48,7 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "DEBUG"
     APPLICATION_NAME: str = "Keepem"
     APPLICATION_TECHNICAL_NAME: str = "Keepem"
+    APPLICATION_COMPONENT: str = "api"
 
     API_V1: ApiRoute = ApiRoute(prefix="/api/v1")
     API_HEALTH: ApiRoute = ApiRoute(prefix="/health")
@@ -104,6 +105,9 @@ class Settings(BaseSettings):
 
     DATA_KEY_ENCRYPTION_KEY: Optional[str]
     ENVIRONMENT: str = "dev"
+
+    CRON_FEEDBACK_EMAIL: int = 15 * 60 + 3  # 15 min
+    CRON_LEGACY: int = 10 * 60 + 7  # 10 min
 
     class Config:
         env_file = ".env"

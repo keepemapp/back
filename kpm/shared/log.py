@@ -17,14 +17,15 @@ class JsonLogger:
             except:
                 pass
         if s.ENVIRONMENT != 'prod':
-            self._log = logging.getLogger(f"kpm-{s.ENVIRONMENT}")
+            self._log = logging.getLogger(f"kpm")
         else:
             self._log = logging.getLogger("kpm")
         self._log.setLevel(s.LOG_LEVEL)
         ch = logging.StreamHandler(sys.stdout)
         ch.setLevel(s.LOG_LEVEL)
         formatter = logging.Formatter(
-            '{"time": "%(asctime)s", "level": "%(levelname)s", %(message)s, "app_name": "%(name)s"}'
+            '{"time": "%(asctime)s", "level": "%(levelname)s", %(message)s, "app_name": "%(name)s", "comp":"'
+            + s.APPLICATION_COMPONENT + '","env": "' + s.ENVIRONMENT + '"}'
         )
         ch.setFormatter(formatter)
         self._log.addHandler(ch)
