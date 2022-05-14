@@ -10,6 +10,7 @@ from starlette.requests import Request
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.adapters.notifications import EmailNotifications
+from kpm.shared.domain.model import RootAggState
 from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.entrypoints.fastapi.tasks import repeat_every
 from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
@@ -88,7 +89,7 @@ async def cron_feedback():
             "response": r["response"]}
             for r in feedback.find({"created_ts": since})]
         template = env.get_template("feedback.html")
-        body = template.render(responses)
+        body = template.render(responses=responses)
         emails.append({"to": "board@keepem.app", "subject": "Feedback forms",
                        "body": body})
     if emails:
@@ -99,7 +100,6 @@ async def cron_feedback():
 @repeat_every(seconds=s.CRON_LEGACY)
 async def cron_legacy():
     logger.info("Cron for legacy emails started", component="cron")
-    # TODO send email with new keep requests and legacy op
     if not s.EMAIL_SENDER_ADDRESS or not s.EMAIL_SENDER_PASSWORD:
         logger.warning("Can't send notification since no email is set.",
                        component="cron")
@@ -115,8 +115,33 @@ async def cron_legacy():
     since = now_utc_millis() - s.CRON_LEGACY * 1000
 
     with mongo_client() as client:
-        # TODO
-        pass
+        filter = {
+            "state": RootAggState.ACTIVE.value,
+            "$or": [
+                {"conditions.release_ts": {"$gt": since, "$lt": now_utc_millis()}},
+                {"conditions.type": {"$ne": "time_condition"}},
+            ]
+        }
+        legacy_cursor = client.assets.legacy.aggregate(
+            {"$match": filter},
+            {"$unwind": "$receivers"},
+            {"$group": {"_id": "receivers", "count": {"$sum": 1}}}
+        )
+        users_to_alert = {res['_id']: res['count'] for res in legacy_cursor}
+        users_batch = [id for id in users_to_alert.keys()]
+        emails_cursor = client.users.users.aggregate(
+            [
+                {"$match": {"_id": {"$in": users_batch}}},
+                {"$project": {"_id": 0, "id": "$_id", "email": 1}},
+            ]
+        )
+        for user in emails_cursor:
+            template = env.get_template("new_legacy.html")
+            founder_name = random.choice(["Martí", "David", "Jordi"])
+            body = template.render(founder_name=founder_name)
+            emails.append(
+                {"to": user["email"], "subject": "New legacy available",
+                 "body": body})
 
     if emails:
         email_notifications.send_multiple(emails)

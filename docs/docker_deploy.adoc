@@ -29,6 +29,12 @@ sudo docker network create $KEEP_NETW
 [code,bash]
 ----
 sudo docker pull mongo
+# Example for dev
+VOLUME=kpm_mongo-qa
+docker volume create --name $VOLUME \
+  --opt type=none \
+  --opt device=../$VOLUME \
+  --opt o=bind
 
 sudo docker run -d \
 -p 127.0.0.1:27017:27017 \
