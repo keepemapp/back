@@ -81,7 +81,7 @@ build:
 
 .PHONY: up
 up:
-	docker compose --env-file .env.$(ENVIRONMENT) up -d
+	docker compose --force-recreate --env-file .env.$(ENVIRONMENT) up -d
 
 .PHONY: logs
 logs:
