@@ -88,10 +88,12 @@ async def cron_feedback():
             "question": r["question_id"],
             "response": r["response"]}
             for r in feedback.find({"created_ts": since})]
-        template = env.get_template("feedback.html")
-        body = template.render(responses=responses)
-        emails.append({"to": "board@keepem.app", "subject": "Feedback forms",
-                       "body": body})
+        if responses:
+            template = env.get_template("feedback.html")
+            body = template.render(responses=responses)
+            emails.append({"to": "board@keepem.app",
+                           "subject": "Feedback forms",
+                           "body": body})
     if emails:
         email_notifications.send_multiple(emails)
 
