@@ -122,11 +122,11 @@ async def cron_legacy():
                 {"conditions.type": {"$ne": "time_condition"}},
             ]
         }
-        legacy_cursor = client.assets.legacy.aggregate(
+        legacy_cursor = client.assets.legacy.aggregate([
             {"$match": filter},
             {"$unwind": "$receivers"},
             {"$group": {"_id": "receivers", "count": {"$sum": 1}}}
-        )
+        ])
         users_to_alert = {res['_id']: res['count'] for res in legacy_cursor}
         users_batch = [id for id in users_to_alert.keys()]
         emails_cursor = client.users.users.aggregate(
