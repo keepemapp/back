@@ -1,0 +1,46 @@
+version: '3.5'
+
+
+# To Join any other app setup using another network, change name and set external = true
+networks:
+  default:
+    name: kpm-prod
+    external: false
+
+volumes:
+  mongo_db:
+    name: kpm_mongo-prod
+    external: true
+
+services:
+  mongo:
+    container_name: mongo-prod
+    hostname: mongo-prod
+    healthcheck:
+      test: test $$(echo "rs.initiate({_id:'rs0',members:[{_id:0,host:\"mongo-prod:27017\"}]}).ok || rs.status().ok" | mongo --port 27017 --quiet) -eq 1
+    ports:
+      - 127.0.0.1:2399:27017
+    volumes:
+      - mongo_db:/data/db
+
+  api:
+    container_name: api-prod
+    env_file: kpm/.env.qa
+    environment:
+      - COMPOSE_CONVERT_WINDOWS_PATHS=1
+      - APP_MODULE=kpm.main:app
+      - GUNICORN_CMD_ARGS=--forwarded-allow-ips *
+      - "MONGODB_URL=mongodb://mongo-prod:27017/?replicaSet=rs0"
+      - MAX_WORKERS=1
+    ports:
+      - 127.0.0.1:2400:80
+  cron:
+    container_name: cron-prod
+    env_file: kpm/.env.qa
+    environment:
+      - COMPOSE_CONVERT_WINDOWS_PATHS=1
+      - APP_MODULE=kpm.cron_app:app
+      - GUNICORN_CMD_ARGS=--forwarded-allow-ips *
+      - "MONGODB_URL=mongodb://mongo-prod:27017/?replicaSet=rs0"
+    ports:
+      - 127.0.0.1:2401:80
