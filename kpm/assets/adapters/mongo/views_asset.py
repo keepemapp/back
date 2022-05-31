@@ -7,7 +7,7 @@ from bson import SON
 from kpm.assets.domain.model import Asset
 from kpm.assets.service_layer.unit_of_work import AssetUoW
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import BETA_USER, AssetId, RootAggState, UserId
+from kpm.shared.domain.model import AssetId, BETA_USER, RootAggState, UserId
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 

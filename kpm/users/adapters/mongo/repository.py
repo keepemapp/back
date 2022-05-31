@@ -6,7 +6,7 @@ from pymongo.collation import Collation
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
+from kpm.shared.domain.model import RootAggState, RootAggregate, UserId
 from kpm.shared.log import logger
 from kpm.users.domain.model import Keep, Session, User
 from kpm.users.domain.repositories import (

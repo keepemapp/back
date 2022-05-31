@@ -1,8 +1,6 @@
 from kpm.assets.adapters.filestorage import AssetFileLocalRepository
-from kpm.assets.adapters.memrepo import (
-    MemoryPersistedAssetRepository,
-    MemPersistedReleaseRepo,
-)
+from kpm.assets.adapters.memrepo import (MemPersistedReleaseRepo,
+                                         MemoryPersistedAssetRepository)
 from kpm.assets.adapters.mongo.repository import (
     AssetMongoRepo,
     AssetReleaseMongoRepo,

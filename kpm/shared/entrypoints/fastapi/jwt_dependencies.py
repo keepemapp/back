@@ -7,8 +7,7 @@ from jose import jwt
 from starlette import status
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
-from kpm.settings import settings
-from kpm.settings import settings as cfg
+from kpm.settings import settings, settings as cfg
 from kpm.shared.domain.time_utils import now_utc
 from kpm.shared.entrypoints.auth_jwt import (
     AccessToken,

@@ -8,27 +8,18 @@ from typing import Dict, List, Optional, Set, Union
 
 from pydantic.dataclasses import dataclass
 
-from kpm.assets.domain.events import (
-    AssetOwnershipChanged,
-    AssetReleaseCanceled,
-    AssetReleased,
-    AssetReleaseScheduled,
-)
+from kpm.assets.domain.events import (AssetOwnershipChanged,
+                                      AssetReleaseCanceled,
+                                      AssetReleaseScheduled, AssetReleased)
 from kpm.shared.domain import (
     DomainId,
     init_id,
     required_field,
     updatable_field,
 )
-from kpm.shared.domain.model import (
-    VISIBLE_STATES,
-    AssetId,
-    NoValue,
-    RootAggregate,
-    RootAggState,
-    UserId,
-    ValueObject,
-)
+from kpm.shared.domain.model import (AssetId, NoValue, RootAggState,
+                                     RootAggregate, UserId, VISIBLE_STATES,
+                                     ValueObject)
 from kpm.shared.domain.time_utils import now_utc_millis
 
 

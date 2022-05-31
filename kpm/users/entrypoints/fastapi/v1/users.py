@@ -14,13 +14,10 @@ from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.adapters.dependencies import get_current_active_user
-from kpm.users.domain.model import (
-    EmailAlreadyExistsException,
-    MissmatchPasswordException,
-    User,
-    UsernameAlreadyExistsException,
-    UserNotFound,
-)
+from kpm.users.domain.model import (EmailAlreadyExistsException,
+                                    MissmatchPasswordException, User,
+                                    UserNotFound,
+                                    UsernameAlreadyExistsException)
 from kpm.users.entrypoints.fastapi.v1.schemas import users as schemas
 from kpm.users.entrypoints.fastapi.v1.schemas.users import UserRemoval
 

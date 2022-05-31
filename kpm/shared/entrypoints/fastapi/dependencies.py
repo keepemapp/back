@@ -11,8 +11,8 @@ import kpm.users.adapters.memrepo.views as uv_mem
 import kpm.users.adapters.mongo.views as uv_mongo
 from kpm.assets.domain import Asset, AssetRelease
 from kpm.assets.entrypoints.fastapi.dependencies import uows as a_uows
-from kpm.assets.service_layer import COMMAND_HANDLERS as a_cmds
-from kpm.assets.service_layer import EVENT_HANDLERS as a_evs
+from kpm.assets.service_layer import COMMAND_HANDLERS as a_cmds, \
+    EVENT_HANDLERS as a_evs
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import MongoUoW
 from kpm.shared.adapters.notifications import (
@@ -24,8 +24,8 @@ from kpm.shared.entrypoints.bootstrap import bootstrap
 from kpm.shared.service_layer.message_bus import MessageBus, UoWs
 from kpm.users.domain.model import User
 from kpm.users.entrypoints.fastapi.dependencies import uows as u_uows
-from kpm.users.service_layer import COMMAND_HANDLERS as u_cmds
-from kpm.users.service_layer import EVENT_HANDLERS as u_evs
+from kpm.users.service_layer import COMMAND_HANDLERS as u_cmds, \
+    EVENT_HANDLERS as u_evs
 
 HandlerDict = Dict[Type[Event], List]
 

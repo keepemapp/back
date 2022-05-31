@@ -4,15 +4,14 @@ from typing import Dict, List, Optional
 import flatdict
 
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import VISIBLE_STATES, RootAggState, UserId
-from kpm.shared.entrypoints.auth_jwt import RefreshToken, from_token
+from kpm.shared.domain.model import RootAggState, UserId, VISIBLE_STATES
+from kpm.shared.entrypoints.auth_jwt import RefreshToken
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import (
     InvalidSession,
     Keep,
     Session,
     User,
-    UserNotFound,
 )
 from kpm.users.domain.repositories import KeepRepository
 

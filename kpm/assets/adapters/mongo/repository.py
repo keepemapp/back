@@ -18,13 +18,8 @@ from kpm.assets.domain.repositories import (
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import (
-    FINAL_STATES,
-    VISIBLE_STATES,
-    AssetId,
-    RootAggState,
-    UserId,
-)
+from kpm.shared.domain.model import (AssetId, FINAL_STATES, RootAggState,
+                                     UserId, VISIBLE_STATES)
 from kpm.shared.log import logger
 
 

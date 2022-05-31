@@ -1,7 +1,7 @@
 import kpm.assets.domain.events as events
 from kpm.assets.domain import commands as cmds
-from kpm.assets.service_layer import asset_handlers as ah
-from kpm.assets.service_layer import transfer_handlers as th
+from kpm.assets.service_layer import asset_handlers as ah, \
+    transfer_handlers as th
 from kpm.users.domain.events import UserRemoved
 
 EVENT_HANDLERS = {

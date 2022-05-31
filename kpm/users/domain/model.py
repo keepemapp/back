@@ -13,13 +13,8 @@ from kpm.shared.domain import (
     required_updatable_field,
     updatable_field,
 )
-from kpm.shared.domain.model import (
-    FINAL_STATES,
-    RootAggregate,
-    RootAggState,
-    UserId,
-)
-from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
+from kpm.shared.domain.model import (FINAL_STATES, RootAggState, RootAggregate,
+                                     UserId)
 from kpm.shared.log import logger
 from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain import events

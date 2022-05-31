@@ -6,7 +6,6 @@ from pydantic.dataclasses import dataclass
 from kpm.shared.domain import DomainId, init_id, required_field
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.model import UserId
-from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 
 
 @dataclass(frozen=True)

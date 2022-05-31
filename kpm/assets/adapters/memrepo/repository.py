@@ -14,7 +14,7 @@ from kpm.assets.domain.repositories import (
 )
 from kpm.settings import settings
 from kpm.shared.domain import DomainId
-from kpm.shared.domain.model import FINAL_STATES, AssetId, UserId
+from kpm.shared.domain.model import AssetId, FINAL_STATES, UserId
 
 Assets = Dict[AssetId, Asset]
 OwnerIndex = Dict[UserId, Set[AssetId]]

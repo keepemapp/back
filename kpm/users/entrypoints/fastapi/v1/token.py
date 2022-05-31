@@ -1,5 +1,3 @@
-from typing import Optional
-
 from fastapi import APIRouter, Depends
 from fastapi.security import OAuth2PasswordRequestForm
 
@@ -12,14 +10,12 @@ from kpm.shared.entrypoints.auth_jwt import (
 )
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_refresh_token
-from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain import commands as cmds
 from kpm.users.domain.model import (
     InvalidScope,
     InvalidSession,
     MissmatchPasswordException,
-    User,
     UserNotFound,
     ValidationPending,
 )
@@ -78,13 +74,13 @@ async def login_for_access_token(
 
 @router.delete("/logout")
 async def refresh_access_token(
-    token: RefreshToken = Depends(get_refresh_token),
+    t: RefreshToken = Depends(get_refresh_token),
     bus: MessageBus = Depends(message_bus),
 ):
     """
     Invalidates server-side the token
     """
-    raw, token = token
+    raw, token = t
     cmd = cmds.RemoveSession(token=raw, removed_by=token.subject)
     bus.handle(cmd)
 

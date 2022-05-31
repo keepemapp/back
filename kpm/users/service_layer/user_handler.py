@@ -10,7 +10,6 @@ from kpm.shared.adapters.notifications import AbstractNotifications
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.entrypoints.auth_jwt import RefreshToken
-from kpm.shared.log import logger
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 from kpm.users.domain.repositories import SessionRepository, UserRepository

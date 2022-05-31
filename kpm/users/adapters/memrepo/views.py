@@ -3,9 +3,9 @@ from typing import Dict, List, Optional
 
 import flatdict
 
-from kpm.shared.domain.model import VISIBLE_STATES, RootAggState, UserId
+from kpm.shared.domain.model import RootAggState, UserId, VISIBLE_STATES
 from kpm.shared.service_layer.message_bus import MessageBus
-from kpm.users.domain.model import Keep, User, UserNotFound
+from kpm.users.domain.model import Keep, User
 from kpm.users.domain.repositories import KeepRepository
 
 
