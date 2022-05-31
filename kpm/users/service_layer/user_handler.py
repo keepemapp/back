@@ -7,11 +7,13 @@ import kpm.users.domain.commands as cmds
 import kpm.users.domain.events as events
 import kpm.users.domain.model as model
 from kpm.shared.adapters.notifications import AbstractNotifications
+from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
+from kpm.shared.entrypoints.auth_jwt import RefreshToken
 from kpm.shared.log import logger
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
-from kpm.users.domain.repositories import UserRepository
+from kpm.users.domain.repositories import SessionRepository, UserRepository
 
 
 def _load_email_templates() -> Environment:
@@ -100,8 +102,9 @@ def activate(cmd: cmds.ActivateUser, user_uow: AbstractUnitOfWork):
 
 
 def send_activation_email(
-    event: events.UserActivated, user_uow: AbstractUnitOfWork,
-    email_notifications: AbstractNotifications
+    event: events.UserActivated,
+    user_uow: AbstractUnitOfWork,
+    email_notifications: AbstractNotifications,
 ):
     env = _load_email_templates()
     with user_uow as uow:
@@ -117,7 +120,7 @@ def send_activation_email(
 
 
 def send_new_user_email(
-        event: events.UserRegistered, email_notifications: AbstractNotifications
+    event: events.UserRegistered, email_notifications: AbstractNotifications
 ):
     """Sends welcome email to user and activation to board"""
     env = _load_email_templates()
@@ -134,12 +137,20 @@ def send_new_user_email(
         referral=event.referred_by,
     )
 
-    email_notifications.send_multiple([
-        {"to": event.username, "subject": "Welcome to Keepem!",
-         "body": welcome},
-        {"to": "board@keepem.app", "subject": "User requires activation",
-         "body": activation},
-    ])
+    email_notifications.send_multiple(
+        [
+            {
+                "to": event.username,
+                "subject": "Welcome to Keepem!",
+                "body": welcome,
+            },
+            {
+                "to": "board@keepem.app",
+                "subject": "User requires activation",
+                "body": activation,
+            },
+        ]
+    )
 
 
 def remove_user(cmd: cmds.RemoveUser, user_uow: AbstractUnitOfWork):
@@ -155,3 +166,53 @@ def remove_user(cmd: cmds.RemoveUser, user_uow: AbstractUnitOfWork):
         )
         repo.update(user)
         uow.commit()
+
+
+def login_user(
+    cmd: cmds.LoginUser,
+    user_uow: AbstractUnitOfWork,
+    session_uow: AbstractUnitOfWork,
+):
+    with user_uow, session_uow:
+        u_repo: UserRepository = user_uow.repo
+        s_repo: SessionRepository = session_uow.repo
+        if cmd.email:
+            user: model.User = u_repo.by_email(cmd.email.lower().strip())
+        elif cmd.user_id:
+            user: model.User = u_repo.get(UserId(cmd.user_id))
+        else:
+            raise NotImplementedError()
+        if not user:
+            raise model.UserNotFound()
+        if user.is_pending_validation() or user.is_disabled():
+            raise model.ValidationPending()
+
+        user.validate_password(cmd.password)
+
+        if cmd.scopes:
+            for requested_scope in cmd.scopes:
+                if requested_scope not in user.roles:
+                    raise model.InvalidScope("Scopes not allowed")
+
+        token = RefreshToken(subject=user.id.id, scopes=cmd.scopes)
+        s_repo.put(
+            model.Session(
+                id=DomainId(id=cmd.id),
+                user=user.id,
+                client_id=cmd.device_id,
+                refresh_token=token.to_token(),
+            )
+        )
+        s_repo.commit()
+
+
+def remove_session(cmd: cmds.RemoveSession, session_uow: AbstractUnitOfWork):
+    with session_uow as uow:
+        repo: SessionRepository = uow.repo
+        sessions = repo.get(token=cmd.token)
+        if len(sessions) != 1:
+            raise model.InvalidSession()
+        s = sessions[0]
+        s.remove(cmd.timestamp, by_id=UserId(id=cmd.removed_by))
+        repo.put(s)
+        repo.commit()

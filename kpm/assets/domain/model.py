@@ -276,9 +276,6 @@ class AssetRelease(RootAggregate):
             dict.update(asdict(c))
         return dict
 
-    def is_active(self) -> bool:
-        return self.state == RootAggState.ACTIVE
-
     def is_past(self) -> bool:
         return self.state in [RootAggState.INACTIVE, RootAggState.REMOVED]
 

@@ -12,6 +12,7 @@ from kpm.users.entrypoints.fastapi.v1.schemas.users import (
 )
 from tests.users.domain import active_user, valid_user
 from tests.users.entrypoints.fastapi import *
+from tests.users.fixtures import mongo_client
 
 USER_PATH = s.API_V1.concat(s.API_USER_PATH)
 ME_PATH = s.API_V1.concat("/me")
@@ -494,7 +495,7 @@ class TestUserUpdates:
             u = repo.get(user.id)
             assert u.state == RootAggState.REMOVED
             assert not u.public_name
-            assert not u.email
+            assert u.email != user.email
 
     def test_remove_user_by_user(self, init_users, user_client):
         admin, user = init_users

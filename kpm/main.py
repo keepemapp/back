@@ -52,10 +52,10 @@ app = FastAPI(
     title=s.APPLICATION_NAME,
     description=description,
     version=version,
-    #servers=[
+    # servers=[
     #    {"url": "https://api.keepem.app", "description": "Production environment"},
     #    {"url": "http://localhost:8000", "description": "Staging environment"},
-    #],
+    # ],
 )
 
 app.include_router(users_router)
@@ -85,29 +85,30 @@ async def log_requests(request: Request, call_next):
             "from_ip": request.client.host,  # use --forwarded-allow-ips *
             "method": request.method,
             "path": request.url.path,
-        }, component="api"
+        },
+        component="api",
     )
     start_time = time.time()
     # try:
     response = await call_next(request)
     status_code = response.status_code
     # except Exception as e:
-        # process_time_ms = (time.time() - start_time) * 1000
-        # logger.error(
-        #     {
-        #         "rid": idem,
-        #         "path": request.url.path,
-        #         "elapsed_ms": round(process_time_ms, 2),
-        #         "status_code": 500,
-        #         "message": str(e),
-        #         "stack": str(traceback.format_exc())[-168:]
-        #     }, component="api"
-        # )
-        #
-        # return JSONResponse(status_code=500, content={
-        #     "detail":
-        #         f"Please give this code to support: '{idem}'. Error {str(e)}",
-        # })
+    # process_time_ms = (time.time() - start_time) * 1000
+    # logger.error(
+    #     {
+    #         "rid": idem,
+    #         "path": request.url.path,
+    #         "elapsed_ms": round(process_time_ms, 2),
+    #         "status_code": 500,
+    #         "message": str(e),
+    #         "stack": str(traceback.format_exc())[-168:]
+    #     }, component="api"
+    # )
+    #
+    # return JSONResponse(status_code=500, content={
+    #     "detail":
+    #         f"Please give this code to support: '{idem}'. Error {str(e)}",
+    # })
 
     process_time_ms = (time.time() - start_time) * 1000
     formatted_process_time = round(process_time_ms, 2)
@@ -118,7 +119,8 @@ async def log_requests(request: Request, call_next):
             "method": request.method,
             "elapsed_ms": formatted_process_time,
             "status_code": status_code,
-        }, component="api"
+        },
+        component="api",
     )
 
     return response

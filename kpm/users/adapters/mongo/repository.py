@@ -8,8 +8,12 @@ from kpm.shared.adapters.mongo import MongoBase
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggregate, RootAggState, UserId
 from kpm.shared.log import logger
-from kpm.users.domain.model import Keep, User
-from kpm.users.domain.repositories import KeepRepository, UserRepository
+from kpm.users.domain.model import Keep, Session, User
+from kpm.users.domain.repositories import (
+    KeepRepository,
+    SessionRepository,
+    UserRepository,
+)
 
 
 class UserMongoRepo(MongoBase, UserRepository):
@@ -18,7 +22,7 @@ class UserMongoRepo(MongoBase, UserRepository):
         mongo_db: str = "users",
         mongo_url: str = s.MONGODB_URL,
     ):
-        super().__init__(mongo_url=mongo_url)
+        super().__init__(mongo_url=mongo_url, db=mongo_db)
         self._coll = self._client[mongo_db].users
 
     def all(self) -> List[User]:
@@ -42,6 +46,7 @@ class UserMongoRepo(MongoBase, UserRepository):
             return self._from_bson(resp)
 
     def by_email(self, email: str) -> Optional[User]:
+        # TODO allow dots in different places for gmail emails
         find_dict = {"email": email.lower()}
         resp = self._coll.find_one(find_dict)
         if resp:
@@ -121,7 +126,7 @@ class KeepMongoRepo(MongoBase, KeepRepository):
         mongo_db: str = "users",
         mongo_url: str = s.MONGODB_URL,
     ):
-        super().__init__(mongo_url=mongo_url)
+        super().__init__(db=mongo_db, mongo_url=mongo_url)
         self._coll = self._client[mongo_db].keeps
 
     def put(self, agg: Keep):
@@ -181,3 +186,50 @@ class KeepMongoRepo(MongoBase, KeepRepository):
         bson["requester"] = UserId(id=bson.pop("requester"))
         bson["requested"] = UserId(id=bson.pop("requested"))
         return Keep(loaded_from_db=True, **bson)
+
+
+class SessionMongoRepo(MongoBase, SessionRepository):
+    def __init__(
+        self,
+        mongo_db: str = "sessions",
+        mongo_url: str = s.MONGODB_URL,
+    ):
+        super().__init__(db=mongo_db, mongo_url=mongo_url)
+        self._coll = self._client[mongo_db].keeps
+
+    def put(self, s: Session):
+        bson = self._to_bson(s)
+        self._update(self._coll, {"_id": bson["_id"]}, bson)
+        self._seen.add(s)
+
+    def get(
+        self, sid: str = None, user: UserId = None, token: str = None
+    ) -> List[Session]:
+        find_dict = {}
+        if sid:
+            find_dict["_id"] = sid
+        if user:
+            find_dict["user"] = user.id
+        if token:
+            find_dict["refresh_token"] = token
+        logger.debug(f"Mongo query filters {find_dict}", component="mongodb")
+        resps = self._coll.find(find_dict)
+        res = []
+        for a in resps:
+            res.append(self._from_bson(a))
+        logger.debug(f"Mongo response count: {len(res)}", component="mongodb")
+        return res
+
+    @staticmethod
+    def _to_bson(agg: Session) -> Dict:
+        bson = asdict(agg)
+        bson["_id"] = bson.pop("id")["id"]
+        bson["state"] = bson.pop("state").value
+        bson["user"] = bson.pop("user")["id"]
+        return bson
+
+    @staticmethod
+    def _from_bson(bson: Dict) -> Session:
+        bson["id"] = DomainId(id=bson.pop("_id"))
+        bson["user"] = UserId(id=bson.pop("user"))
+        return Session(loaded_from_db=True, **bson)

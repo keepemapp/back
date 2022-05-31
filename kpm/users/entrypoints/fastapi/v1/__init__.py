@@ -1,8 +1,13 @@
 from fastapi import APIRouter
 
 from kpm.settings import settings
-from kpm.users.entrypoints.fastapi.v1 import cross_domain_endpoints, feedback, \
-    keeps, token, users
+from kpm.users.entrypoints.fastapi.v1 import (
+    cross_domain_endpoints,
+    feedback,
+    keeps,
+    token,
+    users,
+)
 
 users_router = APIRouter(
     responses={404: {"description": "Not found"}},

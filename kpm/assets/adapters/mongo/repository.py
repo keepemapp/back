@@ -34,7 +34,7 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         mongo_db: str = "assets",
         mongo_url: str = s.MONGODB_URL,
     ):
-        super().__init__(mongo_url=mongo_url)
+        super().__init__(db=mongo_db, mongo_url=mongo_url)
         self._assets = self._client[mongo_db].assets
 
     def _query(
@@ -75,8 +75,9 @@ class AssetMongoRepo(MongoBase, AssetRepository):
         res = []
         for a in resps:
             res.append(self._from_bson(a))
-        logger.debug({"query": str(find_dict), "count": len(res)},
-                     component="mongodb")
+        logger.debug(
+            {"query": str(find_dict), "count": len(res)}, component="mongodb"
+        )
         return res
 
     @staticmethod
@@ -112,8 +113,8 @@ class AssetMongoRepo(MongoBase, AssetRepository):
 
     def remove(self, id: AssetId) -> NoReturn:
         res = self._remove(self._assets, {"_id": id.id})
-        logger.info({
-            "delete": id.id, "entity": "asset", "count": res.deleted_count},
+        logger.info(
+            {"delete": id.id, "entity": "asset", "count": res.deleted_count},
             component="mongodb",
         )
 
@@ -124,7 +125,7 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         mongo_db: str = "assets",
         mongo_url: str = s.MONGODB_URL,
     ):
-        super().__init__(mongo_url=mongo_url)
+        super().__init__(db=mongo_db, mongo_url=mongo_url)
         self._legacy = self._client[mongo_db].legacy
 
     def _to_bson(self, agg: AssetRelease) -> Dict:
@@ -159,10 +160,12 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
             "owner": owner.id,
             "name": name,
             "state": {"$not": {"$in": [st.value for st in FINAL_STATES]}},
-            "assets": {"$elemMatch": {"$in": assets}}
+            "assets": {"$elemMatch": {"$in": assets}},
         }
         res = self._legacy.count_documents(find_dict) > 0
-        logger.debug({"query": str(find_dict), "count": res}, component="mongodb")
+        logger.debug(
+            {"query": str(find_dict), "count": res}, component="mongodb"
+        )
         return res > 0
 
     def get(self, release_id: DomainId) -> Optional[AssetRelease]:
@@ -202,6 +205,7 @@ class AssetReleaseMongoRepo(MongoBase, AssetReleaseRepository):
         for a in resps:
             res.append(self._from_bson(a))
 
-        logger.debug({"query": str(find_dict), "count": len(res)},
-                     component="mongodb")
+        logger.debug(
+            {"query": str(find_dict), "count": len(res)}, component="mongodb"
+        )
         return res

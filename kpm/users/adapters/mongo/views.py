@@ -4,9 +4,16 @@ from typing import Dict, List, Optional
 import flatdict
 
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.domain.model import RootAggState, VISIBLE_STATES, UserId
+from kpm.shared.domain.model import VISIBLE_STATES, RootAggState, UserId
+from kpm.shared.entrypoints.auth_jwt import RefreshToken, from_token
 from kpm.shared.service_layer.message_bus import MessageBus
-from kpm.users.domain.model import Keep, User, UserNotFound
+from kpm.users.domain.model import (
+    InvalidSession,
+    Keep,
+    Session,
+    User,
+    UserNotFound,
+)
 from kpm.users.domain.repositories import KeepRepository
 
 
@@ -33,8 +40,11 @@ def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
         "referral_code": 1,
         "email": 1,
     }
+    with bus.uows.get(User) as uow:
+        db = uow.repo.db
     with mongo_client() as client:
-        col = client.users.users
+        col = client[db].users
+        print(list(col.find({})))
         res = col.aggregate(
             [
                 {"$match": filter},
@@ -42,12 +52,15 @@ def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
             ]
         )
         results = list(res)
+        print(results)
     return results
 
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
+    with bus.uows.get(User) as uow:
+        db = uow.repo.db
     with mongo_client() as client:
-        col = client["users"].users
+        col = client[db].users
         res = col.find_one(
             filter={"referral_code": referral_code}, projection=["_id"]
         )
@@ -56,30 +69,13 @@ def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
 
 
 def id_from_email(email: str, bus: MessageBus) -> Optional[str]:
+    with bus.uows.get(User) as uow:
+        db = uow.repo.db
     with mongo_client() as client:
-        col = client["users"].users
+        col = client[db].users
         res = col.find_one(filter={"email": email.lower()}, projection=["_id"])
 
     return res.get("_id", None) if res else None
-
-
-def credentials_email(email: str, password: str, bus: MessageBus) -> User:
-    user = None
-    with bus.uows.get(User) as uow:
-        user: User = uow.repo.by_email(email.lower().strip())
-    if not user:
-        raise UserNotFound()
-    user.validate_password(password)
-    return user
-
-
-def credentials_id(user_id: str, password: str, bus: MessageBus) -> User:
-    with bus.uows.get(User) as uow:
-        user = uow.repo.get(UserId(user_id))
-    if not user:
-        raise UserNotFound()
-    user.validate_password(password)
-    return user
 
 
 def keep_to_flat_dict(k: Keep):
@@ -128,11 +124,28 @@ def all_keeps(
 
 
 def pending_keeps(user_id: str, bus=None) -> int:
+    with bus.uows.get(User) as uow:
+        db = uow.repo.db
     with mongo_client() as client:
-        col = client.users.keeps
+        col = client[db].keeps
         filter = {
             "requested": user_id,
             "state": RootAggState.PENDING.value,
         }
         num_pending = col.count_documents(filter)
     return num_pending
+
+
+def get_active_refresh_token(
+    bus: MessageBus, session_id: str = None, token: str = None
+) -> RefreshToken:
+    with bus.uows.get(Session) as uow:
+        if session_id:
+            sessions = uow.repo.get(sid=session_id)
+        else:
+            sessions = uow.repo.get(token=token)
+        for session in sessions:
+            if session.is_active():
+                return session.refresh_token
+        # All other cases
+        raise InvalidSession()

@@ -278,14 +278,34 @@ class TestMongoAssetReleaseRepo:
         repo.put(release2)
         repo.commit()
 
-        assert repo.exists(owner=release1.owner, name=release1.name, assets=release1.assets)
-        assert repo.exists(owner=release1.owner, name=release1.name, assets=release1.assets + [AssetId("another-id")])
-        assert not repo.exists(owner=release1.owner, name=release1.name, assets=[AssetId("another-id")])
-        assert not repo.exists(owner=UserId("another u"), name=release1.name, assets=release1.assets)
-        assert not repo.exists(owner=release1.owner, name="random", assets=release1.assets)
-        assert not repo.exists(owner=UserId("another u"), name="random", assets=release1.assets)
+        assert repo.exists(
+            owner=release1.owner, name=release1.name, assets=release1.assets
+        )
+        assert repo.exists(
+            owner=release1.owner,
+            name=release1.name,
+            assets=release1.assets + [AssetId("another-id")],
+        )
+        assert not repo.exists(
+            owner=release1.owner,
+            name=release1.name,
+            assets=[AssetId("another-id")],
+        )
+        assert not repo.exists(
+            owner=UserId("another u"),
+            name=release1.name,
+            assets=release1.assets,
+        )
+        assert not repo.exists(
+            owner=release1.owner, name="random", assets=release1.assets
+        )
+        assert not repo.exists(
+            owner=UserId("another u"), name="random", assets=release1.assets
+        )
 
-        assert not repo.exists(owner=release2.owner, name=release2.name, assets=release2.assets)
+        assert not repo.exists(
+            owner=release2.owner, name=release2.name, assets=release2.assets
+        )
 
     def test_get_all(self, arrepo, release1, release2):
         db, repo = arrepo

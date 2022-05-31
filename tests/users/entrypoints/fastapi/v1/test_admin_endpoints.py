@@ -2,6 +2,7 @@ import pytest
 from fastapi.routing import APIRoute
 
 from tests.users.entrypoints.fastapi import *
+from tests.users.fixtures import mongo_client
 
 
 @pytest.mark.unit

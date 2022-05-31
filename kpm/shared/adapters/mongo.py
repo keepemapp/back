@@ -69,8 +69,9 @@ class MongoBase(ABC):
     ```
     """
 
-    def __init__(self, mongo_url: str = s.MONGODB_URL, **kwargs):
+    def __init__(self, db: str, mongo_url: str = s.MONGODB_URL, **kwargs):
         super().__init__(**kwargs)
+        self.db = db
         self._client = mongo_client(mongo_url)
         self._tx_session = None
 

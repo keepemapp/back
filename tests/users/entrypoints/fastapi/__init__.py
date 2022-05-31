@@ -6,7 +6,7 @@ from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
 from kpm.users.entrypoints.fastapi.v1 import users_router
-from tests.users.fixtures import bus
+from tests.users.fixtures import bus, mongo_client
 
 ADMIN_TOKEN = AccessToken(subject="admin", scopes=["user", "admin"])
 USER_TOKEN = AccessToken(subject="user", scopes=["user"])

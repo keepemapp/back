@@ -83,9 +83,12 @@ class MessageBus:
                 self.queue.extend(self.uows.collect_new_events())
             except Exception as e:
                 logger.error(
-                    {"handler": handler.__name__, "event": str(event),
-                     "message": str(e),
-                     "stack": str(traceback.format_exc())[-168:]},
+                    {
+                        "handler": handler.__name__,
+                        "event": str(event),
+                        "message": str(e),
+                        "stack": str(traceback.format_exc())[-168:],
+                    },
                     component="bus",
                 )
                 continue  # TODO not sure we have to continue here
@@ -101,9 +104,12 @@ class MessageBus:
             self.queue.extend(self.uows.collect_new_events())
         except Exception as e:
             logger.error(
-                {"handler": handler.__name__, "command": str(command),
-                 "message": str(e),
-                 "stack": str(traceback.format_exc())[-168:]},
+                {
+                    "handler": handler.__name__,
+                    "command": str(command),
+                    "message": str(e),
+                    "stack": str(traceback.format_exc())[-168:],
+                },
                 component="bus",
             )
             raise e

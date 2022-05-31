@@ -4,12 +4,15 @@ and user domains as of now)
 """
 
 from fastapi import APIRouter, Depends, status
+
 from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
-from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
-    message_bus, user_view
+from kpm.shared.entrypoints.fastapi.dependencies import (
+    asset_rel_view,
+    message_bus,
+    user_view,
+)
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token
-
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.service_layer.message_bus import MessageBus
 

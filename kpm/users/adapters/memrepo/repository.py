@@ -16,6 +16,11 @@ class MemoryPersistedUserRepository(UserRepository):
     Don't use this in production
     """
 
+    def by_email(self, email: str) -> Optional[User]:
+        for u in self._users.values():
+            if u.email == email:
+                return u
+
     def __init__(
         self,
         dbfile=os.path.join(settings.DATA_FOLDER, "usersrepo.pk"),

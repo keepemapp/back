@@ -570,8 +570,12 @@ class TestAssetReleaseVisibility:
             )
             keep_r.commit()
         bus.handle(
-            dc.replace(create_asset_cmd, asset_id=asset_id, owners_id=[owner],
-                       bookmarked=bookmarked)
+            dc.replace(
+                create_asset_cmd,
+                asset_id=asset_id,
+                owners_id=[owner],
+                bookmarked=bookmarked,
+            )
         )
 
     def populate_bus_with_release(
@@ -588,8 +592,13 @@ class TestAssetReleaseVisibility:
         # Given
         asset_id = "assetId"
         self.populate_bus_with_asset_and_keep(
-            bus, create_asset_cmd, owner, receiver, asset_id, keep_state,
-            asset_bookmarked
+            bus,
+            create_asset_cmd,
+            owner,
+            receiver,
+            asset_id,
+            keep_state,
+            asset_bookmarked,
         )
         release = model.AssetRelease(
             id=DomainId(release_id),

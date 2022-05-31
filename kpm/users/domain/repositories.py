@@ -4,7 +4,7 @@ from typing import List, Optional, Set
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import UserId
 from kpm.shared.domain.repository import DomainRepository
-from kpm.users.domain.model import Keep, User
+from kpm.users.domain.model import Keep, Session, User
 
 
 class UserRepository(DomainRepository):
@@ -18,6 +18,10 @@ class UserRepository(DomainRepository):
 
     @abstractmethod
     def get(self, uid: UserId) -> Optional[User]:
+        raise NotImplementedError
+
+    @abstractmethod
+    def by_email(self, email: str) -> Optional[User]:
         raise NotImplementedError
 
     @abstractmethod
@@ -62,4 +66,20 @@ class KeepRepository(DomainRepository):
     def exists(
         self, user1: UserId, user2: UserId, all_states: bool = False
     ) -> bool:
+        raise NotImplementedError
+
+
+class SessionRepository(DomainRepository):
+    def __init__(self):
+        super(SessionRepository, self).__init__()
+        self._seen: Set[Session] = set()
+
+    @abstractmethod
+    def put(self, s: Session):
+        raise NotImplementedError
+
+    @abstractmethod
+    def get(
+        self, sid: DomainId = None, user: UserId = None, token: str = None
+    ) -> List[Session]:
         raise NotImplementedError

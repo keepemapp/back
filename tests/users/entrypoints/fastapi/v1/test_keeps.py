@@ -12,6 +12,7 @@ from kpm.users.entrypoints.fastapi.v1.schemas.keeps import (
 )
 from tests.users.domain import active_user, valid_user
 from tests.users.entrypoints.fastapi import *
+from tests.users.fixtures import mongo_client
 
 KEEP_ROUTE = s.API_V1.concat(s.API_MY_KEEPS)
 
@@ -287,27 +288,32 @@ class TestKeepsApi:
         )
         assert len(user_client.get(KEEP_ROUTE.path()).json()["items"]) == 0
 
-
     @staticmethod
     @pytest.fixture
     def init_keeps(bus):
         with bus.uows.get(Keep) as uow:
             repo: KeepRepository = uow.repo
-            repo.put(Keep(
-                requester=UserId(USER_TOKEN.subject),
-                requested=UserId(ADMIN_TOKEN.subject),
-                state=RootAggState.PENDING
-            ))
-            repo.put(Keep(
-                requester=UserId("anotherUser"),
-                requested=UserId(USER_TOKEN.subject),
-                state=RootAggState.ACTIVE
-            ))
-            repo.put(Keep(
-                requester=UserId(ADMIN_TOKEN.subject),
-                requested=UserId("anotherUser"),
-                state=RootAggState.REMOVED
-            ))
+            repo.put(
+                Keep(
+                    requester=UserId(USER_TOKEN.subject),
+                    requested=UserId(ADMIN_TOKEN.subject),
+                    state=RootAggState.PENDING,
+                )
+            )
+            repo.put(
+                Keep(
+                    requester=UserId("anotherUser"),
+                    requested=UserId(USER_TOKEN.subject),
+                    state=RootAggState.ACTIVE,
+                )
+            )
+            repo.put(
+                Keep(
+                    requester=UserId(ADMIN_TOKEN.subject),
+                    requested=UserId("anotherUser"),
+                    state=RootAggState.REMOVED,
+                )
+            )
             repo.commit()
 
     def test_get_all_keeps(self, init_users, init_keeps, admin_client):

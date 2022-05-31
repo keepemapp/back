@@ -59,8 +59,9 @@ class Settings(BaseSettings):
     API_ASSET_PATH: ApiRoute = ApiRoute(prefix="/assets", tags=["assets"])
     API_USER_PATH: ApiRoute = ApiRoute(prefix="/users", tags=["users"])
     API_KEEPS: ApiRoute = ApiRoute(prefix="/keeps")
-    API_MY_KEEPS: ApiRoute = ApiRoute(prefix=API_ME.concat(API_KEEPS).path(),
-                                      tags=["users"])
+    API_MY_KEEPS: ApiRoute = ApiRoute(
+        prefix=API_ME.concat(API_KEEPS).path(), tags=["users"]
+    )
     API_FEEDBACK: ApiRoute = ApiRoute(prefix="/feedback")
 
     API_LEGACY: ApiRoute = ApiRoute(
@@ -116,8 +117,11 @@ class Settings(BaseSettings):
 @lru_cache
 def get_settings():
     res = Settings()
-    if res.ASSET_S3_BUCKET and res.ENVIRONMENT != "prod" \
-            and res.ENVIRONMENT not in res.ASSET_S3_BUCKET:
+    if (
+        res.ASSET_S3_BUCKET
+        and res.ENVIRONMENT != "prod"
+        and res.ENVIRONMENT not in res.ASSET_S3_BUCKET
+    ):
         raise ValueError("ENVIRONMENT must be in ASSET_S3_BUCKET")
     return Settings()
 

@@ -1,11 +1,12 @@
 from dataclasses import field
-from typing import Optional
+from typing import List, Optional
 
 from pydantic.dataclasses import dataclass
 
 from kpm.shared.domain import DomainId, init_id, required_field
 from kpm.shared.domain.commands import Command
 from kpm.shared.domain.model import UserId
+from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 
 
 @dataclass(frozen=True)
@@ -70,3 +71,22 @@ class DeclineKeep(Command):
     by: str = required_field()  # type: ignore
     keep_id: str = required_field()  # type: ignore
     reason: Optional[str] = field(default=None)
+
+
+@dataclass(frozen=True)
+class LoginUser(Command):
+    email: Optional[str] = None  # type: ignore
+    user_id: Optional[str] = None  # type: ignore
+    password: str = required_field(repr=False)  # type: ignore
+    device_id: Optional[str] = None  # type: ignore
+    scopes: List[str] = field(default_factory=list)  # type: ignore
+    id: Optional[str] = field(default_factory=lambda: init_id(DomainId).id)
+
+    def __post_init__(self):
+        assert self.email or self.user_id
+
+
+@dataclass(frozen=True)
+class RemoveSession(Command):
+    token: str = required_field()  # type: ignore
+    removed_by: str = required_field()  # type: ignore

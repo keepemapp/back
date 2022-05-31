@@ -1,5 +1,5 @@
 from datetime import timedelta
-from typing import Optional, Type, TypeVar
+from typing import Optional, Tuple, Type, TypeVar
 
 from fastapi import Depends, HTTPException
 from fastapi.security import OAuth2PasswordBearer
@@ -62,10 +62,12 @@ async def get_admin_token(
         return t
 
 
-async def get_refresh_token(t: str = Depends(oauth2_scheme)) -> RefreshToken:
+async def get_refresh_token(
+    t: str = Depends(oauth2_scheme),
+) -> Tuple[str, RefreshToken]:
     token = from_token(t)
     if token.is_refresh() and token.is_valid():
-        return token
+        return t, token
     else:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

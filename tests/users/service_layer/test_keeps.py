@@ -5,7 +5,7 @@ from kpm.shared.domain.model import RootAggState
 from kpm.users.domain import commands as cmds
 from kpm.users.domain.events import UserActivated, UserRemoved
 from kpm.users.domain.repositories import KeepRepository
-from tests.users.fixtures import bus
+from tests.users.fixtures import bus, mongo_client
 
 
 def create_user_cmd(uid: str = "1"):

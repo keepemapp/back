@@ -116,7 +116,7 @@ def pending(user_id: str, bus=None) -> int:
             "$or": [
                 {"conditions.release_ts": {"$lt": now_utc_millis()}},
                 {"conditions.type": {"$ne": "time_condition"}},
-            ]
+            ],
         }
         num_pending = col.count_documents(filter)
 

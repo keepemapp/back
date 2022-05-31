@@ -182,9 +182,10 @@ class EncryptedAssetFileRepository(AssetFileRepository):
             raise EnvironmentError("Encryption algorithm not found")
         self._create(location, enc)
         process_time_ms = (time.time() - start_time) * 1000
-        logger.debug({"message": "create",
-                      "elapsed_ms": round(process_time_ms, 2)},
-                     component="fileRepo")
+        logger.debug(
+            {"message": "create", "elapsed_ms": round(process_time_ms, 2)},
+            component="fileRepo",
+        )
 
     @abstractmethod
     def _create(self, location: str, file: TemporaryFile):
@@ -218,9 +219,10 @@ class EncryptedAssetFileRepository(AssetFileRepository):
             plain.seek(0)
 
             process_time_ms = (time.time() - start_time) * 1000
-            logger.debug({"message": "get",
-                          "elapsed_ms": round(process_time_ms, 2)},
-                         component="fileRepo")
+            logger.debug(
+                {"message": "get", "elapsed_ms": round(process_time_ms, 2)},
+                component="fileRepo",
+            )
             return plain
         elif not encryption_type:
             remote_file.seek(0)

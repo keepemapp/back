@@ -13,6 +13,11 @@ class MemoryUserRepository(UserRepository):
         super().__init__()
         self._users: Users = {}
 
+    def by_email(self, email: str) -> Optional[User]:
+        for u in self._users.values():
+            if u.email == email:
+                return u
+
     def all(self) -> List[User]:
         return list(self._users.values())
 

@@ -19,6 +19,7 @@ from kpm.shared.domain.model import (
     RootAggState,
     UserId,
 )
+from kpm.shared.entrypoints.auth_jwt import AccessToken, RefreshToken
 from kpm.shared.log import logger
 from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain import events
@@ -34,7 +35,15 @@ INVALID_EMAIL = "Email is not valid"
 def generate_referral_code() -> str:
     chars = string.ascii_letters + string.digits
     # Avoid ambiguous characters
-    chars = chars.replace("l", "").replace("I", "").replace("1", "").replace("O", "").replace("0", "").replace("S", "").replace("5", "")
+    chars = (
+        chars.replace("l", "")
+        .replace("I", "")
+        .replace("1", "")
+        .replace("O", "")
+        .replace("0", "")
+        .replace("S", "")
+        .replace("5", "")
+    )
     candidate = "".join(random.choice(chars) for x in range(5))
     forbidden_words = ["nazis", "nigga"]
     if candidate.lower() in forbidden_words:
@@ -61,7 +70,7 @@ class User(RootAggregate):
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:
-        regex = r"^[a-z0-9+\._-]+[@]\w+[.]\w{2,10}$"
+        regex = r"^[a-z0-9+\._-]+[@][.\w]+?[.]\w{2,10}$"
         return True if re.match(regex, email) else False
 
     @staticmethod
@@ -110,7 +119,7 @@ class User(RootAggregate):
                 {
                     "removed_by": by,
                     "removed_reason": reason,
-                    "email": "",
+                    "email": f"{self.id.id}@removed.keepem.app".lower(),
                     "public_name": None,
                 },
             )
@@ -249,6 +258,24 @@ class Keep(RootAggregate):
         return hash(self.id.id)
 
 
+@dataclass
+class Session(RootAggregate):
+    user: UserId = required_field()  # type: ignore
+    # client ID / device ID (used for sending push notifications if applies)
+    client_id: Optional[str] = None  # type: ignore
+    refresh_token: str = required_field()  # type: ignore
+    state: RootAggState = field(default=RootAggState.ACTIVE)
+    removed_by: Optional[str] = updatable_field()  # type: ignore
+
+    def remove(self, mod_ts: Optional[int], by_id: UserId = None, **kwargs):
+        if self.state != FINAL_STATES:
+            self.update_fields(mod_ts, {"removed_by": by_id.id})
+            self._update_field(mod_ts, "state", RootAggState.REMOVED)
+
+    def __hash__(self):
+        return hash(self.id.id)
+
+
 class DuplicatedKeepException(Exception):
     def __init__(self, msg="This keep was already created"):
         self.msg = msg
@@ -262,3 +289,17 @@ class KeepAlreadyDeclined(Exception):
 class KeepActionError(Exception):
     def __init__(self, msg="Error acting on a keep"):
         self.msg = msg
+
+
+class ValidationPending(Exception):
+    def __init__(self, msg="User pending validation"):
+        self.msg = msg
+
+
+class InvalidSession(Exception):
+    def __init__(self, msg="Session has expired or was invalidated"):
+        self.msg = msg
+
+
+class InvalidScope(Exception):
+    pass

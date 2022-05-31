@@ -5,6 +5,7 @@ from abc import ABC, abstractmethod
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Dict, List, Union
+
 from fastapi import BackgroundTasks
 
 from kpm.settings import settings as s
@@ -29,8 +30,10 @@ class EmailNotifications(AbstractNotifications):
     """
 
     def __init__(
-        self, background_tasks: BackgroundTasks = None,
-            host: str = s.EMAIL_SMTP_SERVER, port: int = s.EMAIL_SMTP_PORT
+        self,
+        background_tasks: BackgroundTasks = None,
+        host: str = s.EMAIL_SMTP_SERVER,
+        port: int = s.EMAIL_SMTP_PORT,
     ):
         self._host = host
         self._port = port
@@ -54,12 +57,17 @@ class EmailNotifications(AbstractNotifications):
             )
             self._bg_tasks.add_task(
                 EmailNotifications._connect_and_send,
-                self._host, self._port, destination, msg_body, subject
+                self._host,
+                self._port,
+                destination,
+                msg_body,
+                subject,
             )
         else:
             logger.warning("Synchronously sending email", component="mail")
-            EmailNotifications._connect_and_send(self._host, self._port,
-                                                 destination, msg_body, subject)
+            EmailNotifications._connect_and_send(
+                self._host, self._port, destination, msg_body, subject
+            )
 
     def send_multiple(self, emails: List[Dict]):
         msgs = []
@@ -73,8 +81,7 @@ class EmailNotifications(AbstractNotifications):
             msgs.append(message)
         if self._bg_tasks:
             self._bg_tasks.add_task(
-                EmailNotifications._send_multiple,
-                self._host, self._port, msgs
+                EmailNotifications._send_multiple, self._host, self._port, msgs
             )
         else:
             logger.warning("Synchronously sending email", component="mail")
@@ -97,10 +104,12 @@ class EmailNotifications(AbstractNotifications):
                 component="mail",
             )
         except Exception as e:
-            logger.error({
-                "message": str(e),
-                "stack": str(traceback.format_exc())[-168:]}
-                , component="mail"
+            logger.error(
+                {
+                    "message": str(e),
+                    "stack": str(traceback.format_exc())[-168:],
+                },
+                component="mail",
             )
 
     @staticmethod
@@ -116,24 +125,29 @@ class EmailNotifications(AbstractNotifications):
             for msg in messages:
                 try:
                     msg_body = msg.as_string()
-                    server.sendmail(s.EMAIL_SENDER_ADDRESS,
-                                    msg["To"], msg_body)
+                    server.sendmail(
+                        s.EMAIL_SENDER_ADDRESS, msg["To"], msg_body
+                    )
                     logger.info(
                         f"Email sent to '{msg['To']}' with subject '{msg['Subject']}'",
                         component="mail",
                     )
                 except Exception as e:
-                    logger.error({
-                        "message": str(e),
-                        "stack": str(traceback.format_exc())[-168:]}
-                        , component="mail"
+                    logger.error(
+                        {
+                            "message": str(e),
+                            "stack": str(traceback.format_exc())[-168:],
+                        },
+                        component="mail",
                     )
             server.close()
         except Exception as e:
-            logger.error({
-                "message": str(e),
-                "stack": str(traceback.format_exc())[-168:]}
-                , component="mail"
+            logger.error(
+                {
+                    "message": str(e),
+                    "stack": str(traceback.format_exc())[-168:],
+                },
+                component="mail",
             )
 
 

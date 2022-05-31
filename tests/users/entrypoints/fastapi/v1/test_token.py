@@ -3,13 +3,17 @@ import time
 import pytest
 
 from kpm.settings import settings as s
+from kpm.shared.domain.model import RootAggState
 from kpm.shared.domain.time_utils import now_utc_sec
 from kpm.shared.entrypoints.auth_jwt import from_token
+from kpm.users.domain.commands import RemoveSession
+from kpm.users.domain.model import Session
 from tests.users.entrypoints.fastapi import *
 from tests.users.entrypoints.fastapi.v1.test_users import (
     create_active_user,
     create_user,
 )
+from tests.users.fixtures import mongo_client
 
 user_route: str = s.API_V1.concat(s.API_USER_PATH).prefix
 login_route: str = s.API_V1.concat(s.API_TOKEN).prefix
@@ -79,3 +83,65 @@ class TestJwtTokens:
         old_expires = login_js["access_token_expires"]
         new_expires = refresh_js["access_token_expires"]
         assert old_expires < new_expires
+
+    def test_removed_token(self, client_with_user, bus):
+        # Create token
+        login_js = client_with_user.post(
+            login_route,
+            data={"username": self.user_email, "password": self.user_pwd},
+        ).json()
+        refresh = login_js["refresh_token"]
+        # Remove session token
+        cmd = RemoveSession(token=refresh, removed_by="")
+        bus.handle(cmd)
+        # When
+        response = client_with_user.post(
+            s.API_V1.concat("/refresh").path(),
+            headers={"Accept": "application/json", "Authorization": refresh},
+        )
+        # Then
+        assert response.status_code == 401
+
+    def test_logout_removes_token(self, client_with_user, bus):
+        # Given a token
+        login_js = client_with_user.post(
+            login_route,
+            data={"username": self.user_email, "password": self.user_pwd},
+        ).json()
+        refresh = login_js["refresh_token"]
+
+        # When
+        client_with_user.delete(s.API_V1.concat("/logout").path())
+
+        # Then
+        with bus.uows.get(Session) as uow:
+            sessions = uow.repo.get(token=refresh)
+            assert len(sessions) == 1
+            ses: Session = sessions[0]
+            assert ses.state == RootAggState.REMOVED
+        response = client_with_user.post(
+            s.API_V1.concat("/refresh").path(),
+            headers={"Accept": "application/json", "Authorization": refresh},
+        )
+        assert response.status_code == 401
+
+    def test_login_stores_client_id(self, client_with_user, bus):
+        # Given
+        client_id = "some random client id"
+        # When
+        login_js = client_with_user.post(
+            login_route,
+            data={
+                "username": self.user_email,
+                "password": self.user_pwd,
+                "client_id": client_id,
+            },
+        ).json()
+        refresh = login_js["refresh_token"]
+        # Then
+        with bus.uows.get(Session) as uow:
+            sessions = uow.repo.get(token=refresh)
+            assert len(sessions) == 1
+            s: Session = sessions[0]
+            assert s.client_id == client_id
+            assert not s.removed_by

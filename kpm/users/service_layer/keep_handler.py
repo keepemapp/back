@@ -14,11 +14,15 @@ def new_keep(cmd: cmds.RequestKeep, keep_uow: AbstractUnitOfWork):
         repo: KeepRepository = uow.repo
         if repo.exists(requester, requested, all_states=True):
             # Allow to request back the keep if declined by mistake
-            mutual_keeps = [k for k in repo.all(requester)
-                           if k.requester == requested
-                           or k.requested == requested]
-            if len(mutual_keeps) == 2 \
-                    or mutual_keeps[0].state != RootAggState.REMOVED:
+            mutual_keeps = [
+                k
+                for k in repo.all(requester)
+                if k.requester == requested or k.requested == requested
+            ]
+            if (
+                len(mutual_keeps) == 2
+                or mutual_keeps[0].state != RootAggState.REMOVED
+            ):
                 raise model.DuplicatedKeepException()
         k = model.Keep(
             id=DomainId(cmd.id),
@@ -34,7 +38,9 @@ def new_keep(cmd: cmds.RequestKeep, keep_uow: AbstractUnitOfWork):
 def accept_keep(cmd: cmds.AcceptKeep, keep_uow: AbstractUnitOfWork):
     with keep_uow as uow:
         repo: KeepRepository = uow.repo
-        k = repo.get(kid=DomainId(cmd.keep_id))
+        k = repo.get(kid=DomainId(id=cmd.keep_id))
+        if not k:
+            raise KeyError(f"Keep {cmd.keep_id} not found")
         if cmd.by != k.requested.id:
             raise model.KeepActionError()
         k.accept(cmd.name_by_requested, cmd.timestamp)

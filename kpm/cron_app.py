@@ -68,12 +68,15 @@ async def cron_feedback():
     logger.info("Cron for feedback email started", component="cron")
     # TODO send email with new keep requests and legacy op
     if not s.EMAIL_SENDER_ADDRESS or not s.EMAIL_SENDER_PASSWORD:
-        logger.warning("Can't send notification since no email is set.",
-                       component="cron")
+        logger.warning(
+            "Can't send notification since no email is set.", component="cron"
+        )
         return
     if not s.MONGODB_URL:
-        logger.warning("Can't send notification since database is not mongo.",
-                       component="cron")
+        logger.warning(
+            "Can't send notification since database is not mongo.",
+            component="cron",
+        )
         return
 
     email_notifications = EmailNotifications()
@@ -83,17 +86,24 @@ async def cron_feedback():
 
     with mongo_client() as client:
         feedback = client.users.feedback_response
-        responses = [{
-            "form": r["form_id"],
-            "question": r["question_id"],
-            "response": r["response"]}
-            for r in feedback.find({"created_ts": since})]
+        responses = [
+            {
+                "form": r["form_id"],
+                "question": r["question_id"],
+                "response": r["response"],
+            }
+            for r in feedback.find({"created_ts": since})
+        ]
         if responses:
             template = env.get_template("feedback.html")
             body = template.render(responses=responses)
-            emails.append({"to": "board@keepem.app",
-                           "subject": "Feedback forms",
-                           "body": body})
+            emails.append(
+                {
+                    "to": "board@keepem.app",
+                    "subject": "Feedback forms",
+                    "body": body,
+                }
+            )
     if emails:
         email_notifications.send_multiple(emails)
 
@@ -103,12 +113,15 @@ async def cron_feedback():
 async def cron_legacy():
     logger.info("Cron for legacy emails started", component="cron")
     if not s.EMAIL_SENDER_ADDRESS or not s.EMAIL_SENDER_PASSWORD:
-        logger.warning("Can't send notification since no email is set.",
-                       component="cron")
+        logger.warning(
+            "Can't send notification since no email is set.", component="cron"
+        )
         return
     if not s.MONGODB_URL:
-        logger.warning("Can't send notification since database is not mongo.",
-                       component="cron")
+        logger.warning(
+            "Can't send notification since database is not mongo.",
+            component="cron",
+        )
         return
 
     email_notifications = EmailNotifications()
@@ -120,16 +133,23 @@ async def cron_legacy():
         filter = {
             "state": RootAggState.ACTIVE.value,
             "$or": [
-                {"conditions.release_ts": {"$gt": since, "$lt": now_utc_millis()}},
+                {
+                    "conditions.release_ts": {
+                        "$gt": since,
+                        "$lt": now_utc_millis(),
+                    }
+                },
                 {"conditions.type": {"$ne": "time_condition"}},
-            ]
+            ],
         }
-        legacy_cursor = client.assets.legacy.aggregate([
-            {"$match": filter},
-            {"$unwind": "$receivers"},
-            {"$group": {"_id": "receivers", "count": {"$sum": 1}}}
-        ])
-        users_to_alert = {res['_id']: res['count'] for res in legacy_cursor}
+        legacy_cursor = client.assets.legacy.aggregate(
+            [
+                {"$match": filter},
+                {"$unwind": "$receivers"},
+                {"$group": {"_id": "receivers", "count": {"$sum": 1}}},
+            ]
+        )
+        users_to_alert = {res["_id"]: res["count"] for res in legacy_cursor}
         users_batch = [id for id in users_to_alert.keys()]
         emails_cursor = client.users.users.aggregate(
             [
@@ -142,8 +162,12 @@ async def cron_legacy():
             founder_name = random.choice(["Martí", "David", "Jordi"])
             body = template.render(founder_name=founder_name)
             emails.append(
-                {"to": user["email"], "subject": "New legacy available",
-                 "body": body})
+                {
+                    "to": user["email"],
+                    "subject": "New legacy available",
+                    "body": body,
+                }
+            )
 
     if emails:
         email_notifications.send_multiple(emails)
@@ -171,7 +195,8 @@ async def log_requests(request: Request, call_next):
             "method": request.method,
             "elapsed_ms": formatted_process_time,
             "status_code": status_code,
-        }, component="cron"
+        },
+        component="cron",
     )
 
     return response

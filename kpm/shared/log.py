@@ -16,7 +16,7 @@ class JsonLogger:
                 logger.setLevel(logging.ERROR)
             except:
                 pass
-        if s.ENVIRONMENT != 'prod':
+        if s.ENVIRONMENT != "prod":
             self._log = logging.getLogger(f"kpm")
         else:
             self._log = logging.getLogger("kpm")
@@ -25,7 +25,10 @@ class JsonLogger:
         ch.setLevel(s.LOG_LEVEL)
         formatter = logging.Formatter(
             '{"time": "%(asctime)s", "level": "%(levelname)s", %(message)s, "app_name": "%(name)s", "comp":"'
-            + s.APPLICATION_COMPONENT + '","env": "' + s.ENVIRONMENT + '"}'
+            + s.APPLICATION_COMPONENT
+            + '","env": "'
+            + s.ENVIRONMENT
+            + '"}'
         )
         ch.setFormatter(formatter)
         self._log.addHandler(ch)

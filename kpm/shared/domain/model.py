@@ -215,7 +215,10 @@ class RootAggregate(Entity):
         else:
             return None
 
-    def is_visible(self):
+    def is_active(self) -> bool:
+        return self.state == RootAggState.ACTIVE
+
+    def is_visible(self) -> bool:
         return self.state in VISIBLE_STATES
 
     def remove(self, mod_ts: Optional[int], **kwargs):

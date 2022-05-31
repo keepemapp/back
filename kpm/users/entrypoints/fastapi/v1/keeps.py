@@ -6,8 +6,10 @@ from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi import query_params
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.exceptions import FORBIDDEN_GENERIC
-from kpm.shared.entrypoints.fastapi.jwt_dependencies import get_access_token, \
-    get_admin_token
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
+    get_access_token,
+    get_admin_token,
+)
 from kpm.shared.entrypoints.fastapi.schemas import HTTPError
 from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
@@ -32,7 +34,7 @@ router = APIRouter(
 @router.get(
     s.API_MY_KEEPS.path(),
     tags=s.API_MY_KEEPS.tags,
-    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
+    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}},
 )
 async def list_keeps(
     order_by: str = query_params.order_by,
@@ -51,9 +53,12 @@ async def list_keeps(
     user_lookup = {
         u["id"]: u for u in views.users_public_info(list(users), bus)
     }
+    print(user_lookup)
 
     keeps = list()
     for k in keeps_raw:
+        print(k.get("requester"))
+        print(user_lookup[k.get("requester")])
         k["requester"] = UserPublic(**user_lookup[k.pop("requester")])
         k["requested"] = UserPublic(**user_lookup[k.pop("requested")])
         keeps.append(schemas.KeepResponse(**k))
@@ -63,7 +68,9 @@ async def list_keeps(
 
 @router.post(
     s.API_MY_KEEPS.path(),
-    tags=s.API_MY_KEEPS.tags, status_code=status.HTTP_201_CREATED)
+    tags=s.API_MY_KEEPS.tags,
+    status_code=status.HTTP_201_CREATED,
+)
 async def new_keep(
     request: schemas.RequestKeep,
     token: AccessToken = Depends(get_access_token),
@@ -98,7 +105,8 @@ async def new_keep(
 @router.put(
     s.API_MY_KEEPS.concat("accept").path(),
     tags=s.API_MY_KEEPS.tags,
-    status_code=status.HTTP_204_NO_CONTENT)
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def accept_keep(
     request: schemas.AcceptKeep,
     token: AccessToken = Depends(get_access_token),
@@ -117,7 +125,8 @@ async def accept_keep(
 @router.put(
     s.API_MY_KEEPS.concat("decline").path(),
     tags=s.API_MY_KEEPS.tags,
-    status_code=status.HTTP_204_NO_CONTENT)
+    status_code=status.HTTP_204_NO_CONTENT,
+)
 async def decline_keep(
     request: schemas.DeclineKeep,
     token: AccessToken = Depends(get_access_token),
@@ -140,7 +149,7 @@ async def decline_keep(
 @router.get(
     s.API_KEEPS.path(),
     tags=["admin"],
-    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}}
+    responses={status.HTTP_200_OK: {"model": Page[schemas.KeepResponse]}},
 )
 async def list_all_keeps(
     order_by: str = query_params.order_by,

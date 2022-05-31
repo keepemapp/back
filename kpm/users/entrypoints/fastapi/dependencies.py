@@ -6,8 +6,12 @@ from kpm.users.adapters.memrepo.repository import (
     KeepMemoryRepository,
     MemoryPersistedUserRepository,
 )
-from kpm.users.adapters.mongo.repository import KeepMongoRepo, UserMongoRepo
-from kpm.users.domain.model import Keep, User
+from kpm.users.adapters.mongo.repository import (
+    KeepMongoRepo,
+    SessionMongoRepo,
+    UserMongoRepo,
+)
+from kpm.users.domain.model import Keep, Session, User
 
 
 def uows() -> UoWs:
@@ -16,6 +20,7 @@ def uows() -> UoWs:
             {
                 User: MongoUoW(UserMongoRepo),
                 Keep: MongoUoW(KeepMongoRepo),
+                Session: MongoUoW(SessionMongoRepo),
             }
         )
     return UoWs(

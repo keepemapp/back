@@ -36,53 +36,70 @@ class TestUser:
             active_user["id"] = UserId("232")
             assert isinstance(User(**active_user).id, UserId)
 
-        @pytest.mark.parametrize("username", [
-            "test",
-            "Test",
-            "this_is_an_user",
-            "Ts",
-        ])
+        @pytest.mark.parametrize(
+            "username",
+            [
+                "test",
+                "Test",
+                "this_is_an_user",
+                "Ts",
+            ],
+        )
         def test_valid_usernames(self, active_user, username):
             active_user["username"] = username
             u = User(**active_user)
             assert u.username == username.lower()
 
-        @pytest.mark.parametrize("username", [
-            "spa ces",
-            "",
-            "no-dash",
-            "odd'chars",
-            "oddajkshdajksdhaskjdhsakjdhasdkljashdkjs",
-        ])
+        @pytest.mark.parametrize(
+            "username",
+            [
+                "spa ces",
+                "",
+                "no-dash",
+                "odd'chars",
+                "oddajkshdajksdhaskjdhsakjdhasdkljashdkjs",
+            ],
+        )
         def test_invalid_usernames(self, active_user, username):
             active_user["username"] = username
 
             with pytest.raises(ValueError):
                 u = User(**active_user)
 
-        @pytest.mark.parametrize("email", [
-            "test@fmai.cos",
-            "tes-t-test-test_test.test@fmai.cos",
-            "test@barcelona.barcelona",
-            "test-test@gmail.com",
-            "test.test@gmail.com",
-            "a@a.co",
-            "Test@C.co",
-            "test@Com.cSo",
-            "test+valid@gmail.com",
-            "  testvalid@gmail.com",
-            "  testvalid@gmail.com   ",
-            "testvalid@gmail.com     ",
-        ])
+        @pytest.mark.parametrize(
+            "email",
+            [
+                "test@fmai.cos",
+                "tes-t-test-test_test.test@fmai.cos",
+                "test@barcelona.barcelona",
+                "test-test@gmail.com",
+                "test.test@gmail.com",
+                "a@a.co",
+                "Test@C.co",
+                "test@Com.cSo",
+                "test+valid@gmail.com",
+                "  testvalid@gmail.com",
+                "  testvalid@gmail.com   ",
+                "testvalid@gmail.com     ",
+            ],
+        )
         def test_valid_emails(self, active_user, email):
             active_user["email"] = email
             u = User(**active_user)
             assert u.email == email.lower().strip()
 
-        @pytest.mark.parametrize("email", [
-            "asd", "@gmail.com", "s d@gmail.com", "test@gmail", "test@.com",
-            "te`st@gmail.com", "';test@gmail.com"
-        ])
+        @pytest.mark.parametrize(
+            "email",
+            [
+                "asd",
+                "@gmail.com",
+                "s d@gmail.com",
+                "test@gmail",
+                "test@.com",
+                "te`st@gmail.com",
+                "';test@gmail.com",
+            ],
+        )
         def test_invalid_emails(self, active_user, email):
             active_user["email"] = email
             with pytest.raises(ValueError) as _:
