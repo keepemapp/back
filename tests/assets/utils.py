@@ -1,20 +1,26 @@
+import random
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Union
 
 import pytest
 
 from kpm.assets.adapters.memrepo import MemoryAssetRepository
+from kpm.assets.adapters.mongo.repository import AssetMongoRepo, \
+    AssetReleaseMongoRepo
 from kpm.assets.domain import model
 from kpm.assets.domain.model import AssetRelease
 from kpm.assets.domain.repositories import AssetReleaseRepository
 from kpm.assets.service_layer import COMMAND_HANDLERS, EVENT_HANDLERS
+from kpm.shared.adapters.mongo import MongoUoW
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import FINAL_STATES, AssetId, UserId
 from kpm.shared.entrypoints import bootstrap
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import UoWs
 from kpm.users.domain.model import Keep
 from tests.shared.utils import TestUoW
 from tests.users.utils import TestKeepRepository
+from tests.users.adapters.mongo.test_repository import mongo_client
 
 
 class TestAssetRepository(MemoryAssetRepository):
@@ -93,3 +99,23 @@ def bus():
         event_handlers=EVENT_HANDLERS,
         command_handlers=COMMAND_HANDLERS,
     )
+
+
+@pytest.fixture
+def mongo_bus(mongo_client):
+    """Init test bus for passing it to tests"""
+    db = "assets_" + "".join(random.choice("smiwysndkajsown") for _ in range(5))
+    logger.debug(f"Using db '{db}'", component="test")
+    yield bootstrap.bootstrap(
+        uows=UoWs(
+            {
+                model.Asset: MongoUoW(AssetMongoRepo, mongo_db=db),
+                model.AssetRelease: MongoUoW(AssetReleaseMongoRepo, mongo_db=db),
+                Keep: TestUoW(TestKeepRepository),
+            }
+        ),
+        event_handlers=EVENT_HANDLERS,
+        command_handlers=COMMAND_HANDLERS,
+    )
+    with mongo_client as client:
+        client.drop_database(db)

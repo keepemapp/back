@@ -4,7 +4,7 @@ import string
 import time
 
 import uvicorn
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from starlette.requests import Request
 
 from kpm.settings import settings as s
@@ -12,6 +12,8 @@ from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.adapters.notifications import EmailNotifications
 from kpm.shared.domain.model import RootAggState
 from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
+    asset_view
 from kpm.shared.entrypoints.fastapi.tasks import repeat_every
 from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
 from kpm.shared.log import logger
@@ -110,7 +112,7 @@ async def cron_feedback():
 
 @app.on_event("startup")
 @repeat_every(seconds=s.CRON_LEGACY)
-async def cron_legacy():
+async def cron_legacy(assets=Depends(asset_rel_view)):
     logger.info("Cron for legacy emails started", component="cron")
     if not s.EMAIL_SENDER_ADDRESS or not s.EMAIL_SENDER_PASSWORD:
         logger.warning(
@@ -129,28 +131,11 @@ async def cron_legacy():
     env = _load_email_templates()
     since = now_utc_millis() - s.CRON_LEGACY * 1000
 
+    users_to_alert = assets.users_with_incoming_releases(since)
+    users_batch = [id for id in users_to_alert.keys()]
+    logger.info(f"Users to send alerts to {users_batch}")
+
     with mongo_client() as client:
-        filter = {
-            "state": RootAggState.ACTIVE.value,
-            "$or": [
-                {
-                    "conditions.release_ts": {
-                        "$gt": since,
-                        "$lt": now_utc_millis(),
-                    }
-                },
-                {"conditions.type": {"$ne": "time_condition"}},
-            ],
-        }
-        legacy_cursor = client.assets.legacy.aggregate(
-            [
-                {"$match": filter},
-                {"$unwind": "$receivers"},
-                {"$group": {"_id": "receivers", "count": {"$sum": 1}}},
-            ]
-        )
-        users_to_alert = {res["_id"]: res["count"] for res in legacy_cursor}
-        users_batch = [id for id in users_to_alert.keys()]
         emails_cursor = client.users.users.aggregate(
             [
                 {"$match": {"_id": {"$in": users_batch}}},
@@ -158,6 +143,7 @@ async def cron_legacy():
             ]
         )
         for user in emails_cursor:
+            logger.debug(f"Sending new legacy email to user {user['id']}")
             template = env.get_template("new_legacy.html")
             founder_name = random.choice(["Martí", "David", "Jordi"])
             body = template.render(founder_name=founder_name)

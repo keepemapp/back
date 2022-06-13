@@ -4,10 +4,14 @@ import pytest
 
 from kpm.assets.adapters.memrepo import views_asset as memrepo_views
 from kpm.assets.adapters.mongo import views_asset as mongo_views
-from kpm.assets.domain.model import Asset
+from kpm.assets.adapters.mongo import views_asset_release
+from kpm.assets.domain.model import Asset, AssetRelease, BequestType, \
+    TimeCondition
 from kpm.shared.domain.model import AssetId, RootAggState, UserId
-from tests.assets.domain import active_asset, asset, random_asset, valid_asset
-from tests.assets.utils import bus
+from tests.assets.domain import active_asset, asset, random_asset, \
+    valid_asset, release1
+from tests.assets.utils import bus, mongo_bus
+from tests.users.adapters.mongo.test_repository import mongo_client
 
 
 def add_asset_to_bus(asset: Asset, bus):
@@ -24,6 +28,12 @@ def bus_with_asset(active_asset, bus):
 @pytest.fixture
 def random_assets():
     return [random_asset(active=True, users=["u1", "u2"]) for _ in range(50)]
+
+
+def add_asset_release_to_bus(ar: AssetRelease, bus):
+    with bus.uows.get(AssetRelease) as uow:
+        uow.repo.put(ar)
+        uow.commit()
 
 
 VIEWS = [
@@ -179,3 +189,36 @@ class TestAssetViews:
         # Then
         assert results["size_mb"].pop("total") == resulting_size
         assert results["count"].pop("total") == 1
+
+
+@pytest.mark.parametrize("views", [views_asset_release])
+@pytest.mark.integration
+class TestAssetReleasesViews():
+    AR_CONDITIONS = [
+        ([TimeCondition(release_ts=100000)], True),
+        ([TimeCondition(release_ts=105000)], True),
+        ([TimeCondition(release_ts=905000)], False),
+        ([TimeCondition(release_ts=2)], False),
+    ]
+
+    @pytest.mark.parametrize("cond_included", AR_CONDITIONS)
+    def test_users_incoming_releases(self, mongo_bus, release1, cond_included, views):
+        # Given
+        start_window = 100000
+        endin_window = 200000
+        r = AssetRelease(
+            name="Ar1",
+            owner=UserId("u1"),
+            receivers=[UserId("U")],
+            assets=[AssetId("a11")],
+            release_type="example",
+            bequest_type=BequestType.GIFT,
+            conditions=cond_included[0],
+        )
+        add_asset_release_to_bus(r, mongo_bus)
+
+        # When
+        users = views.users_with_incoming_releases(start_window, endin_window, mongo_bus)
+
+        # Then
+        assert (len(users) == 1) == cond_included[1]

@@ -10,6 +10,7 @@ from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.shared.log import logger
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 
@@ -121,3 +122,37 @@ def pending(user_id: str, bus=None) -> int:
         num_pending = col.count_documents(filter)
 
     return num_pending
+
+
+def users_with_incoming_releases(since: int, to: int = now_utc_millis(),
+                                 bus: MessageBus = None) -> Dict[str, int]:
+    """
+    Returns the users with incoming releases since a time to another time
+
+    :param since:
+    :param to: Upper limit (lt). Default: now_utc_millis()
+    :param bus:
+    :return: Dict[UserID, # of incoming releases in this time]
+    """
+    with bus.uows.get(model.AssetRelease) as uow:
+        client = uow.repo._client
+        db = uow.repo.db
+        filter = {
+            "state": RootAggState.ACTIVE.value,
+            "conditions.release_ts": {
+                    "$gte": since,
+                    "$lt": to,
+            }
+        }
+        logger.debug(f"Using filters {filter}", component="mongo")
+        legacy_cursor = client[db].legacy.aggregate(
+            [
+                {"$match": filter},
+                {"$unwind": {"path": "$receivers"}},
+                {"$group": {"_id": "receivers", "count": {"$sum": 1}}},
+            ]
+        )
+        resp = {res["_id"]: res["count"] for res in legacy_cursor}
+
+        logger.info(f"Users to send alerts to {len(resp)}")
+        return resp

@@ -10,6 +10,8 @@ networks:
 secrets:
   env_file:
     file: ./.env
+  firebase_credentials:
+    file: ./firebase_creds.json
 
 volumes:
   mongo_db:
@@ -84,3 +86,5 @@ services:
       - mongo
     ports:
       - "127.0.0.1:2301:80"
+    secrets:
+      - firebase_credentials
