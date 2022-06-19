@@ -4,30 +4,30 @@ version: '3.5'
 # To Join any other app setup using another network, change name and set external = true
 networks:
   default:
-    name: kpm-qa
+    name: kpm-dev
     external: false
 
 volumes:
   mongo_db:
-    name: kpm_mongo-qa
+    name: kpm_mongo-dev
     external: true
 
 services:
   mongo:
-    container_name: mongo-qa
+    container_name: mongo-dev
     hostname: mongo
     ports:
-      - 127.0.0.1:2349:27017
+      - 127.0.0.1:2299:27017
     volumes:
       - mongo_db:/data/db
 
   api:
-    container_name: api-qa
-    env_file: kpm/.env.qa
+    container_name: api-dev
+    env_file: kpm/.env.dev
     ports:
-      - "127.0.0.1:2350:80"
+      - "127.0.0.1:2300:80"
   cron:
-    container_name: cron-qa
-    env_file: kpm/.env.qa
+    container_name: cron-dev
+    env_file: kpm/.env.dev
     ports:
-      - 127.0.0.1:2351:80
+      - 127.0.0.1:2301:80

@@ -81,20 +81,20 @@ build:
 
 .PHONY: up
 up:
-	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml up -d
+	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml -p keepem-$(ENVIRONMENT) up -d
 
 .PHONY: logs
 logs:
-	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml logs --follow
+	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml -p keepem-$(ENVIRONMENT) logs --follow
 
 .PHONY: stop
 stop:
-	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml stop
+	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml -p keepem-$(ENVIRONMENT) stop
 
 .PHONY: down
 down:
-	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml down
+	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml -p keepem-$(ENVIRONMENT) down
 
 .PHONY: ps
 ps:
-	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml ps
+	@docker compose -f docker-compose.yml -f docker-compose.$(ENVIRONMENT).yml -p keepem-$(ENVIRONMENT) ps
