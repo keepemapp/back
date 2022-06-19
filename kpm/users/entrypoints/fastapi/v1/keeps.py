@@ -53,12 +53,9 @@ async def list_keeps(
     user_lookup = {
         u["id"]: u for u in views.users_public_info(list(users), bus)
     }
-    print(user_lookup)
 
     keeps = list()
     for k in keeps_raw:
-        print(k.get("requester"))
-        print(user_lookup[k.get("requester")])
         k["requester"] = UserPublic(**user_lookup[k.pop("requester")])
         k["requested"] = UserPublic(**user_lookup[k.pop("requested")])
         keeps.append(schemas.KeepResponse(**k))

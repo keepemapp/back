@@ -43,7 +43,6 @@ def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
         db = uow.repo.db
     with mongo_client() as client:
         col = client[db].users
-        print(list(col.find({})))
         res = col.aggregate(
             [
                 {"$match": filter},
@@ -51,7 +50,6 @@ def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
             ]
         )
         results = list(res)
-        print(results)
     return results
 
 

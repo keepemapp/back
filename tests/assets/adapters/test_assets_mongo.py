@@ -150,7 +150,6 @@ class TestMongoAssetRepo:
         asset2.bookmarked = True
         repo.create(asset2)
         repo.commit()
-
         assert len(repo.all()) == 2
         assert len(repo.all(bookmarked=True)) == 1
         assert repo.all(bookmarked=True)[0].id == asset2.id

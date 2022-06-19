@@ -11,16 +11,16 @@ from kpm.shared.entrypoints.fastapi.schemas import Links
 class AssetUpdatableFields(BaseModel):
     """Updatable fields of Asset"""
 
-    title: Optional[str] = None
-    description: Optional[str] = None
-    tags: Optional[List[str]] = None
-    people: Optional[List[str]] = None
-    location: Optional[str] = None
-    created_date: Optional[str] = None
+    title: Optional[str]
+    description: Optional[str]
+    tags: Optional[List[str]]
+    people: Optional[List[str]]
+    location: Optional[str]
+    created_date: Optional[str]
     """Default value at creation: False"""
-    extra_private: Optional[bool] = None
+    extra_private: Optional[bool] = False
     """Default value at creation: False"""
-    bookmarked: Optional[bool] = None
+    bookmarked: Optional[bool] = False
 
 
 class AssetBase(AssetUpdatableFields):
@@ -40,9 +40,9 @@ class AssetCreate(AssetBase):
     @validator("owners_id", always=True)
     def clean_owners_id(cls, v):
         if v:
-            return settings.API_USER_PATH.remove_from(v)
+            return [settings.API_USER_PATH.remove_from(oid) for oid in v]
         else:
-            return None
+            return []
 
 
 class AssetResponse(AssetBase):

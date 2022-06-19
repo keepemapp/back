@@ -78,7 +78,6 @@ class TestKeepHandlers:
             bus.handle(msg)
         with bus.uows.get(model.Keep) as uow:
             kid = uow.repo.all()[0].id.id
-            print(uow.repo.all())
 
         # When
         cmd = cmds.AcceptKeep(keep_id=kid, by=uid2)
@@ -87,7 +86,6 @@ class TestKeepHandlers:
         # Then
         with bus.uows.get(model.Keep) as uow:
             repo: KeepRepository = uow.repo
-            print(repo.all())
             assert len(repo.all()) == 1
             assert repo.all()[0].state == RootAggState.ACTIVE
 

@@ -82,7 +82,6 @@ def add_referral_keep_when_user_activated(
     with user_uow:
         new_user: model.User = user_uow.repo.get(UserId(id=new_user_id))
         referral_user_id = new_user.referred_by
-        print("user referred by")
     if referral_user_id:
         request_cmd = cmds.RequestKeep(
             requester=new_user_id, requested=referral_user_id

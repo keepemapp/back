@@ -22,11 +22,11 @@ def required_updatable_field(**kwargs) -> Field:
 
 
 def updatable_field(**kwargs) -> Field:
-    if kwargs.get("metadata"):
+    if "metadata" in kwargs:
         kwargs["metadata"].update({"user_updatable": True})
     else:
         kwargs["metadata"] = {"user_updatable": True}
-    if not kwargs.get("default") and not kwargs.get("default_factory"):
+    if "default" not in kwargs and "default_factory" not in kwargs:
         kwargs["default"] = None
     return field(**kwargs)
 

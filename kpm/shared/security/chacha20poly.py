@@ -20,12 +20,12 @@ class ChaCha20PolyFileCypher(FileCypher):
         ```
         import io
         import base64
-        from Crypto.Random import get_random_bytes
+        from cryptography.fernet import Fernet
         from kpm.shared.security import ChaCha20PolyFileCypher
 
         # Obtain Keys
-        kekb = get_random_bytes(32)
-        kek = base64.b64encode(kekb).decode('utf-8')
+        kek_bytes = Fernet.generate_key()
+        kek = base64.b64encode(kek_bytes).decode("utf-8")
         data_key = ChaCha20PolyFileCypher.generate_data_key(kek)
 
         cipher = ChaCha20PolyFileCypher(data_key, kek)
@@ -167,11 +167,13 @@ class ChaCha20PolyFileCypher(FileCypher):
         use
         ```
         import base64
-        from Crypto.Random import get_random_bytes
-        kek_bytes = get_random_bytes(32)
-        kek = base64.b64encode(kek_bytes).decode('utf-8')
+        from cryptography.fernet import Fernet
+        kek_bytes = Fernet.generate_key()
+        kek = base64.b64encode(kek_bytes).decode("utf-8")
         print("Keep this safe", kek)
         ```
+
+        **DO NOT USE** `Fernet.generate_key()`
         """
         data_key = get_random_bytes(32)
         kek_bytes = base64.b64decode(kek)

@@ -189,12 +189,14 @@ def login_user(
 
         user.validate_password(cmd.password)
 
+        scopes = user.roles
         if cmd.scopes:
             for requested_scope in cmd.scopes:
                 if requested_scope not in user.roles:
                     raise model.InvalidScope("Scopes not allowed")
+            scopes = cmd.scopes
 
-        token = RefreshToken(subject=user.id.id, scopes=cmd.scopes)
+        token = RefreshToken(subject=user.id.id, scopes=scopes)
         s_repo.put(
             model.Session(
                 id=DomainId(id=cmd.id),

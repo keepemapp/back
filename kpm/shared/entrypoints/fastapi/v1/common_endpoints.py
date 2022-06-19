@@ -18,6 +18,8 @@ async def get_health(
     _: MessageBus = Depends(message_bus),
     file_repo: AssetFileLocalRepository = Depends(asset_file_repository),
 ):
+    # TODO check db connections
+    # TODO check it can decrypt data in s3
     return "OK"
 
 
