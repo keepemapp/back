@@ -38,6 +38,6 @@ services:
     environment:
       - FIREBASE_CREDENTIALS_FILE=/run/secret/firebase_creds
     secrets:
-      - firebase_creds_prod
+      - firebase_creds
     ports:
       - 127.0.0.1:2401:80
