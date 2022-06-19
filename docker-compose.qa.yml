@@ -7,6 +7,10 @@ networks:
     name: kpm-qa
     external: false
 
+secrets:
+  firebase_creds:
+    file: ../credentials/keepem-d7092-firebase-adminsdk-us2h6-ac9154b389.json
+
 volumes:
   mongo_db:
     name: kpm_mongo-qa
@@ -29,5 +33,9 @@ services:
   cron:
     container_name: cron-qa
     env_file: kpm/.env.qa
+    environment:
+      - FIREBASE_CREDENTIALS_FILE=/run/secret/firebase_creds
+    secrets:
+      - firebase_creds_prod
     ports:
       - 127.0.0.1:2351:80

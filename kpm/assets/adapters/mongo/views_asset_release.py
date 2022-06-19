@@ -154,5 +154,4 @@ def users_with_incoming_releases(since: int, to: int = now_utc_millis(),
         )
         resp = {res["_id"]: res["count"] for res in legacy_cursor}
 
-        logger.info(f"Users to send alerts to {len(resp)}")
         return resp

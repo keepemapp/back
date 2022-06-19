@@ -187,7 +187,11 @@ async def cron_push_legacy():
     since = now_utc_millis() - s.CRON_LEGACY * 1000
     users_to_alert = users_with_incoming_releases(since, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
-    logger.info(f"Users to send alerts to {users_batch}")
+    logger.debug(f"Users to send alerts to {users_batch}", component="cron")
+
+    logger.info(
+        {"messgae": "Number of push messages", "value": len(users_batch)},
+        component="cron")
 
     with mongo_client() as client:
         sessions_cursor = client.users.sessions.aggregate(
