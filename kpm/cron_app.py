@@ -209,6 +209,7 @@ async def cron_push_legacy():
                 {"$match": {
                     "user": {"$in": users_batch},
                     "state": RootAggState.ACTIVE.value,
+                    "client_id": {"$ne": None}
                 }},
                 {"$project": {"_id": 0, "client_id": 1}},
             ]
