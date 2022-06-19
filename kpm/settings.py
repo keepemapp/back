@@ -95,6 +95,8 @@ class Settings(BaseSettings):
     EMAIL_SMTP_PORT: int = 587
     EMAIL_SMTP_SECURITY: str = "STARTTLS"
 
+    FIREBASE_CREDENTIALS_FILE: Optional[str]
+
     MONGODB_URL: Optional[str] = "mongodb://127.0.0.1:27017/?replicaSet=rs0"
     MONGODB_USER: Optional[str] = ""
     MONGODB_PWD: Optional[str] = ""
@@ -109,6 +111,7 @@ class Settings(BaseSettings):
 
     CRON_FEEDBACK_EMAIL: int = 15 * 60 + 3  # 15 min
     CRON_LEGACY: int = 10 * 60 + 7  # 10 min
+    CRON_PUSH: int = 1 * 60 + 1  # 1 min and 1 sec
 
     class Config:
         env_file = ".env"

@@ -6,7 +6,9 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from typing import Dict, List, Union
 
+import firebase_admin
 from fastapi import BackgroundTasks
+from firebase_admin import credentials, messaging
 
 from kpm.settings import settings as s
 from kpm.shared.log import logger
@@ -166,3 +168,35 @@ class NoNotifications(AbstractNotifications):
             f"I would have send {emails} ",
             component="notifications",
         )
+
+
+class PushNotifications(AbstractNotifications):
+    def __init__(self, creds_file: str = s.FIREBASE_CREDENTIALS_FILE):
+        creds = credentials.Certificate(creds_file)
+        self.app = firebase_admin.initialize_app(
+            credential=creds)
+
+    def __del__(self):
+        firebase_admin.delete_app(self.app)
+
+    @abstractmethod
+    def send(
+        self, destination: Union[List[str], str], subject: str, body: str
+    ):
+        raise NotImplementedError
+
+    @abstractmethod
+    def send_multiple(self, payloads: List[Dict]):
+        # group 500 msg per call maximum. Firebase API limit
+        msgs_batches = [[
+            messaging.Message(
+                notification=messaging.Notification(payload["subject"]),
+                token=payload["client_id"],
+            )
+            for payload in payloads[x:x+500]]
+            for x in range(0, len(payloads), 500)
+        ]
+
+        for batch in msgs_batches:
+            resp = messaging.send_all(batch)
+            logger.info(f"{resp.success_count} messages were sent successfully")

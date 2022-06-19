@@ -191,11 +191,11 @@ class KeepMongoRepo(MongoBase, KeepRepository):
 class SessionMongoRepo(MongoBase, SessionRepository):
     def __init__(
         self,
-        mongo_db: str = "sessions",
+        mongo_db: str = "users",
         mongo_url: str = s.MONGODB_URL,
     ):
         super().__init__(db=mongo_db, mongo_url=mongo_url)
-        self._coll = self._client[mongo_db].keeps
+        self._coll = self._client[mongo_db].sessions
 
     def put(self, s: Session):
         bson = self._to_bson(s)

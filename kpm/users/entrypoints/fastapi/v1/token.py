@@ -153,7 +153,10 @@ async def refresh_access_token(
             subject=token.subject, scopes=token.scopes, fresh=False
         )
     except InvalidSession:
-        bus.handle(cmds.RemoveSession(token=raw, removed_by="backend"))
+        try:
+            bus.handle(cmds.RemoveSession(token=raw, removed_by="backend"))
+        except:
+            pass
         raise ex.TOKEN_ER
     except Exception as e:
         raise e

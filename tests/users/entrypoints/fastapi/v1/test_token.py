@@ -91,13 +91,14 @@ class TestJwtTokens:
             data={"username": self.user_email, "password": self.user_pwd},
         ).json()
         refresh = login_js["refresh_token"]
+        r_token = "Bearer " + str(refresh)
         # Remove session token
         cmd = RemoveSession(token=refresh, removed_by="")
         bus.handle(cmd)
         # When
         response = client_with_user.post(
             s.API_V1.concat("/refresh").path(),
-            headers={"Accept": "application/json", "Authorization": refresh},
+            headers={"Accept": "application/json", "Authorization": r_token},
         )
         # Then
         assert response.status_code == 401
@@ -109,11 +110,17 @@ class TestJwtTokens:
             data={"username": self.user_email, "password": self.user_pwd},
         ).json()
         refresh = login_js["refresh_token"]
-
+        r_token = "Bearer " + str(refresh)
+        print("setup done")
         # When
-        client_with_user.delete(s.API_V1.concat("/logout").path())
+        resp = client_with_user.delete(
+            s.API_V1.concat("/logout").path(),
+            headers={"Accept": "application/json", "Authorization": r_token},
+        )
 
+        print(resp.text)
         # Then
+        assert resp.status_code == 200
         with bus.uows.get(Session) as uow:
             sessions = uow.repo.get(token=refresh)
             assert len(sessions) == 1
@@ -121,7 +128,7 @@ class TestJwtTokens:
             assert ses.state == RootAggState.REMOVED
         response = client_with_user.post(
             s.API_V1.concat("/refresh").path(),
-            headers={"Accept": "application/json", "Authorization": refresh},
+            headers={"Accept": "application/json", "Authorization": r_token},
         )
         assert response.status_code == 401
 

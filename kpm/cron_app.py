@@ -7,17 +7,23 @@ import uvicorn
 from fastapi import Depends, FastAPI
 from starlette.requests import Request
 
+from kpm.assets.adapters.mongo.views_asset_release import \
+    users_with_incoming_releases
 from kpm.settings import settings as s
 from kpm.shared.adapters.mongo import mongo_client
-from kpm.shared.adapters.notifications import EmailNotifications
+from kpm.shared.adapters.notifications import EmailNotifications, \
+    PushNotifications
 from kpm.shared.domain.model import RootAggState
 from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
-    asset_view
+    asset_view, message_bus
 from kpm.shared.entrypoints.fastapi.tasks import repeat_every
 from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
 from kpm.shared.log import logger
 from kpm.users.service_layer.user_handler import _load_email_templates
+
+from kpm.assets.entrypoints.fastapi.dependencies import uows as a_uows
+from kpm.users.entrypoints.fastapi.dependencies import uows as u_uows
 
 description = """
 ## Keepem Cron 
@@ -112,7 +118,7 @@ async def cron_feedback():
 
 @app.on_event("startup")
 @repeat_every(seconds=s.CRON_LEGACY)
-async def cron_legacy(assets=Depends(asset_rel_view)):
+async def cron_legacy():
     logger.info("Cron for legacy emails started", component="cron")
     if not s.EMAIL_SENDER_ADDRESS or not s.EMAIL_SENDER_PASSWORD:
         logger.warning(
@@ -131,7 +137,8 @@ async def cron_legacy(assets=Depends(asset_rel_view)):
     env = _load_email_templates()
     since = now_utc_millis() - s.CRON_LEGACY * 1000
 
-    users_to_alert = assets.users_with_incoming_releases(since)
+    bus = next(message_bus(None, a_uows(), u_uows()))
+    users_to_alert = users_with_incoming_releases(since, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
     logger.info(f"Users to send alerts to {users_batch}")
 
@@ -157,6 +164,54 @@ async def cron_legacy(assets=Depends(asset_rel_view)):
 
     if emails:
         email_notifications.send_multiple(emails)
+
+
+@app.on_event("startup")
+@repeat_every(seconds=s.CRON_PUSH)
+async def cron_push_legacy():
+    if not s.FIREBASE_CREDENTIALS_FILE:
+        logger.warning("Firebase credentials file not set",
+                       component="cron")
+        return
+    logger.info("Cron for push messages started", component="cron")
+    if not s.MONGODB_URL:
+        logger.warning(
+            "Can't send notification since database is not mongo.",
+            component="cron",
+        )
+        return
+
+    messages = []
+
+    bus = next(message_bus(None, a_uows(), u_uows()))
+    since = now_utc_millis() - s.CRON_LEGACY * 1000
+    users_to_alert = users_with_incoming_releases(since, bus=bus)
+    users_batch = [id for id in users_to_alert.keys()]
+    logger.info(f"Users to send alerts to {users_batch}")
+
+    with mongo_client() as client:
+        sessions_cursor = client.users.sessions.aggregate(
+            [
+                {"$match": {
+                    "user": {"$in": users_batch},
+                    "state": RootAggState.ACTIVE.value,
+                }},
+                {"$project": {"_id": 0, "client_id": 1}},
+            ]
+        )
+        for session in sessions_cursor:
+            logger.debug(f"Sending new legacy push to client {session['client_id']}")
+            messages.append(
+                {
+                    "client_id": session["client_id"],
+                    "subject": "New legacy available",
+                }
+            )
+
+    if messages:
+        notification_svc = PushNotifications()
+        notification_svc.send_multiple(messages)
+        del notification_svc
 
 
 @app.on_event("shutdown")
