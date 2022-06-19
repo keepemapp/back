@@ -179,13 +179,11 @@ class PushNotifications(AbstractNotifications):
     def __del__(self):
         firebase_admin.delete_app(self.app)
 
-    @abstractmethod
     def send(
         self, destination: Union[List[str], str], subject: str, body: str
     ):
         raise NotImplementedError
 
-    @abstractmethod
     def send_multiple(self, payloads: List[Dict]):
         # group 500 msg per call maximum. Firebase API limit
         msgs_batches = [[

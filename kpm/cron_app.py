@@ -141,7 +141,10 @@ async def cron_legacy():
     bus = next(message_bus(None, a_uows(), u_uows()))
     users_to_alert = users_with_incoming_releases(since, to, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
-    logger.info(f"Users to send alerts to {users_batch}")
+    if len(users_batch) == 0:
+        logger.info("No new alerts found", component="cron")
+        return
+    logger.info(f"Users to send alerts to {users_batch}", component="cron")
 
     with mongo_client() as client:
         emails_cursor = client.users.users.aggregate(
@@ -151,7 +154,8 @@ async def cron_legacy():
             ]
         )
         for user in emails_cursor:
-            logger.debug(f"Sending new legacy email to user {user['id']}")
+            logger.debug(f"Sending new legacy email to user {user['id']}",
+                         component="cron")
             template = env.get_template("new_legacy.html")
             founder_name = random.choice(["Martí", "David", "Jordi"])
             body = template.render(founder_name=founder_name)
@@ -189,6 +193,10 @@ async def cron_push_legacy():
     since = to - s.CRON_LEGACY * 1000
     users_to_alert = users_with_incoming_releases(since, to, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
+    if len(users_batch) == 0:
+        logger.info("No new alerts found", component="cron")
+        return
+
     logger.debug(f"Users to send alerts to {users_batch}", component="cron")
 
     logger.info(
@@ -206,14 +214,17 @@ async def cron_push_legacy():
             ]
         )
         for session in sessions_cursor:
-            logger.debug(f"Sending new legacy push to client {session['client_id']}")
+            logger.debug(
+                f"Sending new legacy push to client {session['client_id']}",
+                component="cron")
             messages.append(
                 {
                     "client_id": session["client_id"],
                     "subject": "New legacy available",
                 }
             )
-        logger.info(f"Found {len(messages)} open sessions to send push msg to.")
+        logger.info(f"Found {len(messages)} open sessions to send push msg to.",
+                    component="cron")
 
     if messages:
         notification_svc = PushNotifications()
