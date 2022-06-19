@@ -135,10 +135,11 @@ async def cron_legacy():
     email_notifications = EmailNotifications()
     emails = []
     env = _load_email_templates()
-    since = now_utc_millis() - s.CRON_LEGACY * 1000
+    to = now_utc_millis()
+    since = to - s.CRON_LEGACY * 1000
 
     bus = next(message_bus(None, a_uows(), u_uows()))
-    users_to_alert = users_with_incoming_releases(since, bus=bus)
+    users_to_alert = users_with_incoming_releases(since, to, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
     logger.info(f"Users to send alerts to {users_batch}")
 
@@ -184,13 +185,14 @@ async def cron_push_legacy():
     messages = []
 
     bus = next(message_bus(None, a_uows(), u_uows()))
-    since = now_utc_millis() - s.CRON_LEGACY * 1000
-    users_to_alert = users_with_incoming_releases(since, bus=bus)
+    to = now_utc_millis()
+    since = to - s.CRON_LEGACY * 1000
+    users_to_alert = users_with_incoming_releases(since, to, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
     logger.debug(f"Users to send alerts to {users_batch}", component="cron")
 
     logger.info(
-        {"messgae": "Number of push messages", "value": len(users_batch)},
+        {"message": "Number of push messages", "value": len(users_batch)},
         component="cron")
 
     with mongo_client() as client:
