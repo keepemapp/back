@@ -190,7 +190,7 @@ async def cron_push_legacy():
 
     bus = next(message_bus(None, a_uows(), u_uows()))
     to = now_utc_millis()
-    since = to - s.CRON_LEGACY * 1000
+    since = to - s.CRON_PUSH * 1000
     users_to_alert = users_with_incoming_releases(since, to, bus=bus)
     users_batch = [id for id in users_to_alert.keys()]
     if len(users_batch) == 0:

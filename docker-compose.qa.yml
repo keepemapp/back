@@ -35,7 +35,7 @@ services:
     container_name: cron-qa
     env_file: kpm/.env.qa
     environment:
-      - FIREBASE_CREDENTIALS_FILE=/run/secret/firebase_creds
+      - FIREBASE_CREDENTIALS_FILE=/run/secrets/firebase_creds
     secrets:
       - firebase_creds
     ports:
