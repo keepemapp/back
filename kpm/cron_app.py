@@ -205,6 +205,7 @@ async def cron_push_legacy():
                 {"$project": {"_id": 0, "client_id": 1}},
             ]
         )
+        logger.debug(f"Found {len(sessions_cursor)}")
         for session in sessions_cursor:
             logger.debug(f"Sending new legacy push to client {session['client_id']}")
             messages.append(
@@ -213,6 +214,7 @@ async def cron_push_legacy():
                     "subject": "New legacy available",
                 }
             )
+        logger.info(f"Found {len(messages)} open sessions to send push msg to.")
 
     if messages:
         notification_svc = PushNotifications()

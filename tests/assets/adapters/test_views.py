@@ -221,4 +221,6 @@ class TestAssetReleasesViews():
         users = views.users_with_incoming_releases(start_window, endin_window, mongo_bus)
 
         # Then
+        if cond_included[1]:
+            assert list(users.keys()) == [u.id for u in r.receivers]
         assert (len(users) == 1) == cond_included[1]

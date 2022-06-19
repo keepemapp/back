@@ -149,7 +149,7 @@ def users_with_incoming_releases(since: int, to: int = now_utc_millis(),
             [
                 {"$match": filter},
                 {"$unwind": {"path": "$receivers"}},
-                {"$group": {"_id": "receivers", "count": {"$sum": 1}}},
+                {"$group": {"_id": "$receivers", "count": {"$sum": 1}}},
             ]
         )
         resp = {res["_id"]: res["count"] for res in legacy_cursor}
