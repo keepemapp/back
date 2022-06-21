@@ -188,7 +188,7 @@ class PushNotifications(AbstractNotifications):
         # group 500 msg per call maximum. Firebase API limit
         msgs_batches = [[
             messaging.Message(
-                notification=messaging.Notification(payload["subject"]),
+                notification=messaging.Notification(payload["subject"], image="https://keepem.app/assets/icon-simple.png"),
                 token=payload["client_id"],
             )
             for payload in payloads[x:x+500]]

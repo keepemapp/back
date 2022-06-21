@@ -73,7 +73,7 @@ async def add_asset(
             detail=str("Cannot create an asset you are not owner of"),
         )
 
-    new_asset
+    payload = {k: v for k, v in new_asset.__dict__.items() if v is not None}
     cmd = cmds.CreateAsset(**payload)
     try:
         bus.handle(cmd)
