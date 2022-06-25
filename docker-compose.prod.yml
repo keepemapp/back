@@ -31,6 +31,7 @@ services:
     env_file: kpm/.env.prod
     environment:
       - MAX_WORKERS=24
+      - APPLICATION_COMPONENT=api
     ports:
       - 127.0.0.1:2400:80
   cron:
@@ -38,6 +39,7 @@ services:
     env_file: kpm/.env.prod
     environment:
       - FIREBASE_CREDENTIALS_FILE=/run/secrets/firebase_creds
+      - APPLICATION_COMPONENT=cron
     secrets:
       - firebase_creds
     ports:

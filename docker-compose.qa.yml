@@ -29,6 +29,8 @@ services:
   api:
     container_name: api-qa
     env_file: kpm/.env.qa
+    environment:
+      - APPLICATION_COMPONENT=api
     ports:
       - "127.0.0.1:2350:80"
   cron:
@@ -36,6 +38,7 @@ services:
     env_file: kpm/.env.qa
     environment:
       - FIREBASE_CREDENTIALS_FILE=/run/secrets/firebase_creds
+      - APPLICATION_COMPONENT=cron
     secrets:
       - firebase_creds
     ports:
