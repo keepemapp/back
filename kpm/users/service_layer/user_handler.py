@@ -219,3 +219,39 @@ def remove_session(cmd: cmds.RemoveSession, session_uow: AbstractUnitOfWork):
         repo.put(s)
         logger.info(f"Removing session with token {cmd.token}", component="mongo")
         repo.commit()
+
+
+def add_reminders(cmd: cmds.AddUserReminder, user_uow: AbstractUnitOfWork):
+    with user_uow as uow:
+        repo: UserRepository = uow.repo
+        user: model.User = repo.get(UserId(cmd.user_id))
+        if not user:
+            raise model.UserNotFound()
+        user.add_reminder(
+            reminder=model.Reminder(
+                title=cmd.title,
+                time=cmd.time,
+                frequency=cmd.frequency,
+                related_user=UserId(id=cmd.related_user) if cmd.related_user else None
+            ),
+            mod_ts=cmd.timestamp
+        )
+        repo.update(user)
+        repo.commit()
+
+
+def remove_reminders(cmd: cmds.RemoveUserReminder, user_uow: AbstractUnitOfWork):
+    with user_uow as uow:
+        repo: UserRepository = uow.repo
+        user: model.User = repo.get(UserId(cmd.user_id))
+        if not user:
+            raise model.UserNotFound()
+        user.remove_reminder(
+            reminder=model.Reminder(
+                title=cmd.title,
+                time=cmd.time
+            ),
+            mod_ts=cmd.timestamp
+        )
+        repo.update(user)
+        repo.commit()

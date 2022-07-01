@@ -47,3 +47,19 @@ class KeepDeclined(Event):
     was_accepted: bool = required_field()  # type: ignore
     requester: str = required_field()  # type: ignore
     requested: str = required_field()  # type: ignore
+
+
+@dataclass(frozen=True)
+class UserReminderAdded(Event):
+    eventType: str = "reminder_added"
+    title: str = required_field()  # type: ignore
+    time: int = required_field()  # type: ignore
+    frequency: int = field(default=0)
+    related_user: Optional[str] = field(default=None)  # type: ignore
+
+
+@dataclass(frozen=True)
+class UserReminderRemoved(Event):
+    eventType: str = "reminder_removed"
+    title: str = required_field()  # type: ignore
+    time: int = required_field()  # type: ignore

@@ -6,7 +6,7 @@ from kpm.users.domain.model import INVALID_USERNAME, User
 from kpm.users.domain.repositories import UserRepository
 from kpm.users.entrypoints.fastapi.v1.schemas.users import (
     PasswordUpdate,
-    UserCreate,
+    Reminder, UserCreate,
     UserRemoval,
     UserUpdate,
 )
@@ -503,3 +503,68 @@ class TestUserUpdates:
 
         req = user_client.delete(user_path, json=UserRemoval(reason="").dict())
         assert req.status_code == 403
+
+    def test_add_reminder(self, init_users, user_client):
+        admin, user = init_users
+        user_path = USER_PATH.concat("me", "reminders").path()
+        # When
+        result = user_client.post(
+            user_path,
+            json=[Reminder(title="r1", time=1234).dict()],
+        )
+        # Then
+        assert result.status_code == 201
+
+    def test_add_duplicated_reminders(self, init_users, user_client):
+        admin, user = init_users
+        user_path = USER_PATH.concat("me", "reminders").path()
+        initial = [Reminder(title="r1", time=1234).dict(),
+                   Reminder(title="r2", time=1234).dict(),
+                   Reminder(title="r3", time=1234).dict()]
+        update = [Reminder(title="r1", time=1234).dict(),
+                  Reminder(title="r2", time=1234, related_user=admin.id.id).dict(),
+                  Reminder(title="r3", time=1234, frequency=1223).dict(),
+                  Reminder(title="r4", time=122, frequency=23).dict()]
+        user_client.post(user_path, json=initial)
+
+        # When
+        result = user_client.post(user_path, json=update)
+        # Then
+        assert result.status_code == 201
+        reminders = user_client.get(user_path).json()
+        assert len(reminders) == 4
+        print(reminders)
+        for resp in reminders:
+            assert resp in update
+
+    def test_get_reminders(self, init_users, user_client):
+        # Given
+        admin, user = init_users
+        user_path = USER_PATH.concat("me", "reminders").path()
+        user_client.post(
+            user_path,
+            json=[Reminder(title="r1", time=1234).dict()],
+        )
+        # When
+        result = user_client.get(user_path)
+        # Then
+        assert result.status_code == 200
+        results = result.json()
+        assert len(results) == 1
+        assert results[0] == Reminder(title="r1", time=1234).dict()
+
+    def test_delete_reminders(self, init_users, user_client):
+        # Given
+        admin, user = init_users
+        user_path = USER_PATH.concat("me", "reminders").path()
+        user_client.post(
+            user_path,
+            json=[Reminder(title="r1", time=1234).dict()],
+        )
+        # When
+        result = user_client.delete(
+            user_path,
+            json=[Reminder(title="r1", time=1234).dict()]
+        )
+        # Then
+        assert result.status_code == 200

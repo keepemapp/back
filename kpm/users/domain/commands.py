@@ -89,3 +89,19 @@ class LoginUser(Command):
 class RemoveSession(Command):
     token: str = required_field()  # type: ignore
     removed_by: str = required_field()  # type: ignore
+
+
+@dataclass(frozen=True)
+class AddUserReminder(Command):
+    user_id: str = required_field()  # type: ignore
+    title: str = required_field()  # type: ignore
+    time: int = required_field()  # type: ignore
+    frequency: int = field(default=0)
+    related_user: Optional[str] = field(default=None)  # type: ignore
+
+
+@dataclass(frozen=True)
+class RemoveUserReminder(Command):
+    user_id: str = required_field()  # type: ignore
+    title: str = required_field()  # type: ignore
+    time: int = required_field()  # type: ignore

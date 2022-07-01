@@ -20,6 +20,8 @@ COMMAND_HANDLERS = {
     cmds.UpdateUser: uh.update_user_attributes,
     cmds.UpdateUserPassword: uh.update_password,
     cmds.RemoveUser: uh.remove_user,
+    cmds.AddUserReminder: uh.add_reminders,
+    cmds.RemoveUserReminder: uh.remove_reminders,
     # Keeps
     cmds.RequestKeep: kh.new_keep,
     cmds.AcceptKeep: kh.accept_keep,

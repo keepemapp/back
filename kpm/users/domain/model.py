@@ -13,11 +13,13 @@ from kpm.shared.domain import (
     required_updatable_field,
     updatable_field,
 )
-from kpm.shared.domain.model import (FINAL_STATES, RootAggState, RootAggregate,
+from kpm.shared.domain.model import (ValueObject, FINAL_STATES, RootAggState,
+                                     RootAggregate,
                                      UserId)
 from kpm.shared.log import logger
 from kpm.shared.security import hash_password, salt_password, verify_password
 from kpm.users.domain import events
+from kpm.users.domain.events import UserReminderAdded, UserReminderRemoved
 
 INVALID_USERNAME = (
     "Username is not valid. It can contain letters, "
@@ -47,6 +49,20 @@ def generate_referral_code() -> str:
         return candidate
 
 
+@dataclass(frozen=True)
+class Reminder(ValueObject):
+    title: str = required_field()  # type: ignore
+    time: int = required_field()  # type: ignore
+    frequency: int = field(default=0)
+    related_user: Optional[UserId] = updatable_field(default=None)  # type: ignore
+
+    def __hash__(self):
+        return hash(self.title) + hash(self.time)
+
+    def __eq__(self, other) -> bool:
+        return type(self) == type(other) and self.__hash__() == other.__hash__()
+
+
 @dataclass
 class User(RootAggregate):
     id: UserId = required_field()  # type: ignore
@@ -62,6 +78,7 @@ class User(RootAggregate):
     referred_by: Optional[str] = field(default=None)
     removed_by: Optional[UserId] = updatable_field(default=None)
     removed_reason: Optional[str] = updatable_field(default=None)
+    reminders: List[Reminder] = updatable_field(default_factory=list)
 
     @staticmethod
     def _email_is_valid(email: str) -> bool:
@@ -157,6 +174,52 @@ class User(RootAggregate):
         logger.info(
             f"Password auth success for user '{self.id.id}'", component="auth"
         )
+
+    def add_reminder(self, reminder: Reminder, mod_ts: int):
+        original_reminders = self.reminders
+        if not original_reminders:
+            original_reminders = []
+        updated = []
+        removed = []
+        for r in [reminder] + original_reminders:
+            if r not in updated:
+                updated.append(r)
+            else:
+                removed.append(r)
+
+        self.update_fields(mod_ts=mod_ts, updates={"reminders": updated})
+        for r in removed:
+            self.events.append(
+                UserReminderRemoved(
+                    aggregate_id=self.id.id,
+                    title=r.title,
+                    time=r.time,
+                    timestamp=mod_ts - 1
+                ))
+
+        self.events.append(
+            UserReminderAdded(
+                aggregate_id=self.id.id,
+                title=reminder.title,
+                time=reminder.time,
+                frequency=reminder.frequency,
+                related_user=reminder.related_user.id if reminder.related_user else None,
+                timestamp=mod_ts
+            ))
+
+    def remove_reminder(self, reminder: Reminder, mod_ts: int):
+        if not self.reminders:
+            return
+        updated = [r for r in self.reminders if r is not reminder]
+        self.update_fields(mod_ts=mod_ts, updates={"reminders": updated})
+
+        self.events.append(
+            UserReminderRemoved(
+                aggregate_id=self.id.id,
+                title=reminder.title,
+                time=reminder.time,
+                timestamp=mod_ts - 1
+            ))
 
     def __hash__(self):
         return hash(self.id.id)

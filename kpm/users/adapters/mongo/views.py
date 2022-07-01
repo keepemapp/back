@@ -1,5 +1,5 @@
 from dataclasses import asdict
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 
 import flatdict
 
@@ -10,7 +10,7 @@ from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import (
     InvalidSession,
     Keep,
-    Session,
+    Reminder, Session,
     User,
 )
 from kpm.users.domain.repositories import KeepRepository
@@ -51,6 +51,24 @@ def users_public_info(users: List[str], bus: MessageBus) -> List[Dict]:
         )
         results = list(res)
     return results
+
+
+def reminder_to_flat_dict(r: Union[Reminder, Dict]):
+    r = asdict(r) if isinstance(r, Reminder) else r
+    d = dict(flatdict.FlatDict(r, delimiter="_"))
+    if "related_user_id" in d:
+        d["related_user"] = d.pop("related_user_id")
+    return d
+
+
+def get_user_reminders(user_id: str, bus: MessageBus) -> List[Dict]:
+    with bus.uows.get(User) as uow:
+        db = uow.repo.db
+    with mongo_client() as client:
+        col = client[db].users
+        res = col.find_one({"_id": user_id}, projection=["reminders"])
+    cleaned = [reminder_to_flat_dict(r) for r in res.get("reminders", [])]
+    return cleaned
 
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:

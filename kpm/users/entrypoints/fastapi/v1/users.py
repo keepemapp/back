@@ -1,3 +1,5 @@
+from typing import List
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
 
@@ -19,7 +21,7 @@ from kpm.users.domain.model import (EmailAlreadyExistsException,
                                     UserNotFound,
                                     UsernameAlreadyExistsException)
 from kpm.users.entrypoints.fastapi.v1.schemas import users as schemas
-from kpm.users.entrypoints.fastapi.v1.schemas.users import UserRemoval
+from kpm.users.entrypoints.fastapi.v1.schemas.users import Reminder, UserRemoval
 
 router = APIRouter(
     responses={404: {"description": "Not found"}},
@@ -209,6 +211,77 @@ async def remove_user(
                 user_id=user_id, deleted_by=token.subject, reason=reason.reason
             )
         )
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return
+
+
+@router.post(
+    s.API_USER_PATH.concat("me", "reminders").path(),
+    responses={
+        status.HTTP_201_CREATED: {},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+    status_code=201,
+)
+async def add_reminders(
+    reminders: List[Reminder],
+    bus: MessageBus = Depends(message_bus),
+    token: AccessToken = Depends(get_access_token),
+):
+    """Endpoint to add reminders of the user
+
+    **IMPORTANT**: A reminder is considered unique if it has the same
+    `title` and `time`.
+    """
+    try:
+        for r in reminders:
+            payload = r.__dict__
+            payload = {k: v for k, v in payload.items() if v is not None}
+            bus.handle(cmds.AddUserReminder(user_id=token.subject,
+                                            **payload))
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return
+
+
+@router.get(
+    s.API_USER_PATH.concat("me", "reminders").path(),
+    responses={
+        status.HTTP_200_OK: {},
+        status.HTTP_401_UNAUTHORIZED: {"model": HTTPError},
+    },
+)
+async def get_reminders(
+    bus: MessageBus = Depends(message_bus),
+    token: AccessToken = Depends(get_access_token),
+    views=Depends(user_view),
+):
+    """Endpoint to list the reminders of the user"""
+    try:
+        res = views.get_user_reminders(user_id=token.subject, bus=bus)
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return res
+
+
+@router.delete(
+    s.API_USER_PATH.concat("me", "reminders").path(),
+    responses={status.HTTP_200_OK: {}},
+)
+async def remove_reminder(
+    reminders: List[Reminder],
+    bus: MessageBus = Depends(message_bus),
+    token: AccessToken = Depends(get_access_token),
+):
+    """Endpoint to remove the reminders of the user"""
+    try:
+        for r in reminders:
+            bus.handle(cmds.RemoveUserReminder(
+                user_id=token.subject,
+                title=r.title,
+                time=r.time
+            ))
     except UserNotFound:
         raise ex.NOT_FOUND
     return

@@ -2,9 +2,10 @@ import pytest
 
 from kpm.shared.domain import DomainId, IdTypeException
 from kpm.shared.domain.model import RootAggState, UserId
-from kpm.users.domain.events import UserRemoved
-from kpm.users.domain.model import User, generate_referral_code
-from tests.users.domain import active_user, valid_user
+from kpm.shared.domain.time_utils import now_utc_millis
+from kpm.users.domain.events import UserReminderAdded, UserRemoved
+from kpm.users.domain.model import Reminder, User, generate_referral_code
+from tests.users.domain import active_user, valid_user, user
 
 
 @pytest.mark.unit
@@ -111,6 +112,56 @@ class TestUser:
                 code = generate_referral_code()
                 for char in ambiguous_characters:
                     assert char not in code
+
+        def test_add_reminders(self, user):
+            r1 = Reminder(title="one", time=123, frequency=2323)
+            r2 = Reminder(title="two", time=1277)
+            mod_ts = now_utc_millis()+100
+            user.add_reminder(r1, mod_ts)
+            user.add_reminder(r2, mod_ts)
+            assert set(user.reminders) == {r1, r2}
+
+            result_events = [
+                UserReminderAdded(aggregate_id=user.id.id, title="one", time=123, frequency=2323, related_user=None, timestamp=mod_ts),
+                UserReminderAdded(aggregate_id=user.id.id, title="two", time=1277, frequency=0, related_user=None, timestamp=mod_ts)
+            ]
+            print(user.events)
+            for event in result_events:
+                assert event in user.events
+
+        def test_double_add_reminders_does_not_duplicate(self, user):
+            r1 = Reminder(title="one", time=123, frequency=2323)
+            r1_upd = Reminder(title="one", time=123, frequency=2323)
+
+            user.add_reminder(r1, now_utc_millis()+100)
+            # When
+            user.add_reminder(r1_upd, now_utc_millis()+1000)
+            # Then
+            assert user.reminders == [r1]
+
+        def test_last_reminder_is_kept(self, user):
+            r1 = Reminder(title="one", time=123, frequency=2323)
+            user.add_reminder(r1, now_utc_millis()+100)
+            # When
+            r1_v2 = Reminder(title="one", time=123, frequency=2)
+            user.add_reminder(r1_v2, now_utc_millis()+1000)
+            # Then
+            assert user.reminders == [r1_v2]
+            assert user.reminders[0].frequency == r1_v2.frequency
+
+        def test_remove_reminders(self, user):
+            # When there were no reminders
+            r1 = Reminder(title="one", time=123, frequency=2323)
+            user.remove_reminder(r1, now_utc_millis()+100)
+            assert len(user.reminders) == 0
+
+            # Given
+            user.add_reminder(r1, now_utc_millis() + 100)
+            assert len(user.reminders) == 1
+            # When
+            user.remove_reminder(r1, now_utc_millis()+1000)
+            # Then
+            assert len(user.reminders) == 0
 
     class TestActions:
         def test_user_disable(self, active_user):

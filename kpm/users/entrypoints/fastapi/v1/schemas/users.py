@@ -77,3 +77,11 @@ class UserUpdate(BaseModel):
 
 class UserRemoval(BaseModel):
     reason: str
+
+
+class Reminder(BaseModel):
+    title: str
+    time: int
+    """By default 0 which means a one time reminder"""
+    frequency: Optional[int] = 0
+    related_user: Optional[str] = None
