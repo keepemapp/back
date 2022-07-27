@@ -50,6 +50,7 @@ class Settings(BaseSettings):
     APPLICATION_TECHNICAL_NAME: str = "Keepem"
     APPLICATION_COMPONENT: str = "api"
 
+    PUBLIC_API_URL: str = "http://localhost"
     API_V1: ApiRoute = ApiRoute(prefix="/api/v1")
     API_HEALTH: ApiRoute = ApiRoute(prefix="/health")
     API_VERSION: ApiRoute = ApiRoute(prefix="/version")

@@ -2,6 +2,7 @@ from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi_pagination import Page, Params, paginate
+from jose import JWTError
 
 import kpm.shared.entrypoints.fastapi.exceptions as ex
 import kpm.users.domain.commands as cmds
@@ -9,7 +10,7 @@ from kpm.settings import settings as s
 from kpm.shared.entrypoints.auth_jwt import AccessToken
 from kpm.shared.entrypoints.fastapi.dependencies import message_bus, user_view
 from kpm.shared.entrypoints.fastapi.jwt_dependencies import (
-    get_access_token,
+    decode_token, get_access_token,
     get_admin_token,
 )
 from kpm.shared.entrypoints.fastapi.schema_utils import to_pydantic_model
@@ -81,7 +82,7 @@ async def get_all_users(
     responses={status.HTTP_200_OK: {}},
     tags=["admin"],
 )
-async def activate_user(
+async def activate_user_by_admin(
     user_id: str,
     bus: MessageBus = Depends(message_bus),
     _: AccessToken = Depends(get_admin_token),
@@ -92,6 +93,29 @@ async def activate_user(
     except UserNotFound:
         raise ex.NOT_FOUND
     return
+
+
+@router.get(
+    s.API_USER_PATH.concat("activate").path(),
+    responses={status.HTTP_200_OK: {}},
+)
+async def activate_user(
+    activation_token: str,
+    bus: MessageBus = Depends(message_bus),
+):
+    """Endpoint to activate a user. If user is already active does nothing."""
+    try:
+        token = decode_token(activation_token, dict)
+        user_id = token.get("user_id", "NON EXIST USER ID")
+        bus.handle(cmds.ActivateUser(user_id=user_id))
+    except JWTError:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate authorizer token",
+        )
+    except UserNotFound:
+        raise ex.NOT_FOUND
+    return "User Activated. You can Log in in your app"
 
 
 @router.post(

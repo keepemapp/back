@@ -1,5 +1,6 @@
 import os
 import random
+from datetime import timedelta
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -10,10 +11,12 @@ from kpm.shared.adapters.notifications import AbstractNotifications
 from kpm.shared.domain import DomainId
 from kpm.shared.domain.model import RootAggState, UserId
 from kpm.shared.entrypoints.auth_jwt import RefreshToken
+from kpm.shared.entrypoints.fastapi.jwt_dependencies import create_jwt_token
 from kpm.shared.log import logger
 from kpm.shared.security import generate_salt, hash_password, salt_password
 from kpm.shared.service_layer.unit_of_work import AbstractUnitOfWork
 from kpm.users.domain.repositories import SessionRepository, UserRepository
+from kpm.settings import settings as s
 
 
 def _load_email_templates() -> Environment:
@@ -127,7 +130,16 @@ def send_new_user_email(
 
     template = env.get_template("welcome_email.html")
     founder_name = random.choice(["Martí", "David", "Jordi"])
-    welcome = template.render(name=event.username, founder_name=founder_name)
+
+    auth_token = create_jwt_token(
+        {"user_id": event.aggregate_id},
+        expires_delta=timedelta(minutes=90)
+    )
+    activation_link = (s.PUBLIC_API_URL + "/" +
+                       s.API_USER_PATH.concat("activate").path() +
+                       f"?activation_token={auth_token}")
+    welcome = template.render(name=event.username, founder_name=founder_name,
+                              activation_link=activation_link)
 
     template = env.get_template("new_user_internal.html")
     activation = template.render(
@@ -141,12 +153,12 @@ def send_new_user_email(
         [
             {
                 "to": event.username,
-                "subject": "Welcome to Keepem!",
+                "subject": "Welcome to Keepem! Activate your account",
                 "body": welcome,
             },
             {
                 "to": "board@keepem.app",
-                "subject": "User requires activation",
+                "subject": "New user",
                 "body": activation,
             },
         ]
