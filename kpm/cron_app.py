@@ -20,6 +20,7 @@ from kpm.shared.entrypoints.fastapi.dependencies import asset_rel_view, \
 from kpm.shared.entrypoints.fastapi.tasks import repeat_every
 from kpm.shared.entrypoints.fastapi.v1 import common_endpoints
 from kpm.shared.log import logger
+from kpm.users.adapters.mongo.views import get_reminders_to_notify
 from kpm.users.service_layer.user_handler import _load_email_templates
 
 from kpm.assets.entrypoints.fastapi.dependencies import uows as a_uows
@@ -224,6 +225,71 @@ async def cron_push_legacy():
                     "subject": "New legacy available",
                 }
             )
+        logger.info(f"Found {len(messages)} open sessions to send push msg to.",
+                    component="cron")
+
+    if messages:
+        notification_svc = PushNotifications()
+        notification_svc.send_multiple(messages)
+        del notification_svc
+
+
+@app.on_event("startup")
+@repeat_every(seconds=s.CRON_PUSH+8)
+async def cron_push_reminders():
+    if not s.FIREBASE_CREDENTIALS_FILE:
+        logger.warning("Firebase credentials file not set",
+                       component="cron")
+        return
+    logger.info("Cron for push messages started", component="cron")
+    if not s.MONGODB_URL:
+        logger.warning(
+            "Can't send notification since database is not mongo.",
+            component="cron",
+        )
+        return
+
+    messages = []
+
+    bus = next(message_bus(None, a_uows(), u_uows()))
+    to = now_utc_millis()
+    since = to - (s.CRON_PUSH + 8) * 1000
+
+    reminders = get_reminders_to_notify(since, to, bus=bus)
+    users_batch = list(set([r["id"] for r in reminders]))
+    if len(users_batch) == 0:
+        logger.info("No new alerts found", component="cron")
+        return
+
+    logger.debug(f"Users to send alerts to {users_batch}", component="cron")
+
+    logger.info(
+        {"message": "Number of push messages", "value": len(users_batch)},
+        component="cron")
+
+    with mongo_client() as client:
+        sessions_cursor = client.users.sessions.aggregate(
+            [
+                {"$match": {
+                    "user": {"$in": users_batch},
+                    "state": RootAggState.ACTIVE.value,
+                    "client_id": {"$ne": None}
+                }},
+                {"$project": {"_id": 0, "id": "$_id", "client_id": 1}},
+            ]
+        )
+        for session in sessions_cursor:
+            logger.debug(
+                f"Sending new reminder push to client {session['client_id']}",
+                component="cron")
+            for title in [r.get("title") for r in reminders
+                          if r["id"] == session["id"]]:
+                messages.append(
+                    {
+                        "client_id": session["client_id"],
+                        "subject": f"Reminder: {title}",
+                    }
+                )
         logger.info(f"Found {len(messages)} open sessions to send push msg to.",
                     component="cron")
 

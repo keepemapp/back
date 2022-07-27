@@ -5,6 +5,7 @@ import flatdict
 
 from kpm.shared.adapters.mongo import mongo_client
 from kpm.shared.domain.model import RootAggState, UserId, VISIBLE_STATES
+from kpm.shared.domain.time_utils import now_utc_millis
 from kpm.shared.entrypoints.auth_jwt import RefreshToken
 from kpm.shared.service_layer.message_bus import MessageBus
 from kpm.users.domain.model import (
@@ -70,6 +71,29 @@ def get_user_reminders(user_id: str, bus: MessageBus) -> List[Dict]:
     cleaned = [reminder_to_flat_dict(r) for r in res.get("reminders", [])]
     return cleaned
 
+
+def get_reminders_to_notify(since: int, to: int = now_utc_millis(),
+                       bus: MessageBus = None) -> List[Dict]:
+    with bus.uows.get(User) as uow:
+        db = uow.repo.db
+    with mongo_client() as client:
+        col = client[db].users
+        filter = {
+            "state": RootAggState.ACTIVE.value,
+            "reminders.time": {
+                "$gte": since - 24*60*60*1000,
+                "$lt": to - 24*60*60*1000,
+            }
+        }
+        cursor = col.aggregate(
+            [
+                {"$match": filter},
+                {"$unwind": {"path": "reminders"}},
+                {"$project": {"_id": 0, "id": "$_id", "title": 1}},
+            ]
+        )
+
+    return [r for r in cursor]
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
     with bus.uows.get(User) as uow:
