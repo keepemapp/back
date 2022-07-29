@@ -88,12 +88,13 @@ def get_reminders_to_notify(since: int, to: int = now_utc_millis(),
         cursor = col.aggregate(
             [
                 {"$match": filter},
-                {"$unwind": {"path": "reminders"}},
+                {"$unwind": {"path": "$reminders"}},
                 {"$project": {"_id": 0, "id": "$_id", "title": 1}},
             ]
         )
 
     return [r for r in cursor]
+
 
 def id_from_referral(referral_code: str, bus: MessageBus) -> Optional[str]:
     with bus.uows.get(User) as uow:
