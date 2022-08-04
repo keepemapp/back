@@ -53,8 +53,8 @@ class EmailNotifications(AbstractNotifications):
         msg_body = message.as_string()
 
         if self._bg_tasks:
-            logger.debug(
-                f"Sending email to '{destination}'",
+            logger.info(
+                f"Sending email to '{destination}' with subject '{subject}'",
                 component="mail",
             )
             self._bg_tasks.add_task(

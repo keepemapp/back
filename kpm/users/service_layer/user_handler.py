@@ -152,7 +152,7 @@ def send_new_user_email(
     email_notifications.send_multiple(
         [
             {
-                "to": event.username,
+                "to": event.email,
                 "subject": "Welcome to Keepem! Activate your account",
                 "body": welcome,
             },

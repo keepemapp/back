@@ -3,7 +3,7 @@
 [source, python]
 ----
 from pymongo import MongoClient
-client = MongoClient("mongodb://kpm_mongo:27017/?replicaSet=rs0")
+client = MongoClient("mongodb://mongo-prod:27017/?replicaSet=rs0")
 
 us = client.users.users
 ks = client.users.keeps
